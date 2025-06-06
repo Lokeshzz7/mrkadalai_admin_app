@@ -19,6 +19,11 @@ import Reports from './pages/Reports';
 import OrderHistory from './pages/OrderHistory.jsx';
 import Settings from './pages/Settings.jsx';
 import AdminDashboard from './pages/main/AdminDashboard.jsx';
+import Staff from './pages/Staff.jsx';
+import Expenditure from './pages/Expenditure.jsx';
+import Customer from './pages/Customer.jsx';
+import Ticket from './pages/Ticket.jsx';
+import AppManagement from './pages/AppManagement.jsx';
 
 function App() {
   return (
@@ -51,6 +56,49 @@ function App() {
             }
           />
           <Route
+            path="/staff"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Staff />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/expenditure"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Expenditure />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/customers"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Customer />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/tickets"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <Ticket />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+
+          <Route
             path="/notifications"
             element={
               <ProtectedRoute>
@@ -60,6 +108,18 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <AppManagement />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+
+
           <Route
             path="/manual-order"
             element={

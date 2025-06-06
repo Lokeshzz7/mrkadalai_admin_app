@@ -1,5 +1,5 @@
 import React from 'react'
-import { NavLink } from 'react-router-dom'
+import { href, NavLink } from 'react-router-dom'
 import {
     LayoutDashboard,
     Bell,
@@ -10,17 +10,24 @@ import {
     Settings,
     LogOut,
     X,
-    Clock
+    Clock,
+    Ticket,
+    PersonStanding
 } from 'lucide-react'
 
 const Sidebar = ({ onClose }) => {
     const navigation = [
         { name: 'Dashboard', href: '/home', icon: LayoutDashboard },
-        { name: 'Notifications', href: '/notifications', icon: Bell },
-        { name: 'Manual Order', href: '/manual-order', icon: PlusCircle },
         { name: 'Order History', href: '/order-history', icon: Clock },
+        { name: 'Staff Management', href: '/staff', icon: Bell },
         { name: 'Inventory', href: '/inventory', icon: Package },
+        { name: 'Expenditure', href: '/expenditure', icon: PlusCircle },
         { name: 'Wallet', href: '/wallet', icon: Wallet },
+        { name: 'Customers', href: '/customers', icon: PersonStanding },
+        { name: 'Ticket', href: '/tickets', icon: Ticket },
+
+        { name: 'Notifications', href: '/notifications', icon: Bell },
+        { name: 'App Management', href: '/app', icon: Wallet },
         { name: 'Reports', href: '/reports', icon: BarChart3 },
     ]
 
