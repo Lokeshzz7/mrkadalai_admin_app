@@ -15,7 +15,7 @@ import {
 
 const Sidebar = ({ onClose }) => {
     const navigation = [
-        { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+        { name: 'Dashboard', href: '/home', icon: LayoutDashboard },
         { name: 'Notifications', href: '/notifications', icon: Bell },
         { name: 'Manual Order', href: '/manual-order', icon: PlusCircle },
         { name: 'Order History', href: '/order-history', icon: Clock },
@@ -63,14 +63,13 @@ const Sidebar = ({ onClose }) => {
 
             {/* Bottom Section */}
             <div className="p-4 border-t border-gray-700">
-                                <NavLink
+                <NavLink
                     to="/settings"
                     onClick={() => onClose && onClose()}
                     className={({ isActive }) =>
-                        `flex items-center w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                            isActive
-                                ? 'bg-theme text-white'
-                                : 'text-primary hover:bg-gray-800 hover:text-white'
+                        `flex items-center w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isActive
+                            ? 'bg-theme text-white'
+                            : 'text-primary hover:bg-gray-800 hover:text-white'
                         }`
                     }
                 >

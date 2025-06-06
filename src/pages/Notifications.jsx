@@ -122,20 +122,7 @@ const Notifications = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex justify-end space-x-4">
-        <Button
-          variant={activeTab === 'orders' ? 'black' : 'secondary'}
-          onClick={() => setActiveTab('orders')}
-        >
-          Orders
-        </Button>
-        <Button
-          variant={activeTab === 'inventory' ? 'black' : 'secondary'}
-          onClick={() => setActiveTab('inventory')}
-        >
-          Inventory
-        </Button>
-      </div>
+      
 
       {/* Orders Section */}
       {activeTab === 'orders' && (

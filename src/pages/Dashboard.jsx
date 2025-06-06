@@ -39,10 +39,12 @@ const Dashboard = () => {
         <Badge variant={order.status}>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</Badge>
     ]))
 
+    const collegeName = localStorage.getItem('collegeName');
+
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl font-semibold text-gray-800">Overview</h2>
+                <h2 className="text-xl font-semibold text-gray-800">{collegeName}</h2>
             </div>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">

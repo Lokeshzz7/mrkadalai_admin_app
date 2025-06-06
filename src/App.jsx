@@ -18,6 +18,7 @@ import Wallet from './pages/Wallet';
 import Reports from './pages/Reports';
 import OrderHistory from './pages/OrderHistory.jsx';
 import Settings from './pages/Settings.jsx';
+import AdminDashboard from './pages/main/AdminDashboard.jsx';
 
 function App() {
   return (
@@ -30,7 +31,17 @@ function App() {
 
           {/* Protected routes - each wrapped individually */}
           <Route
-            path="/"
+            path='/'
+            element={
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+
+          <Route
+            path="/home"
             element={
               <ProtectedRoute>
                 <Layout>
@@ -104,7 +115,7 @@ function App() {
             element={
               <ProtectedRoute>
                 <Layout>
-                  <Settings/>
+                  <Settings />
                 </Layout>
               </ProtectedRoute>
             }
