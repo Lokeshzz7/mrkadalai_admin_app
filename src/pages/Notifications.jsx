@@ -1,284 +1,278 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Marquee from 'react-fast-marquee';
 import Button from '../components/ui/Button';
+import Card from '../components/ui/Card';
 
 const Notifications = () => {
-  const [activeTab, setActiveTab] = useState('orders');
-  const [inventoryTab, setInventoryTab] = useState('food');
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('notification');
+  const fileInputRef = useRef();
 
-  // ! Fake Data for recent orders (should be replaced with API)
+  const [notificationFormData, setNotificationFormData] = useState({
+    title: '',
+    type: '',
+    description: '',
+    scheduleDate: '',
+    scheduleTime: '',
+    image: null,
+  });
 
-  const recentOrderIds = ['#12345', '#12346', '#12347', '#12348', '#12349', '#12350'];
+  const [promotionFormData, setPromotionFormData] = useState({
+    title: '',
+    type: '',
+    description: '',
+    scheduleDate: '',
+    scheduleTime: '',
+    image: null,
+  });
 
-  // ! Fake Data for orders (should be replaced with API)
+  const handleNotificationChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'image') {
+      setNotificationFormData(prev => ({ ...prev, image: files[0] }));
+    } else {
+      setNotificationFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
 
-  const orders = [
-  {
-    id: '#12345',
-    customer: 'John Doe',
-    date: '2025-06-05',
-    time: '2:30 PM',
-    items: [
-      { name: 'Pizza', price: '₹300', description: 'Cheesy with toppings', qty: 1 },
-      { name: 'Burger', price: '₹200', description: 'Grilled beef burger', qty: 1 },
-    ],
-    totalItems: 2,
-  },
-  {
-    id: '#12346',
-    customer: 'Jane Smith',
-    date: '2025-06-05',
-    time: '2:25 PM',
-    items: [
-      { name: 'Pasta', price: '₹250', description: 'Creamy Alfredo', qty: 1 },
-    ],
-    totalItems: 1,
-  },
-  {
-    id: '#12346',
-    customer: 'Jane Smith',
-    date: '2025-06-05',
-    time: '2:25 PM',
-    items: [
-      { name: 'Pasta', price: '₹250', description: 'Creamy Alfredo', qty: 1 },
-    ],
-    totalItems: 1,
-  },
-   {
-    id: '#12345',
-    customer: 'John Doe',
-    date: '2025-06-05',
-    time: '2:30 PM',
-    items: [
-      { name: 'Pizza', price: '₹300', description: 'Cheesy with toppings', qty: 1 },
-      { name: 'Burger', price: '₹200', description: 'Grilled beef burger', qty: 1 },
-    ],
-    totalItems: 2,
-  },
-   {
-    id: '#12345',
-    customer: 'John Doe',
-    date: '2025-06-05',
-    time: '2:30 PM',
-    items: [
-      { name: 'Pizza', price: '₹300', description: 'Cheesy with toppings', qty: 1 },
-      { name: 'Burger', price: '₹200', description: 'Grilled beef burger', qty: 1 },
-    ],
-    totalItems: 2,
-  },
-   {
-    id: '#12345',
-    customer: 'John Doe',
-    date: '2025-06-05',
-    time: '2:30 PM',
-    items: [
-      { name: 'Pizza', price: '₹300', description: 'Cheesy with toppings', qty: 1 },
-      { name: 'Burger', price: '₹200', description: 'Grilled beef burger', qty: 1 },
-    ],
-    totalItems: 2,
-  },
-   {
-    id: '#12345',
-    customer: 'John Doe',
-    date: '2025-06-05',
-    time: '2:30 PM',
-    items: [
-      { name: 'Pizza', price: '₹300', description: 'Cheesy with toppings', qty: 1 },
-      { name: 'Burger', price: '₹200', description: 'Grilled beef burger', qty: 1 },
-    ],
-    totalItems: 2,
-  },
-   {
-    id: '#12345',
-    customer: 'John Doe',
-    date: '2025-06-05',
-    time: '2:30 PM',
-    items: [
-      { name: 'Pizza', price: '₹300', description: 'Cheesy with toppings', qty: 1 },
-      { name: 'Burger', price: '₹200', description: 'Grilled beef burger', qty: 1 },
-    ],
-    totalItems: 2,
-  },
+  const handlePromotionChange = (e) => {
+    const { name, value, files } = e.target;
+    if (name === 'image') {
+      setPromotionFormData(prev => ({ ...prev, image: files[0] }));
+    } else {
+      setPromotionFormData(prev => ({ ...prev, [name]: value }));
+    }
+  };
 
-];
+  const handleNotificationSubmit = (e) => {
+    e.preventDefault();
+    console.log('Notification Data:', notificationFormData);
+    alert("Notification Sent");
+  };
 
+  const handlePromotionSubmit = (e) => {
+    e.preventDefault();
+    console.log('Promotion Data:', promotionFormData);
+    alert("Promotion Sent");
+  };
+
+  const handleNotificationReset = () => {
+    setNotificationFormData({
+      title: '',
+      type: '',
+      description: '',
+      scheduleDate: '',
+      scheduleTime: '',
+      image: null,
+    });
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    }
+  };
+
+  const handlePromotionReset = () => {
+    setPromotionFormData({
+      title: '',
+      type: '',
+      description: '',
+      scheduleDate: '',
+      scheduleTime: '',
+      image: null,
+    });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = null;
+    }
+  };
 
   return (
-    <div className="space-y-6 p-6">
-      {/* Heading */}
-      <h2 className="text-2xl font-bold text-gray-800">Notifications</h2>
+    <div className="space-y-6">
+      <h1 className="text-4xl font-bold text-gray-800">Notifications</h1>
 
-      {/* Marquee Section */}
-      <div className="w-full bg-white rounded-lg shadow-inner border border-gray-300 overflow-hidden">
-        <Marquee gradient={false} speed={50} pauseOnHover={true}>
-          <div className="flex gap-6 px-4 py-2">
-            <span className="text-sm text-gray-700">New order received from Table A1</span>
-            <span className="text-sm text-gray-700">Inventory updated: Tomatoes low stock</span>
-            <span className="text-sm text-gray-700">Order #12345 delivered successfully</span>
-          </div>
-        </Marquee>
+      <div className='flex justify-between items-center'>
+        <div className='flex space-x-4'>
+          <Button
+            variant={activeTab === 'notification' ? 'black' : 'secondary'}
+            onClick={() => setActiveTab('notification')}
+          >
+            Notifications
+          </Button>
+          <Button
+            variant={activeTab === 'promotion' ? 'black' : 'secondary'}
+            onClick={() => setActiveTab('promotion')}
+          >
+            Promotion
+          </Button>
+        </div>
       </div>
 
-      {/* Tabs */}
-      
-
-      {/* Orders Section */}
-      {activeTab === 'orders' && (
-        <div className="space-y-6">
-          {/* Orders List Heading */}
-          <h3 className="text-xl font-semibold text-gray-800">Orders List</h3>
-
-          {/* Recent Order IDs */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
-            {recentOrderIds.map((orderId) => (
-              <div
-                key={orderId}
-                className="bg-white border border-gray-300 rounded-lg p-4 text-center shadow"
-              >
-                <span className="text-sm font-medium text-gray-700">{orderId}</span>
+      {/* Notification Tab */}
+      {activeTab === 'notification' && (
+        <Card title="Notification Details">
+          <form className="space-y-4" onSubmit={handleNotificationSubmit}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={notificationFormData.title}
+                  onChange={handleNotificationChange}
+                  className="w-full border rounded px-3 py-2"
+                />
               </div>
-            ))}
-          </div>
-
-          {/* Orders Information */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-h-[500px] overflow-y-auto scrollbar-hide">
-            {orders.map((order) => (
-                <div
-                key={order.id}
-                className="bg-white border border-gray-300 rounded-lg p-4 shadow space-y-3"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority Type</label>
+                <select
+                  name="type"
+                  value={notificationFormData.type}
+                  onChange={handleNotificationChange}
+                  className="w-full border rounded px-3 py-2"
                 >
-                {/* Header Line: ID and Customer */}
-                <div>
-                    <h4 className="text-md font-bold text-gray-800">
-                    {order.id} from {order.customer}
-                    </h4>
-                    <p className="text-xs text-gray-500">{order.date} at {order.time}</p>
-                </div>
-
-                {/* Items */}
-                <div className="space-y-2">
-                    {order.items.map((item, index) => (
-                    <div key={index} className="border-b border-gray-200 pb-2">
-                        <div className="flex justify-between">
-                        <span className="text-sm font-medium text-gray-700">{item.name}</span>
-                        <span className="text-sm font-semibold text-gray-800">{item.price}</span>
-                        </div>
-                        <p className="text-xs text-gray-500">{item.description}</p>
-                        <p className="text-xs text-gray-500">Qty: {item.qty}</p>
-                    </div>
-                    ))}
-                </div>
-
-                {/* Divider */}
-                <hr className="border-t border-gray-300" />
-
-                {/* Footer */}
-                <div className="flex justify-between items-center pt-2">
-                    <span className="text-sm text-gray-700 font-medium">
-                    Total Items: {order.totalItems}
-                    </span>
-                    <div className="flex space-x-2">
-                    <Button size="sm" variant="success">✓</Button>
-                    <Button size="sm" variant="danger">✕</Button>
-                    </div>
-                </div>
-                </div>
-            ))}
+                  <option value="">Select Type</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
             </div>
 
-        </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                name="description"
+                value={notificationFormData.description}
+                onChange={handleNotificationChange}
+                className="w-full border rounded px-3 py-2"
+                rows="2"
+                placeholder="Enter description"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  name="image"
+                  onChange={handleNotificationChange}
+                  ref={fileInputRef}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Date</label>
+                <input
+                  type="date"
+                  name="scheduleDate"
+                  value={notificationFormData.scheduleDate}
+                  onChange={handleNotificationChange}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Time</label>
+                <input
+                  type="time"
+                  name="scheduleTime"
+                  value={notificationFormData.scheduleTime}
+                  onChange={handleNotificationChange}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button type="button" variant="danger" onClick={handleNotificationReset}>Reset</Button>
+              <Button type="submit" variant="success">Send Notification</Button>
+            </div>
+          </form>
+        </Card>
       )}
 
-      {/* Inventory Section */}
-      {activeTab === 'inventory' && (
-  <div className="space-y-6">
-    {/* Inventory Heading */}
-    <h3 className="text-xl font-semibold text-gray-800">Inventory</h3>
-
-    {/* Inventory Sub-tabs */}
-    <div className="flex space-x-4">
-      <Button
-        variant={inventoryTab === 'food' ? 'black' : 'secondary'}
-        onClick={() => setInventoryTab('food')}
-      >
-        Food Items
-      </Button>
-      <Button
-        variant={inventoryTab === 'ingredients' ? 'black' : 'secondary'}
-        onClick={() => setInventoryTab('ingredients')}
-      >
-        Ingredients
-      </Button>
-      <Button
-        variant={inventoryTab === 'disposals' ? 'black' : 'secondary'}
-        onClick={() => setInventoryTab('disposals')}
-      >
-        Disposals
-      </Button>
-    </div>
-
-    {/* Inventory Cards - Scrollable */}
-    <div className="max-h-[500px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-400 scrollbar-hide scrollbar-track-gray-200">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {(
-                inventoryTab === 'food'
-                    ? [
-                        { level: 'Low Stock', updated: '10 mins ago', item: 'Tomatoes', stock: 1, status: 'Urgent' },
-                        { level: 'Medium Stock', updated: '45 mins ago', item: 'Cheese', stock: 2, status: 'Warning' },
-                        { level: 'High Stock', updated: '1 hr ago', item: 'Bread', stock: 4, status: 'Normal' },
-                        { level: 'Low Stock', updated: '5 mins ago', item: 'Oil', stock: 1, status: 'Critical' },
-                        { level: 'Low Stock', updated: '10 mins ago', item: 'Tomatoes', stock: 1, status: 'Urgent' },
-                        { level: 'Medium Stock', updated: '45 mins ago', item: 'Cheese', stock: 2, status: 'Warning' },
-                        { level: 'High Stock', updated: '1 hr ago', item: 'Bread', stock: 4, status: 'Normal' },
-                        { level: 'Low Stock', updated: '5 mins ago', item: 'Oil', stock: 1, status: 'Critical' },
-                        { level: 'Low Stock', updated: '10 mins ago', item: 'Tomatoes', stock: 1, status: 'Urgent' },
-                        { level: 'Medium Stock', updated: '45 mins ago', item: 'Cheese', stock: 2, status: 'Warning' },
-                        { level: 'High Stock', updated: '1 hr ago', item: 'Bread', stock: 4, status: 'Normal' },
-                        { level: 'Low Stock', updated: '5 mins ago', item: 'Oil', stock: 1, status: 'Critical' },
-                    ]
-                    : inventoryTab === 'ingredients'
-                    ? [
-                        { level: 'Low Stock', updated: '15 mins ago', item: 'Salt', stock: 1, status: 'Low' },
-                        { level: 'High Stock', updated: '20 mins ago', item: 'Pepper', stock: 3, status: 'Stable' },
-                        { level: 'Medium Stock', updated: '30 mins ago', item: 'Oregano', stock: 2, status: 'Moderate' },
-                    ]
-                    : [
-                        { level: 'Disposal Needed', updated: '2 hrs ago', item: 'Expired Milk', stock: 0, status: 'Remove' },
-                        { level: 'Disposal Pending', updated: '1 hr ago', item: 'Old Cheese', stock: 0, status: 'Dispose' },
-                    ]
-                ).map((inv, idx) => (
-                <div
-                    key={idx}
-                    className="bg-white border border-gray-300 rounded-lg p-4 shadow space-y-3"
+      {/* Promotion Tab */}
+      {activeTab === 'promotion' && (
+        <Card title="Promotion Details">
+          <form className="space-y-4" onSubmit={handlePromotionSubmit}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  value={promotionFormData.title}
+                  onChange={handlePromotionChange}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority Type</label>
+                <select
+                  name="type"
+                  value={promotionFormData.type}
+                  onChange={handlePromotionChange}
+                  className="w-full border rounded px-3 py-2"
                 >
-                    <div className="text-sm font-semibold text-gray-800">
-                    {inv.level}{' '}
-                    <span className="text-xs text-gray-500">— updated {inv.updated}</span>
-                    </div>
-                    <div className="text-sm text-gray-700">
-                    Item: <span className="font-medium">{inv.item}</span>
-                    </div>
-                    <div className="text-sm text-gray-700">
-                    Stock Level: <span className="font-medium">{inv.stock}</span>
-                    </div>
-                    <div className="text-sm text-gray-700">
-                    Status:{' '}
-                    <span className="font-semibold text-red-600">{inv.status}</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-2">
-                    <Button size="sm" variant="primary">Restock</Button>
-                    <span className="text-sm text-blue-600 underline cursor-pointer" onClick={() => navigate('/inventory')}>View Inventory</span>
-                    </div>
-                </div>
-                ))}
+                  <option value="">Select Type</option>
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
             </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <textarea
+                name="description"
+                value={promotionFormData.description}
+                onChange={handlePromotionChange}
+                className="w-full border rounded px-3 py-2"
+                rows="2"
+                placeholder="Enter description"
+              />
             </div>
-        </div>
-        )}
 
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload</label>
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={handlePromotionChange}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Date</label>
+                <input
+                  type="date"
+                  name="scheduleDate"
+                  value={promotionFormData.scheduleDate}
+                  onChange={handlePromotionChange}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Time</label>
+                <input
+                  type="time"
+                  name="scheduleTime"
+                  value={promotionFormData.scheduleTime}
+                  onChange={handlePromotionChange}
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+            </div>
 
+            <div className="flex justify-end space-x-2 pt-2">
+              <Button type="button" variant="danger" onClick={handlePromotionReset}>Reset</Button>
+              <Button type="submit" variant="success">Send Promotion</Button>
+            </div>
+          </form>
+        </Card>
+      )}
     </div>
   );
 };
