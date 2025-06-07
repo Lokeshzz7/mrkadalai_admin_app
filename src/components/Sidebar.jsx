@@ -12,7 +12,8 @@ import {
     X,
     Clock,
     Ticket,
-    PersonStanding
+    PersonStanding,
+    ChefHat
 } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
 
@@ -21,6 +22,7 @@ const Sidebar = ({ onClose }) => {
     const navigation = [
         { name: 'Dashboard', href: '/home', icon: LayoutDashboard },
         { name: 'Order History', href: '/order-history', icon: Clock },
+        { name: 'Product Management', href: '/product', icon: ChefHat },
         { name: 'Staff Management', href: '/staff', icon: Bell },
         { name: 'Inventory', href: '/inventory', icon: Package },
         { name: 'Expenditure', href: '/expenditure', icon: PlusCircle },

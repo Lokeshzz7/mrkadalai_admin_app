@@ -25,6 +25,7 @@ import Customer from './pages/Customer.jsx';
 import Ticket from './pages/Ticket.jsx';
 import AppManagement from './pages/AppManagement.jsx';
 import StaffDetails from './pages/StaffDetails.jsx';
+import ProductManagement from './pages/ProductManagement.jsx';
 
 function App() {
   return (
@@ -157,6 +158,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Inventory />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/product"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <ProductManagement />
                 </Layout>
               </ProtectedRoute>
             }
