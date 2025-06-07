@@ -24,6 +24,7 @@ import Expenditure from './pages/Expenditure.jsx';
 import Customer from './pages/Customer.jsx';
 import Ticket from './pages/Ticket.jsx';
 import AppManagement from './pages/AppManagement.jsx';
+import StaffDetails from './pages/StaffDetails.jsx';
 
 function App() {
   return (
@@ -61,6 +62,16 @@ function App() {
               <ProtectedRoute>
                 <Layout>
                   <Staff />
+                </Layout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/staff/:id"
+            element={
+              <ProtectedRoute>
+                <Layout>
+                  <StaffDetails />
                 </Layout>
               </ProtectedRoute>
             }

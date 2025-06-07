@@ -21,11 +21,10 @@ const Settings = () => {
           <div
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`cursor-pointer pb-1 text-lg capitalize ${
-              activeTab === tab
+            className={`cursor-pointer pb-1 text-lg capitalize ${activeTab === tab
                 ? 'border-b-4 border-theme font-semibold text-theme'
                 : 'text-black hover:text-theme'
-            }`}
+              }`}
           >
             {tab}
           </div>
@@ -113,25 +112,25 @@ const Settings = () => {
               <div className="flex items-center justify-between">
                 <span>Order Alerts</span>
                 <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all"></div>
-                <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all"></div>
+                  <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
                 </label>
               </div>
               <div className="flex items-center justify-between">
                 <span>Inventory Low Stock Alerts</span>
                 <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all"></div>
-                <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all"></div>
+                  <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
                 </label>
               </div>
               <div className="flex items-center justify-between">
                 <span>Refund & Cancellation Alerts</span>
                 <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" className="sr-only peer" />
-                <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all"></div>
-                <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
+                  <input type="checkbox" className="sr-only peer" />
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all"></div>
+                  <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
                 </label>
               </div>
             </div>
@@ -178,11 +177,11 @@ const Settings = () => {
                 <input type="checkbox" className="sr-only peer" />
                 <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:bg-green-500 transition-all"></div>
                 <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
-                </label>
+              </label>
             </div>
             <div>
               <img
-                src="/images/qr-placeholder.png" 
+                src="/images/qr-placeholder.png"
                 alt="QR Code"
                 className="w-40 h-40"
               />
