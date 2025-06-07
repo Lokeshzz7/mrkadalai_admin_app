@@ -9,11 +9,12 @@ const Inventory = () => {
     const [showAddModal, setShowAddModal] = useState(false)
     const [activeTab, setActiveTab] = useState('stock')
     const [selectedItem, setSelectedItem] = useState('All')
+    const [searchText, setSearchText] = useState('')
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
     const [filteredHistory, setFilteredHistory] = useState([])
 
-    const items = ['Tomatoes', 'Onions', 'Chicken', 'Rice']
+    const items = ['Vegetable', 'Meat', 'Grain']
 
     const stockData = [
         ['Tomatoes', 'Vegetable', '5 kg'],
@@ -29,9 +30,11 @@ const Inventory = () => {
         ['Onions', 'Vegetable', '2024-01-14', '3 kg Deducted']
     ]
 
-    const filteredStock = selectedItem === 'All'
-        ? stockData
-        : stockData.filter(([item]) => item === selectedItem)
+    const filteredStock = stockData.filter(([item, category]) => {
+        const matchCategory = selectedItem === 'All' || category === selectedItem
+        const matchSearch = item.toLowerCase().includes(searchText.toLowerCase())
+        return matchCategory && matchSearch
+    })
 
     const handleApplyDateFilter = () => {
         if (!dateFrom || !dateTo) return
@@ -68,43 +71,72 @@ const Inventory = () => {
 
             {/* Filters */}
             {activeTab === 'stock' && (
-                <div className="flex space-x-4">
-                    <select
-                        value={selectedItem}
-                        onChange={(e) => setSelectedItem(e.target.value)}
-                        className="p-2 border rounded"
-                    >
-                        <option value="All">All Items</option>
-                        {items.map(item => (
-                            <option key={item} value={item}>{item}</option>
-                        ))}
-                    </select>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <select
+                            value={selectedItem}
+                            onChange={(e) => setSelectedItem(e.target.value)}
+                            className="p-2 border rounded"
+                        >
+                            <option value="All">All Items</option>
+                            {items.map(item => (
+                                <option key={item} value={item}>{item}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div>
+                        <input
+                            type="text"
+                            placeholder="Search item..."
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
+                            className="p-2 border rounded"
+                        />
+                    </div>
                 </div>
             )}
 
             {activeTab === 'activity' && (
-                <div className="flex space-x-4 items-end">
+                <div className="flex justify-between items-end">
+                    {/* Left: Date filter */}
+                    <div className="flex space-x-4">
+                        <div>
+                            <label className="block text-sm text-gray-700 mb-1">From Date</label>
+                            <input
+                                type="date"
+                                value={dateFrom}
+                                onChange={(e) => setDateFrom(e.target.value)}
+                                className="p-2 border rounded"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm text-gray-700 mb-1">To Date</label>
+                            <input
+                                type="date"
+                                value={dateTo}
+                                onChange={(e) => setDateTo(e.target.value)}
+                                className="p-2 border rounded"
+                            />
+                        </div>
+                        <div className="flex items-end">
+                            <Button variant="black" onClick={handleApplyDateFilter}>
+                                Apply
+                            </Button>
+                        </div>
+                    </div>
+
+                    {/* ✅ Right: Instant search */}
                     <div>
-                        <label className="block text-sm text-gray-700 mb-1">From Date</label>
+                        <label className="block text-sm text-gray-700 mb-1">Search</label>
                         <input
-                            type="date"
-                            value={dateFrom}
-                            onChange={(e) => setDateFrom(e.target.value)}
+                            type="text"
+                            placeholder="Search item..."
+                            value={searchText}
+                            onChange={(e) => setSearchText(e.target.value)}
                             className="p-2 border rounded"
                         />
                     </div>
-                    <div>
-                        <label className="block text-sm text-gray-700 mb-1">To Date</label>
-                        <input
-                            type="date"
-                            value={dateTo}
-                            onChange={(e) => setDateTo(e.target.value)}
-                            className="p-2 border rounded"
-                        />
-                    </div>
-                    <Button variant="black" onClick={handleApplyDateFilter}>
-                        Apply
-                    </Button>
                 </div>
             )}
 
@@ -142,7 +174,11 @@ const Inventory = () => {
                 <Card title="Stock History">
                     <Table
                         headers={['Item', 'Category', 'Date', 'Quantity']}
-                        data={filteredHistory.length ? filteredHistory : activityData}
+                        data={
+                            (filteredHistory.length ? filteredHistory : activityData).filter(
+                                ([item]) => item.toLowerCase().includes(searchText.toLowerCase()) // ✅ filter for searchText
+                            )
+                        }
                     />
                 </Card>
             )}
