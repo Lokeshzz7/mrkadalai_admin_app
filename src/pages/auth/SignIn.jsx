@@ -20,8 +20,8 @@ const SignIn = () => {
     // *  Redirect if already authenticated
     useEffect(() => {
         if (isAuthenticated) {
-            const from = location.state?.from?.pathname || ROUTES.DASHBOARD;
-            navigate(from, { replace: true });  
+            const from = ROUTES.DASHBOARD;
+            navigate(from, { replace: true });
         }
     }, [isAuthenticated, navigate, location]);
 

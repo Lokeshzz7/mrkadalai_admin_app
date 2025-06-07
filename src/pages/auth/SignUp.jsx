@@ -10,6 +10,7 @@ const SignUp = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        role: '',
         password: '',
         confirmPassword: '',
     });
@@ -18,7 +19,7 @@ const SignUp = () => {
     const { signUp, loading, error, clearError, isAuthenticated } = useAuth();
     const navigate = useNavigate();
 
-    // * Redirect if already authenticated
+    // Redirect if already authenticated
     useEffect(() => {
         if (isAuthenticated) {
             navigate(ROUTES.DASHBOARD, { replace: true });
@@ -67,6 +68,10 @@ const SignUp = () => {
             errors.email = 'Email is invalid';
         }
 
+        if (!formData.role) {
+            errors.role = 'Role is required';
+        }
+
         if (!formData.password) {
             errors.password = 'Password is required';
         } else if (formData.password.length < 6) {
@@ -92,6 +97,7 @@ const SignUp = () => {
             const { confirmPassword, ...signupData } = formData;
             await signUp(signupData);
         } catch (err) {
+            // Handle sign up error if needed
         }
     };
 
@@ -144,6 +150,25 @@ const SignUp = () => {
                             error={formErrors.email}
                             placeholder="Enter your email"
                         />
+
+                        {/* Role Select Dropdown */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                            <select
+                                name="role"
+                                value={formData.role}
+                                onChange={handleChange}
+                                className={`w-full border px-3 py-2 rounded ${formErrors.role ? 'border-red-500' : 'border-gray-300'
+                                    }`}
+                            >
+                                <option value="">-- Select Role --</option>
+                                <option value="staff">Staff</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                            {formErrors.role && (
+                                <p className="text-sm text-red-500 mt-1">{formErrors.role}</p>
+                            )}
+                        </div>
 
                         <Input
                             label="Password"

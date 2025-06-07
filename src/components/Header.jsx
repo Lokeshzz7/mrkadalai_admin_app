@@ -1,6 +1,7 @@
 import React, { useContext } from 'react'
 import { Search, Bell, User, Menu } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
+import logo from '../assets/logo.png'
 
 const Header = ({ onMenuClick }) => {
     const { user, signOut } = useContext(AuthContext)
@@ -20,7 +21,7 @@ const Header = ({ onMenuClick }) => {
                     >
                         <Menu className="h-6 w-6" />
                     </button>
-                    <img src="" alt="logo" className="h-8 w-auto" />
+                    <img src={logo} alt="logo" className="h-8 w-auto" />
 
                     {/* Left Section  - SearchBar */}
                     <div className="flex-1 max-w-md mx-4">
