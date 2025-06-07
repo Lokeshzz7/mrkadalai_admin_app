@@ -58,12 +58,12 @@ const Header = ({ onMenuClick }) => {
                         </div>
 
                         {/* Logout button */}
-                        <button
+                        {/* <button
                             onClick={signOut}
                             className="ml-2 px-3 py-1 text-xs font-semibold text-white bg-red-600 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
                         >
                             Logout
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             </div>
