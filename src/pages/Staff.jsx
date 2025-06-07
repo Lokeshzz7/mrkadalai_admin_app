@@ -9,9 +9,9 @@ const Staff = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold">Staff Detials</h1>
+            <h1 className="text-4xl font-bold">Staff Details</h1>
 
-            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6'>
 
                 {staffList.map((staff) => (
                     <Card
@@ -27,7 +27,7 @@ const Staff = () => {
                             </div>
 
                             {/* Right - Details */}
-                            <div className="w-2/3 p-4 text-lg font-bold">
+                            <div className="w-2/3 p-4 text-sm font-bold">
                                 <p className="text-gray-600">{staff.position}</p>
                                 <p className="text-gray-500">{staff.email}</p>
                                 <p className="text-gray-500">{staff.number}</p>

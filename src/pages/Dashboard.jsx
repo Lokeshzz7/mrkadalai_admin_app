@@ -44,7 +44,7 @@ const Dashboard = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-xl font-semibold text-gray-800">{collegeName}</h2>
+                <h1 className="text-4xl font-bold text-gray-800">{collegeName}</h1>
             </div>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">

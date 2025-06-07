@@ -51,6 +51,8 @@ const Inventory = () => {
 
     return (
         <div className="space-y-6">
+
+            <h1 className='text-4xl font-bold'>Inventory Management</h1>
             {/* Tabs */}
             <div className="flex justify-between items-center">
                 <div className="flex space-x-4">

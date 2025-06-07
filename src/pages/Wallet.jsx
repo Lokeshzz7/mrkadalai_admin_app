@@ -23,37 +23,24 @@ const Wallet = () => {
         txn.name.toLowerCase().includes(searchText.toLowerCase())
     )
 
+    const transactionmap = filteredTransactions.map(txn => [
+        txn.id,
+        txn.name,
+        txn.date,
+        txn.amount
+    ])
+
     return (
         <div className="space-y-6">
-            {/* Header Row: Wallet Recharge + Manual Button */}
-            <div className="flex justify-between items-center">
-                <h2 className="text-xl font-bold">Wallet Recharge</h2>
-                <Button variant='success' onClick={() => setShowRechargeModal(true)}>Manual Recharge</Button>
+            <h1 className="text-4xl font-bold">Wallet Recharge</h1>
+
+            <div>
+                <div className=''>
+
+                </div>
             </div>
 
-            {/* Summary Cards
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <Card className="text-center">
-                    <h3 className="text-2xl font-bold text-green-600">₹25,340</h3>
-                    <p className="text-gray-600">Total Recharges Today</p>
-                </Card>
-                <Card className="text-center">
-                    <h3 className="text-2xl font-bold text-blue-600">45</h3>
-                    <p className="text-gray-600">Total Transactions</p>
-                </Card>
-                <Card className="text-center">
-                    <h3 className="text-2xl font-bold text-orange-600">3</h3>
-                    <p className="text-gray-600">Pending Recharges</p>
-                </Card>
-                <Card className="text-center">
-                    <h3 className="text-2xl font-bold text-purple-600">₹567</h3>
-                    <p className="text-gray-600">Average Recharge</p>
-                </Card>
-            </div> */}
-
-            {/* Header Row: Recharge History + Search */}
-            <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold">Recharge History</h2>
+            <div className="flex justify-end items-center">
                 <input
                     type="text"
                     placeholder="Search by ID or Name"
@@ -64,54 +51,15 @@ const Wallet = () => {
             </div>
 
             {/* Transactions Table */}
-            <Card>
+            <Card
+                title='Wallet Summary'
+            >
                 <Table
-                    headers={['Transaction ID', 'Student Name', 'Date', 'Amount']}
-                    data={filteredTransactions.map(txn => [
-                        txn.id,
-                        txn.name,
-                        txn.date,
-                        txn.amount
-                    ])}
+                    headers={['Wallet ID', 'Student Name', 'Date', 'Amount']}
+                    data={transactionmap}
                 />
             </Card>
 
-            {/* Manual Recharge Modal */}
-            <Modal
-                isOpen={showRechargeModal}
-                onClose={() => setShowRechargeModal(false)}
-                title="Manual Recharge"
-                footer={
-                    <div className="space-x-2">
-                        <Button variant="secondary" onClick={() => setShowRechargeModal(false)}>Cancel</Button>
-                        <Button>Process Recharge</Button>
-                    </div>
-                }
-            >
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Student ID/Name</label>
-                        <input type="text" className="w-full p-2 border rounded" placeholder="Enter student ID or name" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
-                        <input type="number" className="w-full p-2 border rounded" placeholder="Enter amount" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
-                        <select className="w-full p-2 border rounded">
-                            <option>Cash</option>
-                            <option>Card</option>
-                            <option>UPI</option>
-                            <option>Net Banking</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
-                        <textarea className="w-full p-2 border rounded" rows="3" placeholder="Additional notes"></textarea>
-                    </div>
-                </div>
-            </Modal>
         </div>
     )
 }

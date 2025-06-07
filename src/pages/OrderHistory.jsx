@@ -45,7 +45,7 @@ const OrderHistory = () => {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-2xl font-bold">Order History</h1>
+            <h1 className="text-4xl font-bold">Order History</h1>
 
             <div className="flex justify-between items-center flex-wrap gap-2">
                 <div className="flex gap-2">
