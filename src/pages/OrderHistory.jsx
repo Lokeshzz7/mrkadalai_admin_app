@@ -1,13 +1,14 @@
 import React, { useState } from 'react'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
-import dayjs from 'dayjs'
 import Table from '../components/ui/Table'
 import Badge from '../components/ui/Badge'
 
 const OrderHistory = () => {
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [statusFilter, setStatusFilter] = useState('');
+
 
     const orders = [
         {
@@ -57,7 +58,12 @@ const OrderHistory = () => {
         },
     ];
 
-    const filteredorders = orders.filter(ord => ord.orderId.toLowerCase().includes(searchQuery.toLowerCase()) || ord.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    const filteredorders = orders.filter(ord =>
+    (ord.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     ord.name.toLowerCase().includes(searchQuery.toLowerCase())) &&
+    (statusFilter === '' || ord.status === statusFilter)
+    );
+
 
     const searchedOrders = filteredorders.map(ord => [
         ord.orderId,
@@ -79,8 +85,17 @@ const OrderHistory = () => {
     return (
         <div className="space-y-6">
             <h1 className="text-4xl font-bold">Order Management</h1>
-
-            <div className='flex justify-end items-center'>
+            <div className='flex justify-end items-center space-x-4'>
+                <select
+                    className='border rounded p-2'
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                    <option value=''>All</option>
+                    <option value='preparing'>Preparing</option>
+                    <option value='delivered'>Delivered</option>
+                    <option value='cancelled'>Cancelled</option>
+                </select>
                 <input
                     type='text'
                     placeholder='Search by ID and Name'

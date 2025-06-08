@@ -21,17 +21,17 @@ const Sidebar = ({ onClose }) => {
     const { user, signOut } = useContext(AuthContext)
     const navigation = [
         { name: 'Dashboard', href: '/home', icon: LayoutDashboard },
-        { name: 'Order History', href: '/order-history', icon: Clock },
-        { name: 'Product Management', href: '/product', icon: ChefHat },
+        { name: 'Order Management', href: '/order-history', icon: Clock },
         { name: 'Staff Management', href: '/staff', icon: Bell },
-        { name: 'Inventory', href: '/inventory', icon: Package },
-        { name: 'Expenditure', href: '/expenditure', icon: PlusCircle },
-        { name: 'Wallet', href: '/wallet', icon: Wallet },
-        { name: 'Customers', href: '/customers', icon: PersonStanding },
-        { name: 'Ticket', href: '/tickets', icon: Ticket },
-        { name: 'Notifications', href: '/notifications', icon: Bell },
+        { name: 'Inventory Management', href: '/inventory', icon: Package },
+        { name: 'Expenditure Management', href: '/expenditure', icon: PlusCircle },
+        { name: 'Wallet Management', href: '/wallet', icon: Wallet },
+        { name: 'Customer Management', href: '/customers', icon: PersonStanding },
+        { name: 'Ticket Management', href: '/tickets', icon: Ticket },
+        { name: 'Notifications Management', href: '/notifications', icon: Bell },
+        { name: 'Product Management', href: '/product', icon: ChefHat },
         { name: 'App Management', href: '/app', icon: Wallet },
-        { name: 'Reports', href: '/reports', icon: BarChart3 },
+        { name: 'Reports & Analytics', href: '/reports', icon: BarChart3 },
     ]
 
     return (
