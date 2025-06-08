@@ -10,7 +10,6 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
         sufficient: 'bg-green-100 text-green-800',
         open: 'bg-green-100 text-green-800',
         warning: 'bg-yellow-100 text-yellow-800',
-        pending: 'bg-yellow-100 text-yellow-800',
         preparing: 'bg-yellow-100 text-yellow-800',
         threshold: 'bg-yellow-100 text-yellow-800',
         medium: 'bg-yellow-100 text-yellow-800',

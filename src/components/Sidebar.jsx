@@ -29,7 +29,6 @@ const Sidebar = ({ onClose }) => {
         { name: 'Wallet', href: '/wallet', icon: Wallet },
         { name: 'Customers', href: '/customers', icon: PersonStanding },
         { name: 'Ticket', href: '/tickets', icon: Ticket },
-
         { name: 'Notifications', href: '/notifications', icon: Bell },
         { name: 'App Management', href: '/app', icon: Wallet },
         { name: 'Reports', href: '/reports', icon: BarChart3 },
@@ -58,8 +57,8 @@ const Sidebar = ({ onClose }) => {
                                 to={item.href}
                                 onClick={() => onClose && onClose()}
                                 className={({ isActive }) =>
-                                    `flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive
-                                        ? 'bg-theme text-white'
+                                    `flex items-center px-2 py-[5.9px] text-sm font-medium rounded-lg transition-colors ${isActive
+                                        ? 'bg-black text-white'
                                         : 'text-primary hover:bg-none hover:text-black'
                                     }`
                                 }

@@ -80,19 +80,19 @@ const Customer = () => {
             </h1>
 
             <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6'>
-                <Card>
+                <Card Black>
                     <p className="text-gray-600">Total customers</p>
                     <h2 className="text-2xl font-bold text-blue-600">45</h2>
                 </Card>
-                <Card>
+                <Card Black>
                     <p className="text-gray-600">Active userss</p>
                     <h2 className="text-2xl font-bold text-blue-600">45</h2>
                 </Card>
-                <Card>
+                <Card Black>
                     <p className="text-gray-600">High value customers</p>
                     <h2 className="text-2xl font-bold text-blue-600">45</h2>
                 </Card>
-                <Card>
+                <Card Black>
                     <p className="text-gray-600">new customers</p>
                     <h2 className="text-2xl font-bold text-blue-600">45</h2>
                 </Card>
