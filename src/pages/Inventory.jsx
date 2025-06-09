@@ -13,6 +13,9 @@ const Inventory = () => {
     const [dateFrom, setDateFrom] = useState('')
     const [dateTo, setDateTo] = useState('')
     const [filteredHistory, setFilteredHistory] = useState([])
+    const [selectedItem, setSelectedItem] = useState(null)
+    const [modalMode, setModalMode] = useState('add') 
+
 
     const items = ['Tomatoes', 'Onions', 'Chicken', 'Rice']
 
@@ -31,12 +34,26 @@ const Inventory = () => {
     ['Onions', 'Food Items', '2024-01-14', '3 kg Deducted']
     ]
 
+    const handleClearDateFilter = () => {
+    setDateFrom('')
+    setDateTo('')
+    setFilteredHistory([])
+    }
+
+
 
     const filteredStock = stockData.filter(([item, category]) => {
     const categoryMatch = categoryFilter === 'All' || category === categoryFilter
     const searchMatch = item.toLowerCase().includes(searchTerm.toLowerCase())
     return categoryMatch && searchMatch
     })
+
+    const handleCloseModal = () => {
+        setShowAddModal(false)
+        setSelectedItem(null)
+        setQuantity('')
+    }
+
 
 
     const handleApplyDateFilter = () => {
@@ -119,7 +136,11 @@ const Inventory = () => {
                     <Button variant="black" onClick={handleApplyDateFilter}>
                         Apply
                     </Button>
+                    <Button variant="secondary" onClick={handleClearDateFilter}>
+                        Clear
+                    </Button>
                 </div>
+
             )}
 
             {/* Content */}
@@ -135,17 +156,26 @@ const Inventory = () => {
                                 <Button
                                     variant="success"
                                     className="px-3 py-1 text-xs"
-                                    onClick={() => setShowAddModal(true)}
+                                    onClick={() => {
+                                        setSelectedItem({ item, category, stock })
+                                        setModalMode('add')
+                                        setShowAddModal(true)
+                                    }}
                                 >
                                     Add
                                 </Button>
                                 <Button
                                     variant="danger"
                                     className="px-3 py-1 text-xs"
-                                    onClick={() => alert(`Deduct clicked for ${item}`)}
+                                    onClick={() => {
+                                        setSelectedItem({ item, category, stock })
+                                        setModalMode('deduct')
+                                        setShowAddModal(true)
+                                    }}
                                 >
                                     Deduct
                                 </Button>
+
                             </div>
                         ])}
                     />
@@ -162,42 +192,54 @@ const Inventory = () => {
             )}
 
             {/* Modal */}
+            {/* Modal */}
             <Modal
                 isOpen={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                title="Add Stock"
+                onClose={handleCloseModal}
+                title={`${modalMode === 'add' ? 'Add' : 'Deduct'} Stock`}
                 footer={
                     <div className="space-x-2">
-                        <Button variant="secondary" onClick={() => setShowAddModal(false)}>Cancel</Button>
-                        <Button>Add Stock</Button>
+                        <Button variant="secondary" onClick={handleCloseModal}>Cancel</Button>
+                        <Button variant={modalMode === 'add' ? 'success' : 'danger'}>
+                            {modalMode === 'add' ? 'Add Stock' : 'Deduct Stock'}
+                        </Button>
                     </div>
                 }
             >
-                <div className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                        <select className="w-full p-2 border rounded">
-                            <option>Select Item</option>
-                            {items.map(item => (
-                                <option key={item}>{item}</option>
-                            ))}
-                        </select>
+                {selectedItem && (
+                    <div className="space-y-4">
+                        {/* Table-style display for item details */}
+                        <table className="w-full text-sm border border-gray-300 rounded">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                <th className="p-2 border border-gray-300 text-left">Item</th>
+                                <th className="p-2 border border-gray-300 text-left">Category</th>
+                                <th className="p-2 border border-gray-300 text-left">Current Stock</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td className="p-2 border border-gray-300">{selectedItem.item}</td>
+                                <td className="p-2 border border-gray-300">{selectedItem.category}</td>
+                                <td className="p-2 border border-gray-300">{selectedItem.stock}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                        {/* Quantity input */}
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Quantity to {modalMode === 'add' ? 'Add' : 'Deduct'}
+                            </label>
+                            <input
+                                type="number"
+                                className="w-full p-2 border rounded"
+                                placeholder={`Enter quantity to ${modalMode === 'add' ? 'add' : 'deduct'}`}
+                            />
+                        </div>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Quantity</label>
-                        <input type="number" className="w-full p-2 border rounded" placeholder="Enter quantity" />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Unit</label>
-                        <select className="w-full p-2 border rounded">
-                            <option>kg</option>
-                            <option>grams</option>
-                            <option>pieces</option>
-                            <option>liters</option>
-                        </select>
-                    </div>
-                </div>
+                )}
             </Modal>
+
         </div>
     )
 }
