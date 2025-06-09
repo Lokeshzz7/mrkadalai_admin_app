@@ -102,26 +102,22 @@ const Ticket = () => {
 
             </div>
 
-            <div className='flex justify-end items-center'>
-                <input
-                    type='text'
-                    placeholder='Search by Id or descripition or name'
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className='border rounded p-2 w-64'
-
-                />
-            </div>
-            <div>
-                <Card
-                    title='Ticket Details'
-                >
-                    <Table
-                        headers={['Ticket Id', 'Date', 'Ticket Description', 'Ticket Raised by', 'Priority', 'status', 'Actions']}
-                        data={searchTicketData}
-                    />
-                </Card>
-            </div>
+        <div className='flex justify-between items-center mb-4 flex-wrap gap-2'>
+            <h2 className="text-lg font-semibold text-gray-800">Ticket Details</h2>
+            <input
+                type='text'
+                placeholder='Search by Id or description or name'
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className='border rounded p-2 w-64'
+            />
+        </div>
+        <Card>
+            <Table
+                headers={['Ticket Id', 'Date', 'Ticket Description', 'Ticket Raised by', 'Priority', 'Status', 'Actions']}
+                data={searchTicketData}
+            />
+        </Card>
         </div>
     )
 }
