@@ -17,6 +17,7 @@ const OrderHistory = () => {
             name: 'John Doe',
             phone: '9876543210',
             status: 'delivered',
+            orderType: 'app',
             orderItems: [
                 { item: 'Burger', quantity: 2, unitPrice: 5.99 },
                 { item: 'Fries', quantity: 1, unitPrice: 1.99 }
@@ -28,6 +29,7 @@ const OrderHistory = () => {
             name: 'Jane Smith',
             phone: '9123456789',
             status: 'preparing',
+            orderType: 'manual',
             orderItems: [
                 { item: 'Pizza', quantity: 1, unitPrice: 8.5 }
             ],
@@ -38,11 +40,34 @@ const OrderHistory = () => {
             name: 'Michael Lee',
             phone: '9988776655',
             status: 'cancelled',
+            orderType: 'manual',
             orderItems: [
                 { item: 'Salad', quantity: 1, unitPrice: 4.5 },
                 { item: 'Juice', quantity: 2, unitPrice: 2.85 }
             ],
             timeStamp: '2025-06-03 18:45'
+        },
+        {
+            orderId: 'ORD004',
+            name: 'Alice Brown',
+            phone: '9012345678',
+            status: 'delivered',
+            orderType: 'app',
+            orderItems: [
+                { item: 'Pasta', quantity: 1, unitPrice: 9.99 }
+            ],
+            timeStamp: '2025-06-04 13:00'
+        },
+        {
+            orderId: 'ORD005',
+            name: 'David Wilson',
+            phone: '9870012345',
+            status: 'preparing',
+            orderType: 'manual',
+            orderItems: [
+                { item: 'Sushi', quantity: 2, unitPrice: 7.80 }
+            ],
+            timeStamp: '2025-06-04 16:20'
         }
     ];
 
@@ -68,6 +93,9 @@ const OrderHistory = () => {
         ord.orderItems.map(i => i.item).join(', '),
         <Badge variant={ord.status}>{ord.status}</Badge>,
         `$${ord.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}`,
+        ord.orderType === 'manual'
+            ? <Badge variant="info">Manual</Badge>
+            : <Badge variant="success">App</Badge>,
         ord.timeStamp,
         <Button onClick={() => openModal(ord)}>View</Button>
     ]);
@@ -76,7 +104,6 @@ const OrderHistory = () => {
         <div className="space-y-6">
             <h1 className="text-4xl font-bold">Order Management</h1>
 
-            {/* Filters */}
             <div className='flex justify-end items-center space-x-4'>
                 <select
                     className='border rounded p-2'
@@ -97,15 +124,13 @@ const OrderHistory = () => {
                 />
             </div>
 
-            {/* Table */}
             <Card title='Order Management'>
                 <Table
-                    headers={['Order Id', 'Name', 'Order Items', 'Status', 'Price', 'Time Stamp', 'Actions']}
+                    headers={['Order Id', 'Name', 'Order Items', 'Status', 'Price', 'Order Type', 'Time Stamp', 'Actions']}
                     data={searchedOrders}
                 />
             </Card>
 
-            {/* Modal */}
             <Modal
                 isOpen={showModal}
                 onClose={closeModal}
@@ -120,9 +145,12 @@ const OrderHistory = () => {
                             <p><strong>Customer Name:</strong> {selectedOrder.name}</p>
                             <p><strong>Phone Number:</strong> {selectedOrder.phone}</p>
                             <p><strong>Status:</strong> <Badge variant={selectedOrder.status}>{selectedOrder.status}</Badge></p>
+                            <p><strong>Order Type:</strong> {selectedOrder.orderType === 'manual'
+                                ? <Badge variant="info">Manual</Badge>
+                                : <Badge variant="success">App</Badge>}
+                            </p>
                         </div>
 
-                        {/* Items Table */}
                         <table className="w-full border border-gray-300 text-sm mt-4">
                             <thead className="bg-gray-100">
                                 <tr>

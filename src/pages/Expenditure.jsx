@@ -6,6 +6,9 @@ import Table from '../components/ui/Table';
 const Expenditure = () => {
     const [activeTab, setActiveTab] = useState('tracker');
     const [searchQuery, setSearchQuery] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
     const allExpense = [
         { category: 'Food', description: 'Lunch at restaurant', amount: '₹500', date: '2025-06-01', paymentMethod: 'Cash' },
@@ -20,7 +23,12 @@ const Expenditure = () => {
         { category: 'Food', description: 'Dinner delivery', amount: '₹700', date: '2025-06-06', paymentMethod: 'Cash' }
     ];
 
-    const filteredExpense = allExpense.filter(expense =>
+    const filterByRange = (data) => {
+        if (!startDate || !endDate) return data;
+        return data.filter(item => item.date >= startDate && item.date <= endDate);
+    };
+
+    const filteredExpense = filterByRange(allExpense).filter(expense =>
         expense.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         expense.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         expense.paymentMethod.toLowerCase().includes(searchQuery.toLowerCase())
@@ -33,6 +41,16 @@ const Expenditure = () => {
         expense.date,
         expense.paymentMethod
     ]));
+
+    const totalAmount = (filterByRange(allExpense)).reduce((acc, curr) => {
+        const value = parseInt(curr.amount.replace('₹', ''));
+        return acc + value;
+    }, 0);
+
+    const formatDate = (dateStr) => {
+        const options = { month: 'short', day: 'numeric' };
+        return new Date(dateStr).toLocaleDateString('en-US', options);
+    };
 
     const [formData, setFormData] = useState({
         date: '',
@@ -71,7 +89,8 @@ const Expenditure = () => {
                 Expenditure Management
             </h1>
 
-            <div className='flex justify-between items-center'>
+            {/* Top Controls */}
+            <div className='flex justify-between items-center flex-wrap gap-4'>
                 <div className='flex space-x-4'>
                     <Button
                         variant={activeTab === 'tracker' ? 'black' : 'secondary'}
@@ -79,30 +98,78 @@ const Expenditure = () => {
                     >
                         Expense Tracker
                     </Button>
-
                     <Button
                         variant={activeTab === 'add' ? 'black' : 'secondary'}
                         onClick={() => setActiveTab('add')}
                     >
-                        Add expense
+                        Add Expense
                     </Button>
                 </div>
+
+                {/* Date Range Filter - Only in Tracker View */}
+                {activeTab === 'tracker' && (
+                    <div className="flex items-center space-x-2 ml-auto">
+                        {showDatePicker ? (
+                            <div className="flex items-center space-x-2 bg-gray-100 px-3 py-2 rounded border border-gray-300">
+                                <input
+                                    type="date"
+                                    value={startDate}
+                                    max={endDate || undefined}
+                                    onChange={(e) => setStartDate(e.target.value)}
+                                    className="text-sm border-none bg-transparent focus:outline-none"
+                                />
+                                <span className="text-gray-500">to</span>
+                                <input
+                                    type="date"
+                                    value={endDate}
+                                    min={startDate || undefined}
+                                    onChange={(e) => setEndDate(e.target.value)}
+                                    className="text-sm border-none bg-transparent focus:outline-none"
+                                />
+                                <button
+                                    onClick={() => {
+                                        setStartDate('');
+                                        setEndDate('');
+                                        setShowDatePicker(false);
+                                    }}
+                                    className="text-gray-400 hover:text-red-500 text-sm"
+                                    title="Clear"
+                                >
+                                    ❌
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                onClick={() => setShowDatePicker(true)}
+                                className="flex items-center space-x-1 border border-gray-400 px-3 py-2 rounded hover:bg-gray-100"
+                                title="Filter by Date Range"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-700" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 8h12v8H4V8z" />
+                                </svg>
+                                <span className="text-sm text-gray-700">Select Date Range</span>
+                            </button>
+                        )}
+                    </div>
+                )}
             </div>
 
+            {/* Tracker View */}
             {activeTab === 'tracker' && (
                 <div className='space-y-6'>
+                    {/* Summary Cards */}
                     <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6'>
                         <Card Black className='text-center'>
                             <p className="text-gray-600">Total revenue</p>
-                            <h2 className="text-2xl font-bold text-blue-600">450000</h2>
+                            <h2 className="text-2xl font-bold text-blue-600">₹450000</h2>
                         </Card>
                         <Card Black className='text-center'>
                             <p className="text-gray-600">Total expenses</p>
-                            <h2 className="text-2xl font-bold text-blue-600">12000</h2>
+                            <h2 className="text-2xl font-bold text-blue-600">₹{totalAmount}</h2>
                         </Card>
                         <Card Black className='text-center'>
                             <p className="text-gray-600">Net profit</p>
-                            <h2 className="text-2xl font-bold text-blue-600">438000</h2>
+                            <h2 className="text-2xl font-bold text-blue-600">₹{450000 - totalAmount}</h2>
                         </Card>
                         <Card Black className='text-center'>
                             <p className="text-gray-600">Total orders</p>
@@ -110,6 +177,7 @@ const Expenditure = () => {
                         </Card>
                     </div>
 
+                    {/* Table */}
                     <div className="space-y-4">
                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                             <h2 className="text-lg font-semibold text-gray-800">Expense Tracker</h2>
@@ -128,15 +196,13 @@ const Expenditure = () => {
                             />
                         </Card>
                     </div>
-
-
                 </div>
             )}
 
+            {/* Add Expense View */}
             {activeTab === 'add' && (
                 <Card title="Add New Expense">
                     <form className="space-y-4" onSubmit={handleSubmit}>
-                        {/* Row 1: Date and Expenditure Type */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Date</label>
@@ -165,7 +231,6 @@ const Expenditure = () => {
                             </div>
                         </div>
 
-                        {/* Row 2: Description */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-3">Expense Description</label>
                             <textarea
@@ -178,7 +243,6 @@ const Expenditure = () => {
                             />
                         </div>
 
-                        {/* Row 3: Amount, Payment Method, Paid To */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Amount</label>
@@ -218,7 +282,6 @@ const Expenditure = () => {
                             </div>
                         </div>
 
-                        {/* Row 4: Buttons (Right-aligned) */}
                         <div className="flex justify-end space-x-2 pt-2">
                             <Button type="button" variant="danger" onClick={handleReset}>Reset</Button>
                             <Button type="submit" variant="success">Add Expense</Button>
@@ -226,10 +289,8 @@ const Expenditure = () => {
                     </form>
                 </Card>
             )}
-
-
         </div>
     )
-}
+};
 
 export default Expenditure;
