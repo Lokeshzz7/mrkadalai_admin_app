@@ -26,6 +26,7 @@ import Ticket from './pages/Ticket.jsx';
 import AppManagement from './pages/AppManagement.jsx';
 import StaffDetails from './pages/StaffDetails.jsx';
 import ProductManagement from './pages/ProductManagement.jsx';
+import AddStaff from './pages/staff/AddStaff.jsx';
 
 function App() {
   return (
@@ -67,6 +68,13 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/staff/add" element={
+            <ProtectedRoute>
+                <Layout>
+                  <AddStaff/>
+                </Layout>
+              </ProtectedRoute>
+          } />
           <Route
             path="/staff/:id"
             element={

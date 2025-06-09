@@ -20,7 +20,7 @@ const AdminDashboard = () => {
 
     const handleCollege = (college) => {
         localStorage.setItem('collegeName', college.name);
-        navigate('/home');
+        navigate('/order-history');
     };
 
     return (
