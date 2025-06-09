@@ -110,24 +110,26 @@ const Expenditure = () => {
                         </Card>
                     </div>
 
-                    <div className="flex justify-end">
-                        <input
-                            type='text'
-                            placeholder='Search by category, description, or payment method'
-                            className='border px-3 py-2 rounded w-full max-w-md'
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                    </div>
-
-                    <div>
-                        <Card Black title='Expense Tracker'>
+                    <div className="space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+                            <h2 className="text-lg font-semibold text-gray-800">Expense Tracker</h2>
+                            <input
+                                type="text"
+                                placeholder="Search by category, description, or payment method"
+                                className="border border-black px-3 py-2 rounded w-full sm:w-80 mt-2 sm:mt-0"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <Card Black>
                             <Table
                                 headers={['Category', 'Description', 'Amount', 'Date', 'Payment Method']}
                                 data={expensehistory}
                             />
                         </Card>
                     </div>
+
+
                 </div>
             )}
 
@@ -137,7 +139,7 @@ const Expenditure = () => {
                         {/* Row 1: Date and Expenditure Type */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Date</label>
                                 <input
                                     type="date"
                                     name="date"
@@ -147,7 +149,7 @@ const Expenditure = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Expenditure Type</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Expenditure Type</label>
                                 <select
                                     name="type"
                                     value={formData.type}
@@ -165,7 +167,7 @@ const Expenditure = () => {
 
                         {/* Row 2: Description */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Expense Description</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-3">Expense Description</label>
                             <textarea
                                 name="description"
                                 value={formData.description}
@@ -179,7 +181,7 @@ const Expenditure = () => {
                         {/* Row 3: Amount, Payment Method, Paid To */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Amount</label>
                                 <input
                                     type="number"
                                     name="amount"
@@ -189,7 +191,7 @@ const Expenditure = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
                                 <select
                                     name="paymentMethod"
                                     value={formData.paymentMethod}
@@ -204,7 +206,7 @@ const Expenditure = () => {
                                 </select>
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">Paid To</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Paid To</label>
                                 <input
                                     type="text"
                                     name="paidTo"
