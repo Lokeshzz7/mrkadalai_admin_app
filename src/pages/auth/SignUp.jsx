@@ -162,8 +162,8 @@ const SignUp = () => {
                                     }`}
                             >
                                 <option value="">-- Select Role --</option>
-                                <option value="staff">Staff</option>
-                                <option value="admin">Admin</option>
+                                <option value="STAFF">Staff</option>
+                                <option value="ADMIN">Admin</option>
                             </select>
                             {formErrors.role && (
                                 <p className="text-sm text-red-500 mt-1">{formErrors.role}</p>
