@@ -10,6 +10,7 @@ const SignUp = () => {
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phone:'',
         role: '',
         password: '',
         confirmPassword: '',
@@ -67,6 +68,13 @@ const SignUp = () => {
         } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
             errors.email = 'Email is invalid';
         }
+
+        if (!formData.phone) {
+            errors.phone = 'Phone number is required';
+        } else if (!/^\+?[0-9]{7,15}$/.test(formData.phone)) {
+            errors.phone = 'Phone number is invalid';
+        }
+
 
         if (!formData.role) {
             errors.role = 'Role is required';
@@ -149,6 +157,18 @@ const SignUp = () => {
                             onChange={handleChange}
                             error={formErrors.email}
                             placeholder="Enter your email"
+                        />
+
+                        <Input
+                            label="Phone Number"
+                            name="phone"
+                            type="tel"
+                            autoComplete="tel"
+                            required
+                            value={formData.phone}
+                            onChange={handleChange}
+                            error={formErrors.phone}
+                            placeholder="Enter your phone number"
                         />
 
                         {/* Role Select Dropdown */}

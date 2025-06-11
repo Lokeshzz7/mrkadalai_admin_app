@@ -39,7 +39,7 @@ const Dashboard = () => {
         <Badge variant={order.status}>{order.status.charAt(0).toUpperCase() + order.status.slice(1)}</Badge>
     ]))
 
-    const collegeName = localStorage.getItem('collegeName');
+    const collegeName = localStorage.getItem('outletName');
 
     return (
         <div className="space-y-6">

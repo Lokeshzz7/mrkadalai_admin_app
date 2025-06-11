@@ -1,7 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
+import { apiRequest } from '../utils/api'; // Adjust the path based on your file structure
 
 const Expenditure = () => {
     const [activeTab, setActiveTab] = useState('tracker');
@@ -9,42 +10,80 @@ const Expenditure = () => {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [allExpense, setAllExpense] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const allExpense = [
-        { category: 'Food', description: 'Lunch at restaurant', amount: '₹500', date: '2025-06-01', paymentMethod: 'Cash' },
-        { category: 'Transport', description: 'Uber ride to office', amount: '₹250', date: '2025-06-01', paymentMethod: 'UPI' },
-        { category: 'Utilities', description: 'Electricity bill', amount: '₹1200', date: '2025-06-02', paymentMethod: 'Credit Card' },
-        { category: 'Shopping', description: 'T-shirt purchase', amount: '₹800', date: '2025-06-03', paymentMethod: 'Debit Card' },
-        { category: 'Food', description: 'Groceries', amount: '₹1500', date: '2025-06-04', paymentMethod: 'UPI' },
-        { category: 'Entertainment', description: 'Movie night', amount: '₹300', date: '2025-06-04', paymentMethod: 'Cash' },
-        { category: 'Transport', description: 'Bus pass renewal', amount: '₹600', date: '2025-06-05', paymentMethod: 'UPI' },
-        { category: 'Health', description: 'Medical checkup', amount: '₹2000', date: '2025-06-05', paymentMethod: 'Credit Card' },
-        { category: 'Utilities', description: 'Internet bill', amount: '₹999', date: '2025-06-06', paymentMethod: 'UPI' },
-        { category: 'Food', description: 'Dinner delivery', amount: '₹700', date: '2025-06-06', paymentMethod: 'Cash' }
-    ];
+    // Get outletId from your auth context or props - replace this with your actual implementation
+    const outletId = 1; // You'll need to get this from your authentication context
+
+    useEffect(() => {
+        fetchExpenses();
+    }, []);
+
+    const fetchExpenses = async () => {
+        setLoading(true);
+        try {
+            const data = await apiRequest(`/admin/outlets/get-expenses/${outletId}/`);
+            setAllExpense(data.expenses || []);
+        } catch (error) {
+            console.error('Error fetching expenses:', error);
+        }
+        setLoading(false);
+    };
+
+    const fetchExpensesByDateRange = async () => {
+        if (!startDate || !endDate) return;
+        
+        setLoading(true);
+        try {
+            const data = await apiRequest('/admin/outlets/get-expenses-bydate/', {
+                method: 'GET',
+                body: {
+                    outletId: outletId,
+                    from: startDate,
+                    to: endDate
+                }
+            });
+            setAllExpense(data.expenses || []);
+        } catch (error) {
+            console.error('Error fetching expenses by date range:', error);
+        }
+        setLoading(false);
+    };
+
+    // Fetch expenses when date range changes
+    useEffect(() => {
+        if (startDate && endDate) {
+            fetchExpensesByDateRange();
+        } else {
+            fetchExpenses();
+        }
+    }, [startDate, endDate]);
 
     const filterByRange = (data) => {
         if (!startDate || !endDate) return data;
-        return data.filter(item => item.date >= startDate && item.date <= endDate);
+        return data.filter(item => {
+            const itemDate = new Date(item.expenseDate).toISOString().split('T')[0];
+            return itemDate >= startDate && itemDate <= endDate;
+        });
     };
 
     const filteredExpense = filterByRange(allExpense).filter(expense =>
         expense.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
         expense.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        expense.paymentMethod.toLowerCase().includes(searchQuery.toLowerCase())
+        expense.method.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     const expensehistory = filteredExpense.map(expense => ([
         expense.category,
         expense.description,
-        expense.amount,
-        expense.date,
-        expense.paymentMethod
+        `₹${expense.amount}`,
+        new Date(expense.expenseDate).toLocaleDateString(),
+        expense.method
     ]));
 
     const totalAmount = (filterByRange(allExpense)).reduce((acc, curr) => {
-        const value = parseInt(curr.amount.replace('₹', ''));
-        return acc + value;
+        return acc + curr.amount;
     }, 0);
 
     const formatDate = (dateStr) => {
@@ -53,11 +92,11 @@ const Expenditure = () => {
     };
 
     const [formData, setFormData] = useState({
-        date: '',
-        type: '',
+        expenseDate: '',
+        category: '',
         description: '',
         amount: '',
-        paymentMethod: '',
+        method: '',
         paidTo: ''
     });
 
@@ -66,19 +105,41 @@ const Expenditure = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        alert("Expense Added");
-        console.log(formData);
+        setLoading(true);
+        
+        try {
+            const data = await apiRequest('/admin/outlets/add-expenses/', {
+                method: 'POST',
+                body: {
+                    outletId: outletId,
+                    description: formData.description,
+                    category: formData.category,
+                    amount: parseFloat(formData.amount),
+                    method: formData.method,
+                    paidTo: formData.paidTo,
+                    expenseDate: formData.expenseDate
+                }
+            });
+
+            alert("Expense Added Successfully");
+            handleReset();
+            fetchExpenses(); // Refresh the expense list
+        } catch (error) {
+            console.error('Error adding expense:', error);
+            alert(`Error: ${error.message}`);
+        }
+        setLoading(false);
     };
 
     const handleReset = () => {
         setFormData({
-            date: '',
-            type: '',
+            expenseDate: '',
+            category: '',
             description: '',
             amount: '',
-            paymentMethod: '',
+            method: '',
             paidTo: ''
         });
     };
@@ -190,10 +251,14 @@ const Expenditure = () => {
                             />
                         </div>
                         <Card Black>
-                            <Table
-                                headers={['Category', 'Description', 'Amount', 'Date', 'Payment Method']}
-                                data={expensehistory}
-                            />
+                            {loading ? (
+                                <div className="text-center py-4">Loading...</div>
+                            ) : (
+                                <Table
+                                    headers={['Category', 'Description', 'Amount', 'Date', 'Payment Method']}
+                                    data={expensehistory}
+                                />
+                            )}
                         </Card>
                     </div>
                 </div>
@@ -208,22 +273,29 @@ const Expenditure = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Date</label>
                                 <input
                                     type="date"
-                                    name="date"
-                                    value={formData.date}
+                                    name="expenseDate"
+                                    value={formData.expenseDate}
                                     onChange={handleChange}
                                     className="w-full border rounded px-3 py-2"
+                                    required
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-3">Expenditure Type</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-3">Category</label>
                                 <select
-                                    name="type"
-                                    value={formData.type}
+                                    name="category"
+                                    value={formData.category}
                                     onChange={handleChange}
                                     className="w-full border rounded px-3 py-2"
+                                    required
                                 >
-                                    <option value="">Select Type</option>
+                                    <option value="">Select Category</option>
+                                    <option value="Food">Food</option>
+                                    <option value="Transport">Transport</option>
                                     <option value="Utilities">Utilities</option>
+                                    <option value="Shopping">Shopping</option>
+                                    <option value="Entertainment">Entertainment</option>
+                                    <option value="Health">Health</option>
                                     <option value="Maintenance">Maintenance</option>
                                     <option value="Staff Salary">Staff Salary</option>
                                     <option value="Miscellaneous">Miscellaneous</option>
@@ -240,6 +312,7 @@ const Expenditure = () => {
                                 className="w-full border rounded px-3 py-2"
                                 rows="2"
                                 placeholder="Enter description"
+                                required
                             />
                         </div>
 
@@ -252,21 +325,25 @@ const Expenditure = () => {
                                     value={formData.amount}
                                     onChange={handleChange}
                                     className="w-full border rounded px-3 py-2"
+                                    min="0"
+                                    step="0.01"
+                                    required
                                 />
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-3">Payment Method</label>
                                 <select
-                                    name="paymentMethod"
-                                    value={formData.paymentMethod}
+                                    name="method"
+                                    value={formData.method}
                                     onChange={handleChange}
                                     className="w-full border rounded px-3 py-2"
+                                    required
                                 >
                                     <option value="">Select Method</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Card">Card</option>
+                                    <option value="CASH">Cash</option>
+                                    <option value="CARD">Card</option>
                                     <option value="UPI">UPI</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
+                                    <option value="WALLET">Wallet</option>
                                 </select>
                             </div>
                             <div>
@@ -278,13 +355,16 @@ const Expenditure = () => {
                                     onChange={handleChange}
                                     className="w-full border rounded px-3 py-2"
                                     placeholder="Enter recipient"
+                                    required
                                 />
                             </div>
                         </div>
 
                         <div className="flex justify-end space-x-2 pt-2">
                             <Button type="button" variant="danger" onClick={handleReset}>Reset</Button>
-                            <Button type="submit" variant="success">Add Expense</Button>
+                            <Button type="submit" variant="success" disabled={loading}>
+                                {loading ? 'Adding...' : 'Add Expense'}
+                            </Button>
                         </div>
                     </form>
                 </Card>
