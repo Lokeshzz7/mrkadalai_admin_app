@@ -2,39 +2,34 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
+import { apiRequest } from '../../utils/api';
 
 const PERMISSIONS_LIST = [
-  { key: 'billing', label: 'Billing' },
-  { key: 'ProductsInsight', label: 'Product Insight' },
-  { key: 'Inventory', label: 'Inventory' },
-  { key: 'Reports', label: 'Reports' },
+  { key: 'BILLING', label: 'BILLING' },
+  { key: 'PRODUCT_INSIGHTS', label: 'PRODUCT' },
+  { key: 'REPORTS', label: 'REPORTS' },
+  { key: 'INVENTORY', label: 'INVENTORY' },
 ];
 
 const AddStaff = () => {
   const navigate = useNavigate();
   const [editPermissions, setEditPermissions] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    fullName: '',
+    name: '',
     email: '',
     phone: '',
-    role: '',
-    username: '',
+    staffRole: '',
     password: '',
     confirmPassword: '',
     permissions: [],
-    image: null,
   });
+
+  const outletId = localStorage.getItem('outletId') || 1;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setFormData(prev => ({ ...prev, image: URL.createObjectURL(file) }));
-    }
   };
 
   const togglePermission = (key) => {
@@ -47,9 +42,85 @@ const AddStaff = () => {
     });
   };
 
-  const handleCreateAccount = () => {
-    console.log('Creating account with data:', formData);
-    // Add your submission logic here
+  const validateForm = () => {
+    const { name, email, phone, staffRole, password, confirmPassword } = formData;
+    
+    if (!name.trim()) {
+      alert('Please enter full name');
+      return false;
+    }
+    
+    if (!email.trim()) {
+      alert('Please enter email address');
+      return false;
+    }
+    
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Please enter a valid email address');
+      return false;
+    }
+    
+    if (!phone.trim()) {
+      alert('Please enter phone number');
+      return false;
+    }
+    
+    if (!staffRole.trim()) {
+      alert('Please enter staff role');
+      return false;
+    }
+    
+    if (!password.trim()) {
+      alert('Please enter password');
+      return false;
+    }
+    
+    if (password.length < 6) {
+      alert('Password must be at least 6 characters long');
+      return false;
+    }
+    
+    if (password !== confirmPassword) {
+      alert('Passwords do not match');
+      return false;
+    }
+    
+    return true;
+  };
+
+  const handleCreateAccount = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Prepare data for API
+      const staffData = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        outletId: parseInt(outletId),
+        staffRole: formData.staffRole,
+        permissions: formData.permissions
+      };
+
+      const response = await apiRequest('/admin/outlets/add-staff/', {
+        method: 'POST',
+        body: staffData
+      });
+
+      alert('Staff account created successfully!');
+      navigate('/staff');
+      
+    } catch (error) {
+      console.error('Error creating staff account:', error);
+      alert(error.message || 'Failed to create staff account');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,33 +139,18 @@ const AddStaff = () => {
       </div>
 
       <Card className="max-w-5xl mx-auto space-y-6 p-6">
-        {/* Image Upload & Full Name */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Upload Image</label>
-            <div className="flex items-center space-x-4">
-              {formData.image && (
-                <img src={formData.image} alt="Staff" className="w-12 h-12 rounded-full object-cover" />
-              )}
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageChange}
-                className="w-full p-2 border rounded text-sm text-gray-600 bg-gray-100 mb-2"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Full Name</label>
-            <input
-              type="text"
-              name="fullName"
-              placeholder="Enter full name"
-              value={formData.fullName}
-              onChange={handleChange}
-              className="w-full p-2 border rounded bg-gray-100 mb-2"
-            />
-          </div>
+        {/* Full Name - Now taking full width */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">Full Name</label>
+          <input
+            type="text"
+            name="name"
+            placeholder="Enter full name"
+            value={formData.name}
+            onChange={handleChange}
+            className="w-full p-2 border rounded bg-gray-100 mb-2"
+            required
+          />
         </div>
 
         {/* Email & Phone */}
@@ -108,6 +164,7 @@ const AddStaff = () => {
               value={formData.email}
               onChange={handleChange}
               className="w-full p-2 border rounded bg-gray-100 mb-2"
+              required
             />
           </div>
           <div>
@@ -119,34 +176,23 @@ const AddStaff = () => {
               value={formData.phone}
               onChange={handleChange}
               className="w-full p-2 border rounded bg-gray-100 mb-2"
+              required
             />
           </div>
         </div>
 
-        {/* Role & Username */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Role</label>
-            <input
-              type="text"
-              name="role"
-              placeholder="Enter role (e.g. Manager)"
-              value={formData.role}
-              onChange={handleChange}
-              className="w-full p-2 border rounded bg-gray-100 mb-2"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-3">Username</label>
-            <input
-              type="text"
-              name="username"
-              placeholder="Choose a username"
-              value={formData.username}
-              onChange={handleChange}
-              className="w-full p-2 border rounded bg-gray-100 mb-2"
-            />
-          </div>
+        {/* Staff Role */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-3">Staff Role</label>
+          <input
+            type="text"
+            name="staffRole"
+            placeholder="Enter role (e.g. Manager, Cashier, Sales Associate)"
+            value={formData.staffRole}
+            onChange={handleChange}
+            className="w-full p-2 border rounded bg-gray-100 mb-2"
+            required
+          />
         </div>
 
         {/* Password & Confirm Password */}
@@ -156,10 +202,11 @@ const AddStaff = () => {
             <input
               type="password"
               name="password"
-              placeholder="Enter password"
+              placeholder="Enter password (min 6 characters)"
               value={formData.password}
               onChange={handleChange}
               className="w-full p-2 border rounded bg-gray-100 mb-2"
+              required
             />
           </div>
           <div>
@@ -171,6 +218,7 @@ const AddStaff = () => {
               value={formData.confirmPassword}
               onChange={handleChange}
               className="w-full p-2 border rounded bg-gray-100 mb-2"
+              required
             />
           </div>
         </div>
@@ -183,7 +231,7 @@ const AddStaff = () => {
             <div className="flex items-center gap-3">
               <input
                 type="text"
-                value="Default Permissions"
+                value={formData.permissions.length > 0 ? `${formData.permissions.length} permission(s) selected` : "Default Permissions"}
                 disabled
                 className="w-60 p-2 border rounded bg-gray-100 text-gray-600 cursor-not-allowed"
               />
@@ -203,9 +251,9 @@ const AddStaff = () => {
                       onChange={() => togglePermission(key)}
                       className="sr-only peer"
                     />
-                              <div
-    className="w-10 h-5 rounded-full transition-colors duration-200 bg-black peer-checked:bg-theme"
-  ></div>
+                    <div
+                      className="w-10 h-5 rounded-full transition-colors duration-200 bg-black peer-checked:bg-theme"
+                    ></div>
                     <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white border border-gray-300 rounded-full shadow transform peer-checked:translate-x-full transition duration-200 ease-in-out" />
                   </label>
                 </div>
@@ -217,10 +265,31 @@ const AddStaff = () => {
           )}
         </div>
 
+        {/* Selected Permissions Display */}
+        {formData.permissions.length > 0 && (
+          <div className="bg-blue-50 p-3 rounded-lg mt-4">
+            <p className="text-sm font-medium text-blue-800 mb-2">Selected Permissions:</p>
+            <div className="flex flex-wrap gap-2">
+              {formData.permissions.map(permission => {
+                const permissionLabel = PERMISSIONS_LIST.find(p => p.key === permission)?.label;
+                return (
+                  <span key={permission} className="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">
+                    {permissionLabel}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* Create Button */}
         <div className="flex justify-end pt-4">
-          <Button variant="black" onClick={handleCreateAccount}>
-            Create Account
+          <Button 
+            variant="black" 
+            onClick={handleCreateAccount}
+            disabled={loading}
+          >
+            {loading ? 'Creating Account...' : 'Create Account'}
           </Button>
         </div>
       </Card>
