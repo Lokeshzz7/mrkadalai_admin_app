@@ -75,7 +75,8 @@ const AdminDashboard = () => {
     };
 
     const handleCollege = (college) => {
-        localStorage.setItem('collegeName', college.name);
+        localStorage.setItem('outletName', college.name);
+        localStorage.setItem('outletId', college.id); 
         navigate('/order-history');
     };
 
