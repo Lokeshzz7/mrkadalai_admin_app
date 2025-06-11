@@ -13,8 +13,7 @@ const Expenditure = () => {
     const [allExpense, setAllExpense] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // Get outletId from your auth context or props - replace this with your actual implementation
-    const outletId = 1; // You'll need to get this from your authentication context
+    const outletId = localStorage.getItem('outletId');
 
     useEffect(() => {
         fetchExpenses();
@@ -78,7 +77,7 @@ const Expenditure = () => {
         expense.category,
         expense.description,
         `₹${expense.amount}`,
-        new Date(expense.expenseDate).toLocaleDateString(),
+        new Date(expense.expenseDate).toLocaleDateString('en-GB'),
         expense.method
     ]));
 
