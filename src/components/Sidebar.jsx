@@ -20,7 +20,8 @@ import { AuthContext } from '../context/AuthContext'
 const Sidebar = ({ onClose }) => {
     const { user, signOut } = useContext(AuthContext)
     const navigation = [
-        { name: 'Dashboard', href: '/home', icon: LayoutDashboard },
+        {name:'Home',href:'/',icon: LayoutDashboard},
+        // { name: 'Dashboard', href: '/home', icon: LayoutDashboard },
         { name: 'Order Management', href: '/order-history', icon: Clock },
         { name: 'Staff Management', href: '/staff', icon: Bell },
         { name: 'Inventory Management', href: '/inventory', icon: Package },

@@ -1,13 +1,25 @@
-import React, { useContext } from 'react'
+import React, { useContext,useEffect } from 'react'
+import { useLocation } from 'react-router-dom';
 import { Search, Bell, User, Menu } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
 import logo from '../assets/logo.png'
 
 const Header = ({ onMenuClick }) => {
     const { user, signOut } = useContext(AuthContext)
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.pathname === '/') {
+            localStorage.removeItem('outletName');
+            localStorage.removeItem('outletId');
+        }
+    }, [location.pathname]);
+
 
     // !  Extract email from the (context) instaed of the name as of now 
     const userName = user?.email?.split('@')[0] || 'Guest'
+
+    const outletName = localStorage.getItem('outletName');
 
     return (
         <header className="bg-header shadow-sm border-b border-gray-200 sticky top-0 z-30">
@@ -21,10 +33,17 @@ const Header = ({ onMenuClick }) => {
                     >
                         <Menu className="h-6 w-6" />
                     </button>
-                    <img src={logo} alt="logo" className="h-8 w-auto" />
+                    <div className="flex items-center gap-3">
+                        <img src={logo} alt="logo" className="h-8 w-auto" />
+                        {outletName && (
+                            <span className="text-sm sm:text-base font-semibold text-gray-700">
+                                {outletName}
+                            </span>
+                        )}
+                    </div>
 
                     {/* Left Section  - SearchBar */}
-                    <div className="flex-1 max-w-md mx-4">
+                    {/* <div className="flex-1 max-w-md mx-4">
                         <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                                 <Search className="h-5 w-5 text-gray-400" />
@@ -35,7 +54,7 @@ const Header = ({ onMenuClick }) => {
                                 placeholder="Search orders, customers..."
                             />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* Right Section */}
                     <div className="flex items-center space-x-2 sm:space-x-4">

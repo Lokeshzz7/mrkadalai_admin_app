@@ -234,7 +234,7 @@ const Ticket = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="border rounded p-2 w-64"
           />
-          <Button onClick={fetchTickets}>Refresh</Button>
+          <Button variant='black' onClick={fetchTickets}>Refresh</Button>
         </div>
       </div>
       
