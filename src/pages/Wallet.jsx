@@ -1,107 +1,141 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Table from '../components/ui/Table'
 import Badge from '../components/ui/Badge'
-import Modal from '../components/ui/Modal'
+import { apiRequest } from '../utils/api'
 
 const Wallet = () => {
-    const [showRechargeModal, setShowRechargeModal] = useState(false)
     const [searchText, setSearchText] = useState('')
-    const [activeTab, setActiveTab] = useState('summary');
+    const [activeTab, setActiveTab] = useState('summary')
+    const [loading, setLoading] = useState(false)
+    const [error, setError] = useState(null)
 
-    // Sample Transaction Data (replace with API call later)
-    const transactionData = [
-        {
-            id: '#TXN001',
-            name: 'John Doe',
-            date: '2025-06-01',
-            amount: '₹500',
-            walletBalance: '₹1500',
-            totalRecharged: '₹2000',
-            totalUsed: '₹500',
-            lastRecharge: '2025-06-01',
-            lastOrder: '2025-06-03',
-            paymentMethod: 'UPI',
-            status: 'success',
-            orderId: '#ORD001',
-            orderStatus: 'success'
-        },
-        {
-            id: '#TXN002',
-            name: 'Jane Smith',
-            date: '2025-06-01',
-            amount: '₹300',
-            walletBalance: '₹1000',
-            totalRecharged: '₹1300',
-            totalUsed: '₹300',
-            lastRecharge: '2025-06-01',
-            lastOrder: '2025-06-02',
-            paymentMethod: 'Card',
-            status: 'success',
-            orderId: '#ORD002',
-            orderStatus: 'success'
-        },
-        {
-            id: '#TXN003',
-            name: 'Mike Johnson',
-            date: '2025-06-01',
-            amount: '₹250',
-            walletBalance: '₹750',
-            totalRecharged: '₹1000',
-            totalUsed: '₹250',
-            lastRecharge: '2025-06-01',
-            lastOrder: '2025-06-04',
-            paymentMethod: 'Netbanking',
-            status: 'pending',
-            orderId: '#ORD003',
-            orderStatus: 'pending'
+    const [walletSummaryData, setWalletSummaryData] = useState([])
+    const [rechargeHistoryData, setRechargeHistoryData] = useState([])
+    const [paidOrdersData, setPaidOrdersData] = useState([])
+
+    const outletId = localStorage.getItem('outletId')
+
+    useEffect(() => {
+        if (outletId) {
+            fetchData()
         }
-    ]
+    }, [outletId, activeTab])
 
+    const fetchData = async () => {
+        try {
+            setLoading(true)
+            setError(null)
 
-    // Filtered data based on search input
-    const filteredTransactions = transactionData.filter(txn =>
-        txn.id.toLowerCase().includes(searchText.toLowerCase()) ||
-        txn.name.toLowerCase().includes(searchText.toLowerCase())
-    )
+            if (activeTab === 'summary') {
+                await fetchWalletSummary()
+            } else if (activeTab === 'history') {
+                await fetchRechargeHistory()
+            } else if (activeTab === 'orders') {
+                await fetchPaidOrders()
+            }
+        } catch (err) {
+            setError(err.message || 'Failed to fetch data')
+            console.error('Error fetching data:', err)
+        } finally {
+            setLoading(false)
+        }
+    }
 
-    const transactionSummaryMap = filteredTransactions.map(txn => [
-        txn.id,
-        txn.name,
-        txn.walletBalance,
-        txn.totalRecharged,
-        txn.totalUsed,
-        txn.lastRecharge,
-        txn.lastOrder
+    const fetchWalletSummary = async () => {
+        const response = await apiRequest(`/admin/outlets/wallet-history/${outletId}/`)
+        setWalletSummaryData(response.data || [])
+    }
+
+    const fetchRechargeHistory = async () => {
+        const response = await apiRequest(`/admin/outlets/recharge-history/${outletId}/`)
+        setRechargeHistoryData(response.data || [])
+    }
+
+    const fetchPaidOrders = async () => {
+        const response = await apiRequest('/admin/outlets/paid-wallet/')
+        setPaidOrdersData(response.data || [])
+    }
+
+    const formatCurrency = (amount) => {
+        return `₹${amount || 0}`
+    }
+
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A'
+        return new Date(dateString).toLocaleDateString('en-GB');
+    }
+
+    const getFilteredData = (data, searchFields) => {
+        if (!searchText) return data
+        
+        return data.filter(item => 
+            searchFields.some(field => 
+                item[field]?.toString().toLowerCase().includes(searchText.toLowerCase())
+            )
+        )
+    }
+
+    // Wallet Summary Data Mapping
+    const filteredWalletSummary = getFilteredData(walletSummaryData, ['walletId', 'name'])
+    const walletSummaryMap = filteredWalletSummary.map(wallet => [
+        `#WLT${wallet.walletId?.toString().padStart(3, '0') || 'N/A'}`,
+        wallet.name,
+        formatCurrency(wallet.balance),
+        formatCurrency(wallet.totalRecharged),
+        formatCurrency(wallet.totalUsed),
+        formatDate(wallet.lastRecharged),
+        formatDate(wallet.lastOrder)
     ])
 
-    const rechargeHistoryMap = filteredTransactions.map(txn => [
-        txn.id,
-        txn.name,
-        txn.amount,
-        txn.date,
-        txn.paymentMethod,
-        // txn.status,
+    // Recharge History Data Mapping
+    const filteredRechargeHistory = getFilteredData(rechargeHistoryData, ['rechargeId', 'customerName'])
+    const rechargeHistoryMap = filteredRechargeHistory.map(recharge => [
+        `#RCH${recharge.rechargeId?.toString().padStart(3, '0')}`,
+        recharge.customerName,
+        formatCurrency(recharge.amount),
+        formatDate(recharge.date),
+        recharge.method || 'N/A',
         <Badge
-            variant={txn.status}
+            variant={recharge.status?.toLowerCase() === 'completed' ? 'success' : 
+                    recharge.status?.toLowerCase() === 'pending' ? 'pending' : 'secondary'}
+            key={recharge.rechargeId}
         >
-            {txn.status}
+            {recharge.status || 'Unknown'}
         </Badge>
     ])
 
-    const paidOrdersMap = filteredTransactions.map(txn => [
-        txn.orderId,
-        txn.name,
-        txn.amount,
-        txn.date,
+    // Paid Orders Data Mapping
+    const filteredPaidOrders = getFilteredData(paidOrdersData, ['orderId', 'customerName'])
+    const paidOrdersMap = filteredPaidOrders.map(order => [
+        `#ORD${order.orderId?.toString().padStart(3, '0')}`,
+        order.customerName,
+        formatCurrency(order.orderTotal),
+        formatDate(order.orderDate),
         <Badge
-            variant={txn.orderStatus}
+            variant="success"
+            key={order.orderId}
         >
-            {txn.orderStatus === 'success' ? 'Delivered' : 'processing'}
+            Wallet Paid
         </Badge>
-
     ])
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab)
+        setSearchText('')
+    }
+
+    if (loading) {
+        return (
+            <div className="space-y-6">
+                <h1 className="text-4xl font-bold">Wallet Recharge</h1>
+                <div className="flex justify-center items-center h-64">
+                    <p className="text-gray-500">Loading wallet data...</p>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-6">
@@ -111,70 +145,94 @@ const Wallet = () => {
                 <div className='flex space-x-4'>
                     <Button
                         variant={activeTab === 'summary' ? 'black' : 'secondary'}
-                        onClick={() => setActiveTab('summary')}
+                        onClick={() => handleTabChange('summary')}
                     >
                         Wallet Summary
                     </Button>
                     <Button
                         variant={activeTab === 'history' ? 'black' : 'secondary'}
-                        onClick={() => setActiveTab('history')}
+                        onClick={() => handleTabChange('history')}
                     >
                         Recharge History
                     </Button>
                     <Button
                         variant={activeTab === 'orders' ? 'black' : 'secondary'}
-                        onClick={() => setActiveTab('orders')}
+                        onClick={() => handleTabChange('orders')}
                     >
                         Paid orders
                     </Button>
                 </div>
             </div>
 
-            <div className="flex justify-end items-center">
-                <input
-                    type="text"
-                    placeholder="Search by ID or Name"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    className="border rounded p-2 w-64"
-                />
+            <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-2">
+                    {error && (
+                        <div className="text-red-500 text-sm">
+                            Error: {error}
+                        </div>
+                    )}
+                </div>
+                <div className="flex space-x-2">
+                    <input
+                        type="text"
+                        placeholder={
+                            activeTab === 'summary' ? "Search by Wallet ID or Name" :
+                            activeTab === 'history' ? "Search by Recharge ID or Name" :
+                            "Search by Order ID or Name"
+                        }
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        className="border rounded p-2 w-64"
+                    />
+                    <Button variant='black' onClick={fetchData}>Refresh</Button>
+                </div>
             </div>
 
-            {/* Transactions Table */}
-
+            {/* Wallet Summary Tab */}
             {activeTab === 'summary' && (
-                <Card
-                    title='Wallet Summary'
-                >
-                    <Table
-                        headers={['Wallet ID', 'Customer Name', 'Wallet balance', 'Total Recharged', 'Total used', 'Last Recharge', 'last Order']}
-                        data={transactionSummaryMap}
-                    />
+                <Card title='Wallet Summary'>
+                    {walletSummaryMap.length > 0 ? (
+                        <Table
+                            headers={['Wallet ID', 'Customer Name', 'Wallet Balance', 'Total Recharged', 'Total Used', 'Last Recharge', 'Last Order']}
+                            data={walletSummaryMap}
+                        />
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            No wallet data found
+                        </div>
+                    )}
                 </Card>
             )}
 
+            {/* Recharge History Tab */}
             {activeTab === 'history' && (
-                <Card
-                    title='Wallet History'
-                >
-                    <Table
-                        headers={['Recharge Id ', 'Customer name ', 'Amount', 'Date', 'Payment Method', 'status']}
-                        data={rechargeHistoryMap}
-                    />
-
+                <Card title='Recharge History'>
+                    {rechargeHistoryMap.length > 0 ? (
+                        <Table
+                            headers={['Recharge ID', 'Customer Name', 'Amount', 'Date', 'Payment Method', 'Status']}
+                            data={rechargeHistoryMap}
+                        />
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            No recharge history found
+                        </div>
+                    )}
                 </Card>
             )}
 
+            {/* Paid Orders Tab */}
             {activeTab === 'orders' && (
-                <Card
-                    title='Paid Orders'
-                >
-
-                    <Table
-                        headers={['Order Id', 'Customer name', 'Amount', 'Date', 'Order Status']}
-                        data={paidOrdersMap}
-                    />
-
+                <Card title='Paid Orders'>
+                    {paidOrdersMap.length > 0 ? (
+                        <Table
+                            headers={['Order ID', 'Customer Name', 'Amount', 'Date', 'Payment Status']}
+                            data={paidOrdersMap}
+                        />
+                    ) : (
+                        <div className="text-center py-8 text-gray-500">
+                            No paid orders found
+                        </div>
+                    )}
                 </Card>
             )}
         </div>
