@@ -1,75 +1,61 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import Table from '../components/ui/Table'
 import Badge from '../components/ui/Badge'
 import Modal from '../components/ui/Modal'
+import { apiRequest } from '../utils/api'
 
 const OrderHistory = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const orders = [
-        {
-            orderId: 'ORD001',
-            name: 'John Doe',
-            phone: '9876543210',
-            status: 'delivered',
-            orderType: 'app',
-            orderItems: [
-                { item: 'Burger', quantity: 2, unitPrice: 5.99 },
-                { item: 'Fries', quantity: 1, unitPrice: 1.99 }
-            ],
-            timeStamp: '2025-06-04 14:32'
-        },
-        {
-            orderId: 'ORD002',
-            name: 'Jane Smith',
-            phone: '9123456789',
-            status: 'preparing',
-            orderType: 'manual',
-            orderItems: [
-                { item: 'Pizza', quantity: 1, unitPrice: 8.5 }
-            ],
-            timeStamp: '2025-06-04 15:10'
-        },
-        {
-            orderId: 'ORD003',
-            name: 'Michael Lee',
-            phone: '9988776655',
-            status: 'cancelled',
-            orderType: 'manual',
-            orderItems: [
-                { item: 'Salad', quantity: 1, unitPrice: 4.5 },
-                { item: 'Juice', quantity: 2, unitPrice: 2.85 }
-            ],
-            timeStamp: '2025-06-03 18:45'
-        },
-        {
-            orderId: 'ORD004',
-            name: 'Alice Brown',
-            phone: '9012345678',
-            status: 'delivered',
-            orderType: 'app',
-            orderItems: [
-                { item: 'Pasta', quantity: 1, unitPrice: 9.99 }
-            ],
-            timeStamp: '2025-06-04 13:00'
-        },
-        {
-            orderId: 'ORD005',
-            name: 'David Wilson',
-            phone: '9870012345',
-            status: 'preparing',
-            orderType: 'manual',
-            orderItems: [
-                { item: 'Sushi', quantity: 2, unitPrice: 7.80 }
-            ],
-            timeStamp: '2025-06-04 16:20'
+    const outletId = localStorage.getItem('outletId');
+
+    useEffect(() => {
+        fetchOrders();
+    }, []);
+
+    const fetchOrders = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+            const response = await apiRequest(`/admin/outlets/${outletId}/orders/`);
+            
+            const transformedOrders = response.map(order => ({
+                orderId: `ORD${order.orderId.toString().padStart(3, '0')}`,
+                name: order.customerName,
+                phone: order.customerPhone,
+                status: order.status.toLowerCase(),
+                orderType: order.type ? order.type.toLowerCase() : 'app',
+                orderItems: order.items.map(item => ({
+                    item: item.productName,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice
+                })),
+                timeStamp: new Date(order.orderTime).toLocaleDateString('en-CA') + ' ' + 
+                          new Date(order.orderTime).toLocaleTimeString('en-US', { 
+                              hour12: false, 
+                              hour: '2-digit', 
+                              minute: '2-digit' 
+                          }),
+                totalAmount: order.totalAmount,
+                paymentMethod: order.paymentMethod
+            }));
+            
+            setOrders(transformedOrders);
+        } catch (err) {
+            setError(err.message);
+            console.error('Failed to fetch orders:', err);
+        } finally {
+            setLoading(false);
         }
-    ];
+    };
 
     const filteredOrders = orders.filter(ord =>
         (ord.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -87,11 +73,27 @@ const OrderHistory = () => {
         setShowModal(false);
     };
 
+    // Status mapping for badge variants
+    const getStatusVariant = (status) => {
+        switch(status.toLowerCase()) {
+            case 'delivered':
+            case 'completed':
+                return 'success';
+            case 'preparing':
+            case 'pending':
+                return 'warning';
+            case 'cancelled':
+                return 'danger';
+            default:
+                return 'info';
+        }
+    };
+
     const searchedOrders = filteredOrders.map(ord => [
         ord.orderId,
         ord.name,
         ord.orderItems.map(i => i.item).join(', '),
-        <Badge variant={ord.status}>{ord.status}</Badge>,
+        <Badge variant={getStatusVariant(ord.status)}>{ord.status}</Badge>,
         `$${ord.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}`,
         ord.orderType === 'manual'
             ? <Badge variant="info">Manual</Badge>
@@ -99,6 +101,33 @@ const OrderHistory = () => {
         ord.timeStamp,
         <Button onClick={() => openModal(ord)}>View</Button>
     ]);
+
+    if (loading) {
+        return (
+            <div className="space-y-6">
+                <h1 className="text-4xl font-bold">Order Management</h1>
+                <Card title='Order Management'>
+                    <div className="p-8 text-center">
+                        <p>Loading orders...</p>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="space-y-6">
+                <h1 className="text-4xl font-bold">Order Management</h1>
+                <Card title='Order Management'>
+                    <div className="p-8 text-center text-red-600">
+                        <p>Error loading orders: {error}</p>
+                        <Button onClick={fetchOrders} className="mt-4">Retry</Button>
+                    </div>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-6">
@@ -112,7 +141,9 @@ const OrderHistory = () => {
                 >
                     <option value=''>All</option>
                     <option value='preparing'>Preparing</option>
+                    <option value='pending'>Pending</option>
                     <option value='delivered'>Delivered</option>
+                    <option value='completed'>Completed</option>
                     <option value='cancelled'>Cancelled</option>
                 </select>
                 <input
@@ -122,6 +153,7 @@ const OrderHistory = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className='border rounded p-2'
                 />
+                <Button onClick={fetchOrders}>Refresh</Button>
             </div>
 
             <Card title='Order Management'>
@@ -144,11 +176,14 @@ const OrderHistory = () => {
                         <div>
                             <p><strong>Customer Name:</strong> {selectedOrder.name}</p>
                             <p><strong>Phone Number:</strong> {selectedOrder.phone}</p>
-                            <p><strong>Status:</strong> <Badge variant={selectedOrder.status}>{selectedOrder.status}</Badge></p>
+                            <p><strong>Status:</strong> <Badge variant={getStatusVariant(selectedOrder.status)}>{selectedOrder.status}</Badge></p>
                             <p><strong>Order Type:</strong> {selectedOrder.orderType === 'manual'
                                 ? <Badge variant="info">Manual</Badge>
                                 : <Badge variant="success">App</Badge>}
                             </p>
+                            {selectedOrder.paymentMethod && (
+                                <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod}</p>
+                            )}
                         </div>
 
                         <table className="w-full border border-gray-300 text-sm mt-4">
