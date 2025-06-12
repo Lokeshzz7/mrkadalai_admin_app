@@ -1,72 +1,71 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Table from '../components/ui/Table'
 import Modal from '../components/ui/Modal'
+import { apiRequest } from '../utils/api'
 
 const Customer = () => {
   const [searchQuery, setSearchQuery] = useState('')
   const [showDetailsModal, setShowDetailsModal] = useState(false)
   const [selectedCustomer, setSelectedCustomer] = useState(null)
+  const [customersData, setCustomersData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  const customersData = [
-    {
-      customerId: 'CUST001',
-      walletId: 'WALLET001',
-      name: 'Alice Johnson',
-      year: '2022',
-      phoneNumber: '9876543210',
-      email: 'alice@example.com',
-      walletBalance: '₹12,500',
-      totalOrders: 15,
-      totalPurchase: '₹45,000',
-      lastOrderDate: '2025-06-08',
-    },
-    {
-      customerId: 'CUST002',
-      walletId: 'WALLET002',
-      name: 'Bob Smith',
-      year: '2023',
-      phoneNumber: '9123456780',
-      email: 'bob@example.com',
-      walletBalance: '₹5,750',
-      totalOrders: 7,
-      totalPurchase: '₹22,300',
-      lastOrderDate: '2025-06-05',
-    },
-    {
-      customerId: 'CUST001',
-      walletId: 'WALLET001',
-      name: 'Alice Johnson',
-      year: '2022',
-      phoneNumber: '9876543210',
-      email: 'alice@example.com',
-      walletBalance: '₹12,500',
-      totalOrders: 15,
-      totalPurchase: '₹45,000',
-      lastOrderDate: '2025-06-08',
-    },
-    {
-      customerId: 'CUST002',
-      walletId: 'WALLET002',
-      name: 'Bob Smith',
-      year: '2023',
-      phoneNumber: '9123456780',
-      email: 'bob@example.com',
-      walletBalance: '₹5,750',
-      totalOrders: 7,
-      totalPurchase: '₹22,300',
-      lastOrderDate: '2025-06-05',
-    },
-    
-    // ... other customers
-  ]
+  const outletId = localStorage.getItem('outletId'); 
+
+  useEffect(() => {
+    fetchCustomers()
+  }, [])
+
+  const fetchCustomers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      
+      const response = await apiRequest(`/admin/outlets/customers/${outletId}/`)
+      
+      console.log('API Response:', response)
+
+      const transformedCustomers = response.customers.map(customer => {
+        return {
+          customerId: String(customer.customerId || 'N/A'),
+          walletId: String(customer.walletId || 'N/A'),
+          name: String(customer.name || 'N/A'),
+          year: String(customer.yearOfStudy || 'N/A'),
+          phoneNumber: String(customer.phoneNo || 'N/A'),
+          email: String(customer.email || 'N/A'), 
+          walletBalance: `₹${customer.walletBalance?.toLocaleString() || '0'}`,
+          totalOrders: String(customer.totalOrders || '0'),
+          totalPurchase: `₹${customer.totalPurchaseCost?.toLocaleString() || '0'}`,
+          lastOrderDate: customer.lastOrderDate 
+            ? new Date(customer.lastOrderDate).toLocaleDateString('en-IN')
+            : 'N/A',
+        }
+      })
+      
+      console.log('Transformed customers:', transformedCustomers)
+      setCustomersData(transformedCustomers)
+    } catch (err) {
+      setError(err.message || 'Failed to fetch customers')
+      console.error('Error fetching customers:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filteredCustomers = customersData.filter(
-    (customer) =>
-      customer.customerId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.walletId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.name.toLowerCase().includes(searchQuery.toLowerCase())
+    (customer) => {
+      const customerId = String(customer.customerId || '').toLowerCase()
+      const walletId = String(customer.walletId || '').toLowerCase()
+      const name = String(customer.name || '').toLowerCase()
+      const query = searchQuery.toLowerCase()
+      
+      return customerId.includes(query) || 
+             walletId.includes(query) || 
+             name.includes(query)
+    }
   )
 
   const tableData = filteredCustomers.map((c) => [
@@ -91,6 +90,29 @@ const Customer = () => {
   const handleCloseModal = () => {
     setShowDetailsModal(false)
     setSelectedCustomer(null)
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-4xl font-bold">Customers Management</h1>
+        <div className="flex justify-center items-center py-8">
+          <div className="text-lg">Loading customers...</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-4xl font-bold">Customers Management</h1>
+        <div className="flex flex-col items-center py-8">
+          <div className="text-lg text-red-600 mb-4">Error: {error}</div>
+          <Button onClick={fetchCustomers}>Retry</Button>
+        </div>
+      </div>
+    )
   }
 
   return (
