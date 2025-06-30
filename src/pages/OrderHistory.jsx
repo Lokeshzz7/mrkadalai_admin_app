@@ -26,13 +26,15 @@ const OrderHistory = () => {
             setLoading(true);
             setError(null);
             const response = await apiRequest(`/admin/outlets/${outletId}/orders/`);
+
+            console.log(response);
             
             const transformedOrders = response.map(order => ({
                 orderId: `ORD${order.orderId.toString().padStart(3, '0')}`,
                 name: order.customerName,
                 phone: order.customerPhone,
                 status: order.status.toLowerCase(),
-                orderType: order.type ? order.type.toLowerCase() : 'app',
+                orderType: order.type,
                 orderItems: order.items.map(item => ({
                     item: item.productName,
                     quantity: item.quantity,
@@ -47,7 +49,7 @@ const OrderHistory = () => {
                 totalAmount: order.totalAmount,
                 paymentMethod: order.paymentMethod
             }));
-            
+
             setOrders(transformedOrders);
         } catch (err) {
             setError(err.message);
@@ -95,7 +97,7 @@ const OrderHistory = () => {
         ord.orderItems.map(i => i.item).join(', '),
         <Badge variant={getStatusVariant(ord.status)}>{ord.status}</Badge>,
         `$${ord.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}`,
-        ord.orderType === 'manual'
+        ord.orderType === 'MANUAL'
             ? <Badge variant="info">Manual</Badge>
             : <Badge variant="success">App</Badge>,
         ord.timeStamp,
@@ -177,7 +179,7 @@ const OrderHistory = () => {
                             <p><strong>Customer Name:</strong> {selectedOrder.name}</p>
                             <p><strong>Phone Number:</strong> {selectedOrder.phone}</p>
                             <p><strong>Status:</strong> <Badge variant={getStatusVariant(selectedOrder.status)}>{selectedOrder.status}</Badge></p>
-                            <p><strong>Order Type:</strong> {selectedOrder.orderType === 'manual'
+                            <p><strong>Order Type:</strong> {selectedOrder.orderType === 'MANUAL'
                                 ? <Badge variant="info">Manual</Badge>
                                 : <Badge variant="success">App</Badge>}
                             </p>
