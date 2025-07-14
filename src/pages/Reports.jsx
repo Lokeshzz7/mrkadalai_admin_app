@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import Table from '../components/ui/Table'
@@ -22,6 +22,11 @@ const Reports = () => {
     const [profitLossData, setProfitLossData] = useState([])
     const [customerTrendsData, setCustomerTrendsData] = useState([])
 
+    // Revenue Analytics Data
+    const [revenueByItemsData, setRevenueByItemsData] = useState([])
+    const [revenueByDaysData, setRevenueByDaysData] = useState([])
+    const [revenueSplitData, setRevenueSplitData] = useState(null)
+
     const outletId = localStorage.getItem('outletId')
 
     useEffect(() => {
@@ -38,7 +43,7 @@ const Reports = () => {
             if (activeTab === 'sales') {
                 await fetchSalesReport()
             } else if (activeTab === 'revenue') {
-                await fetchRevenueReport()
+                await fetchRevenueAnalytics()
             } else if (activeTab === 'profit') {
                 await fetchProfitLossReport()
             } else if (activeTab === 'customer') {
@@ -70,31 +75,48 @@ const Reports = () => {
         }
     }
 
-    const fetchRevenueReport = async () => {
+    const fetchRevenueAnalytics = async () => {
         try {
-            setRevenueReportData([
-                {
-                    category: "Food",
-                    period: "Today",
-                    totalRevenue: 45230,
-                    averageOrder: 290,
-                    totalOrders: 156,
-                    growthRate: 12,
-                    lastUpdated: "2024-01-15"
+            // Fetch revenue by items
+            const revenueByItemsResponse = await apiRequest(`/admin/outlets/revenue-report/${outletId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
                 },
-                {
-                    category: "Beverages",
-                    period: "Today",
-                    totalRevenue: 8500,
-                    averageOrder: 85,
-                    totalOrders: 100,
-                    growthRate: 8,
-                    lastUpdated: "2024-01-15"
-                }
-            ])
+                body: JSON.stringify({
+                    from: dateRange.from,
+                    to: dateRange.to
+                })
+            })
+            setRevenueByItemsData(revenueByItemsResponse || [])
+
+            // Fetch revenue split
+            const revenueSplitResponse = await apiRequest(`/admin/outlets/revenue-split/${outletId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: dateRange.from,
+                    to: dateRange.to
+                })
+            })
+            setRevenueSplitData(revenueSplitResponse || null)
+
+            // Fetch wallet recharge by day
+            const walletRechargeResponse = await apiRequest(`/admin/outlets/wallet-recharge-by-day/${outletId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: dateRange.from,
+                    to: dateRange.to
+                })
+            })
+            setRevenueByDaysData(walletRechargeResponse || [])
         } catch (error) {
-            console.error('Error fetching revenue report:', error)
-            setRevenueReportData([])
+            console.error('Error fetching revenue analytics:', error)
         }
     }
 
@@ -163,6 +185,15 @@ const Reports = () => {
         return new Date(dateString).toLocaleDateString('en-GB');
     }
 
+    const formatDateForDisplay = (dateString) => {
+        if (!dateString) return 'N/A'
+        const date = new Date(dateString)
+        return date.toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+        })
+    }
+
     const getFilteredData = (data, searchFields) => {
         if (!searchText) return data
         
@@ -195,21 +226,20 @@ const Reports = () => {
         setDateRange({ from, to })
     }
 
-    // Check if current date range matches quick button
     const isQuickDateRangeActive = (days) => {
         const expectedFrom = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         const expectedTo = new Date().toISOString().split('T')[0]
         return dateRange.from === expectedFrom && dateRange.to === expectedTo
     }
 
-    // Custom tooltip for the chart
+    // Custom tooltip for bar charts
     const CustomTooltip = ({ active, payload, label }) => {
         if (active && payload && payload.length) {
             return (
                 <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
                     <p className="font-semibold">{label}</p>
                     <p className="text-blue-600">
-                        Orders: {payload[0].value}
+                        {payload[0].dataKey === 'totalOrders' ? 'Orders' : 'Revenue'}: {payload[0].dataKey === 'revenue' ? formatCurrency(payload[0].value) : payload[0].value}
                     </p>
                 </div>
             )
@@ -217,28 +247,31 @@ const Reports = () => {
         return null
     }
 
-    // Custom label function for X-axis to handle long product names
-    const CustomXAxisLabel = ({ payload }) => {
-        if (payload && payload.value) {
-            const maxLength = 15
-            return payload.value.length > maxLength 
-                ? `${payload.value.substring(0, maxLength)}...`
-                : payload.value
+    // Custom tooltip for pie chart
+    const CustomPieTooltip = ({ active, payload }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
+                    <p className="font-semibold">{payload[0].name}</p>
+                    <p className="text-blue-600">
+                        Revenue: {formatCurrency(payload[0].value)}
+                    </p>
+                </div>
+            )
         }
-        return ''
+        return null
     }
 
-    // Revenue Report Data Mapping
-    const filteredRevenueReport = getFilteredData(revenueReportData, ['category', 'period'])
-    const revenueReportMap = filteredRevenueReport.map(revenue => [
-        revenue.category,
-        revenue.period,
-        formatCurrency(revenue.totalRevenue),
-        formatCurrency(revenue.averageOrder),
-        revenue.totalOrders,
-        `${revenue.growthRate}%` || 'N/A',
-        formatDate(revenue.lastUpdated)
-    ])
+    // Prepare pie chart data
+    const getPieChartData = () => {
+        if (!revenueSplitData) return []
+        
+        return [
+            { name: 'App Orders', value: revenueSplitData.revenueByAppOrder, color: '#3b82f6' },
+            { name: 'Manual Orders', value: revenueSplitData.revenueByManualOrder, color: '#10b981' },
+            { name: 'Wallet Recharge', value: revenueSplitData.revenueByWalletRecharge, color: '#f59e0b' }
+        ].filter(item => item.value > 0)
+    }
 
     // Profit/Loss Report Data Mapping
     const filteredProfitLossReport = getFilteredData(profitLossData, ['category', 'period'])
@@ -310,7 +343,7 @@ const Reports = () => {
                         variant={activeTab === 'revenue' ? 'black' : 'secondary'}
                         onClick={() => handleTabChange('revenue')}
                     >
-                        Revenue Report
+                        Revenue Analytics
                     </Button>
                     <Button
                         variant={activeTab === 'profit' ? 'black' : 'secondary'}
@@ -420,6 +453,210 @@ const Reports = () => {
                 </div>
             )}
 
+            {/* Revenue Analytics Tab */}
+            {activeTab === 'revenue' && (
+                <div className="space-y-6">
+                    {/* Header */}
+                    {/* <div className="text-left">
+                        <h2 className="text-2xl font-bold text-gray-800">Revenue Analytics and Insights</h2>
+                    </div> */}
+
+                    {/* Date Range Controls */}
+                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-4">
+                            <span className="text-sm font-medium text-gray-700">Date Range:</span>
+                            <div className="flex space-x-2">
+                                <Button 
+                                    variant={isQuickDateRangeActive(7) ? 'black' : 'secondary'}
+                                    onClick={() => setQuickDateRange(7)}
+                                    className="text-sm px-3 py-1"
+                                >
+                                    7 Days
+                                </Button>
+                                <Button 
+                                    variant={isQuickDateRangeActive(30) ? 'black' : 'secondary'}
+                                    onClick={() => setQuickDateRange(30)}
+                                    className="text-sm px-3 py-1"
+                                >
+                                    30 Days
+                                </Button>
+                                <Button 
+                                    variant={isQuickDateRangeActive(90) ? 'black' : 'secondary'}
+                                    onClick={() => setQuickDateRange(90)}
+                                    className="text-sm px-3 py-1"
+                                >
+                                    90 Days
+                                </Button>
+                            </div>
+                        </div>
+                        
+                        {/* Custom Date Range */}
+                        <div className="flex items-center space-x-3">
+                            <span className="text-sm font-medium text-gray-700">Custom:</span>
+                            <input
+                                type="date"
+                                value={dateRange.from}
+                                onChange={(e) => handleDateRangeChange('from', e.target.value)}
+                                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                            />
+                            <span className="text-gray-500">to</span>
+                            <input
+                                type="date"
+                                value={dateRange.to}
+                                onChange={(e) => handleDateRangeChange('to', e.target.value)}
+                                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Revenue Summary Cards */}
+                    {revenueSplitData && (
+                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <Card>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-semibold text-gray-700">Total Revenue</h3>
+                                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(revenueSplitData.totalRevenue)}</p>
+                                </div>
+                            </Card>
+                            <Card>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-semibold text-gray-700">App Orders</h3>
+                                    <p className="text-2xl font-bold text-green-600">{formatCurrency(revenueSplitData.revenueByAppOrder)}</p>
+                                </div>
+                            </Card>
+                            <Card>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-semibold text-gray-700">Manual Orders</h3>
+                                    <p className="text-2xl font-bold text-purple-600">{formatCurrency(revenueSplitData.revenueByManualOrder)}</p>
+                                </div>
+                            </Card>
+                            <Card>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-semibold text-gray-700">Wallet Recharge</h3>
+                                    <p className="text-2xl font-bold text-orange-600">{formatCurrency(revenueSplitData.revenueByWalletRecharge)}</p>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+
+                    {/* Charts Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Revenue by Items Bar Chart */}
+                        <Card title="Revenue by Items">
+                            {revenueByItemsData && revenueByItemsData.length > 0 ? (
+                                <div className="h-96 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={revenueByItemsData}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis 
+                                                dataKey="productName"
+                                                axisLine={true}
+                                                tickLine={true}
+                                                tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }}
+                                                height={80}
+                                                interval={0}
+                                            />
+                                            <YAxis 
+                                                axisLine={true}
+                                                tickLine={true}
+                                                tick={{ fontSize: 12 }}
+                                                label={{ value: 'Revenue (₹)', angle: -90, position: 'insideLeft' }}
+                                            />
+                                            <Tooltip content={<CustomTooltip />} />
+                                            <Bar 
+                                                dataKey="revenue" 
+                                                fill="#3b82f6"
+                                                radius={[4, 4, 0, 0]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 text-gray-500">
+                                    No revenue by items data found for the selected date range
+                                </div>
+                            )}
+                        </Card>
+
+                        {/* Revenue Split Pie Chart */}
+                        <Card title="Revenue Split by Source">
+                            {getPieChartData().length > 0 ? (
+                                <div className="h-96 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={getPieChartData()}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                outerRadius={100}
+                                                fill="#8884d8"
+                                                dataKey="value"
+                                            >
+                                                {getPieChartData().map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip content={<CustomPieTooltip />} />
+                                            <Legend />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 text-gray-500">
+                                    No revenue split data found for the selected date range
+                                </div>
+                            )}
+                        </Card>
+                    </div>
+
+                    {/* Wallet Recharge by Day Chart */}
+                    <Card title="Wallet Recharge Revenue by Day">
+                        {revenueByDaysData && revenueByDaysData.length > 0 ? (
+                            <div className="h-96 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={revenueByDaysData}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                        <XAxis 
+                                            dataKey="date"
+                                            axisLine={true}
+                                            tickLine={true}
+                                            tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }}
+                                            height={80}
+                                            interval={0}
+                                            tickFormatter={formatDateForDisplay}
+                                        />
+                                        <YAxis 
+                                            axisLine={true}
+                                            tickLine={true}
+                                            tick={{ fontSize: 12 }}
+                                            label={{ value: 'Revenue (₹)', angle: -90, position: 'insideLeft' }}
+                                        />
+                                        <Tooltip content={<CustomTooltip />} />
+                                        <Bar 
+                                            dataKey="revenue" 
+                                            fill="#f59e0b"
+                                            radius={[4, 4, 0, 0]}
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="text-center py-16 text-gray-500">
+                                No wallet recharge data found for the selected date range
+                            </div>
+                        )}
+                    </Card>
+                </div>
+            )}
+
             {/* Error Display */}
             <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-2">
@@ -429,12 +666,11 @@ const Reports = () => {
                         </div>
                     )}
                 </div>
-                {activeTab !== 'sales' && (
+                {(activeTab === 'profit' || activeTab === 'customer') && (
                     <div className="flex space-x-2">
                         <input
                             type="text"
                             placeholder={
-                                activeTab === 'revenue' ? "Search by Category or Period" :
                                 activeTab === 'profit' ? "Search by Category or Period" :
                                 "Search by Customer ID or Name"
                             }
@@ -446,22 +682,6 @@ const Reports = () => {
                     </div>
                 )}
             </div>
-
-            {/* Revenue Report Tab */}
-            {activeTab === 'revenue' && (
-                <Card title='Revenue Report'>
-                    {revenueReportMap.length > 0 ? (
-                        <Table
-                            headers={['Category', 'Period', 'Total Revenue', 'Average Order', 'Total Orders', 'Growth Rate', 'Last Updated']}
-                            data={revenueReportMap}
-                        />
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            No revenue data found
-                        </div>
-                    )}
-                </Card>
-            )}
 
             {/* Profit/Loss Report Tab */}
             {activeTab === 'profit' && (
