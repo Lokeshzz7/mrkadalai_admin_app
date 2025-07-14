@@ -27,13 +27,16 @@ const Reports = () => {
     const [revenueByDaysData, setRevenueByDaysData] = useState([])
     const [revenueSplitData, setRevenueSplitData] = useState(null)
 
+    const [profitLossTrendsData, setProfitLossTrendsData] = useState([])
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+
     const outletId = localStorage.getItem('outletId')
 
     useEffect(() => {
         if (outletId) {
             fetchData()
         }
-    }, [outletId, activeTab, dateRange])
+    }, [outletId, activeTab, dateRange, selectedYear])
 
     const fetchData = async () => {
         try {
@@ -120,34 +123,26 @@ const Reports = () => {
         }
     }
 
-    const fetchProfitLossReport = async () => {
-        try {
-            setProfitLossData([
-                {
-                    id: 1,
-                    category: "Food",
-                    period: "Today",
-                    revenue: 45230,
-                    cost: 30000,
-                    profit: 15230,
-                    profitMargin: 33.7
-                },
-                {
-                    id: 2,
-                    category: "Beverages",
-                    period: "Today",
-                    revenue: 8500,
-                    cost: 3000,
-                    profit: 5500,
-                    profitMargin: 64.7
-                }
-            ])
-        } catch (error) {
-            console.error('Error fetching profit/loss report:', error)
-            setProfitLossData([])
-        }
-    }
+const fetchProfitLossReport = async () => {
+    try {
+        // Fetch profit/loss trends data
+        const profitLossTrendsResponse = await apiRequest(`/admin/outlets/profit-loss-trends/${outletId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                year: selectedYear
+            })
+        })
+        setProfitLossTrendsData(profitLossTrendsResponse || [])
 
+    } catch (error) {
+        console.error('Error fetching profit/loss report:', error)
+        setProfitLossData([])
+        setProfitLossTrendsData([])
+    }
+}
     const fetchCustomerTrends = async () => {
         try {
             setCustomerTrendsData([
@@ -193,6 +188,54 @@ const Reports = () => {
             day: 'numeric' 
         })
     }
+
+    const getProfitLossChartData = () => {
+        return profitLossTrendsData.map(item => ({
+            ...item,
+            month: getMonthName(item.month),
+            originalProfit: item.profit,
+            profit: item.profit < 0 ? 0 : item.profit 
+        }))
+    }
+
+    const ProfitLossTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
+                <p className="font-semibold">{`Month: ${label}`}</p>
+                {payload.map((entry, index) => {
+                    let value = entry.value;
+                    let displayValue = formatCurrency(value);
+                    
+                    // For profit, show original value (including negative) in tooltip
+                    if (entry.dataKey === 'profit') {
+                        const originalProfit = entry.payload.originalProfit;
+                        displayValue = formatCurrency(originalProfit);
+                        return (
+                            <p key={index} style={{ color: entry.color }}>
+                                {`${entry.name}: ${displayValue}`}
+                                {originalProfit < 0 && <span className="text-red-500 ml-1">(Loss)</span>}
+                            </p>
+                        );
+                    }
+                    
+                    return (
+                        <p key={index} style={{ color: entry.color }}>
+                            {`${entry.name}: ${displayValue}`}
+                        </p>
+                    );
+                })}
+            </div>
+        );
+    }
+    return null;
+}
+
+    const getMonthName = (monthNumber) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    return months[monthNumber - 1]
+}
 
     const getFilteredData = (data, searchFields) => {
         if (!searchText) return data
@@ -666,53 +709,94 @@ const Reports = () => {
                         </div>
                     )}
                 </div>
-                {(activeTab === 'profit' || activeTab === 'customer') && (
-                    <div className="flex space-x-2">
-                        <input
-                            type="text"
-                            placeholder={
-                                activeTab === 'profit' ? "Search by Category or Period" :
-                                "Search by Customer ID or Name"
-                            }
-                            value={searchText}
-                            onChange={(e) => setSearchText(e.target.value)}
-                            className="border rounded p-2 w-64"
-                        />
-                        <Button variant='black' onClick={fetchData}>Refresh</Button>
-                    </div>
-                )}
             </div>
 
             {/* Profit/Loss Report Tab */}
             {activeTab === 'profit' && (
-                <Card title='Profit/Loss Report'>
-                    {profitLossReportMap.length > 0 ? (
-                        <Table
-                            headers={['Category', 'Period', 'Revenue', 'Cost', 'Profit/Loss', 'Margin %', 'Status']}
-                            data={profitLossReportMap}
-                        />
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            No profit/loss data found
+                <div className="space-y-6">
+                    {/* Year Selector */}
+                    <div className="flex justify-start items-center bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-4">
+                            <span className="text-sm font-medium text-gray-700">Select Year:</span>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                className="border border-gray-300 rounded px-3 py-2 text-sm"
+                            >
+                                {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(year => (
+                                    <option key={year} value={year}>{year}</option>
+                                ))}
+                            </select>
                         </div>
-                    )}
-                </Card>
-            )}
+                    </div>
+
+                    {/* Profit/Loss Trends Chart */}
+                    <Card title={`Profit/Loss Trends - ${selectedYear}`}>
+                        {profitLossTrendsData && profitLossTrendsData.length > 0 ? (
+                            <div className="h-96 w-full">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart
+                                        data={getProfitLossChartData()}
+                                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                        <XAxis 
+                                            dataKey="month"
+                                            axisLine={true}
+                                            tickLine={true}
+                                            tick={{ fontSize: 12 }}
+                                            height={60}
+                                        />
+                                        <YAxis 
+                                            axisLine={true}
+                                            tickLine={true}
+                                            tick={{ fontSize: 12 }}
+                                            label={{ value: 'Amount (₹)', angle: -90, position: 'insideLeft' }}
+                                        />
+                                        <Tooltip content={<ProfitLossTooltip />} />
+                                        <Legend />
+                                        <Bar 
+                                            dataKey="sales" 
+                                            fill="#10b981"
+                                            name="Sales"
+                                            radius={[2, 2, 0, 0]}
+                                        />
+                                        <Bar 
+                                            dataKey="expenses" 
+                                            fill="#ef4444"
+                                            name="Expenses"
+                                            radius={[2, 2, 0, 0]}
+                                        />
+                                        <Bar 
+                                            dataKey="profit" 
+                                            fill="#3b82f6"
+                                            name="Profit"
+                                            radius={[2, 2, 0, 0]}
+                                        />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            </div>
+                        ) : (
+                            <div className="text-center py-16 text-gray-500">
+                                No profit/loss trends data found for {selectedYear}
+                                </div>
+                            )}
+                        </Card>
+                    </div>
+                )}
 
             {/* Customer Trends Tab */}
-            {activeTab === 'customer' && (
-                <Card title='Customer Trends'>
-                    {customerTrendsMap.length > 0 ? (
-                        <Table
-                            headers={['Customer ID', 'Customer Name', 'Total Orders', 'Total Spent', 'Avg Order Value', 'Last Order', 'Frequency']}
-                            data={customerTrendsMap}
-                        />
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            No customer trends data found
-                        </div>
-                    )}
-                </Card>
+            {(activeTab === 'customer') && (
+                <div className="flex space-x-2">
+                    <input
+                        type="text"
+                        placeholder="Search by Customer ID or Name"
+                        value={searchText}
+                        onChange={(e) => setSearchText(e.target.value)}
+                        className="border rounded p-2 w-64"
+                    />
+                    <Button variant='black' onClick={fetchData}>Refresh</Button>
+                </div>
             )}
         </div>
     )
