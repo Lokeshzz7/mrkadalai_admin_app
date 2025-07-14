@@ -30,6 +30,9 @@ const Reports = () => {
     const [profitLossTrendsData, setProfitLossTrendsData] = useState([])
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
 
+    const [customerOverviewData, setCustomerOverviewData] = useState(null)
+    const [customerPerOrderData, setCustomerPerOrderData] = useState([])
+
     const outletId = localStorage.getItem('outletId')
 
     useEffect(() => {
@@ -143,33 +146,40 @@ const fetchProfitLossReport = async () => {
         setProfitLossTrendsData([])
     }
 }
-    const fetchCustomerTrends = async () => {
-        try {
-            setCustomerTrendsData([
-                {
-                    customerId: 1,
-                    customerName: "John Doe",
-                    totalOrders: 15,
-                    totalSpent: 4350,
-                    averageOrderValue: 290,
-                    lastOrder: "2024-01-15",
-                    frequency: "High"
-                },
-                {
-                    customerId: 2,
-                    customerName: "Jane Smith",
-                    totalOrders: 8,
-                    totalSpent: 2240,
-                    averageOrderValue: 280,
-                    lastOrder: "2024-01-14",
-                    frequency: "Medium"
-                }
-            ])
-        } catch (error) {
-            console.error('Error fetching customer trends:', error)
-            setCustomerTrendsData([])
-        }
+
+
+const fetchCustomerTrends = async () => {
+    try {
+        // Fetch customer overview
+        const customerOverviewResponse = await apiRequest(`/admin/outlets/customer-overview/${outletId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: dateRange.from,
+                to: dateRange.to
+            })
+        })
+        setCustomerOverviewData(customerOverviewResponse || null)
+
+        const customerPerOrderResponse = await apiRequest(`/admin/outlets/customer-per-order/${outletId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                from: dateRange.from,
+                to: dateRange.to
+            })
+        })
+        setCustomerPerOrderData(customerPerOrderResponse || [])
+    } catch (error) {
+        console.error('Error fetching customer trends:', error)
+        setCustomerOverviewData(null)
+        setCustomerPerOrderData([])
     }
+}
 
     const formatCurrency = (amount) => {
         return `₹${amount || 0}`
@@ -196,6 +206,37 @@ const fetchProfitLossReport = async () => {
             originalProfit: item.profit,
             profit: item.profit < 0 ? 0 : item.profit 
         }))
+    }
+
+    const getCustomerOverviewPieData = () => {
+        if (!customerOverviewData) return []
+        
+        return [
+            { 
+                name: 'New Customers', 
+                value: customerOverviewData.newCustomers, 
+                color: '#3b82f6' 
+            },
+            { 
+                name: 'Returning Customers', 
+                value: customerOverviewData.returningCustomers, 
+                color: '#10b981' 
+            }
+        ].filter(item => item.value > 0)
+    }
+
+    const CustomerPerOrderTooltip = ({ active, payload, label }) => {
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
+                    <p className="font-semibold">{`Date: ${formatDateForDisplay(label)}`}</p>
+                    <p className="text-blue-600">
+                        Customers per Order: {payload[0].value.toFixed(2)}
+                    </p>
+                </div>
+            )
+        }
+        return null
     }
 
     const ProfitLossTooltip = ({ active, payload, label }) => {
@@ -786,18 +827,161 @@ const fetchProfitLossReport = async () => {
                 )}
 
             {/* Customer Trends Tab */}
-            {(activeTab === 'customer') && (
+            {activeTab === 'customer' && (
+    <div className="space-y-6">
+        {/* Date Range Controls */}
+        <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+            <div className="flex items-center space-x-4">
+                <span className="text-sm font-medium text-gray-700">Date Range:</span>
                 <div className="flex space-x-2">
-                    <input
-                        type="text"
-                        placeholder="Search by Customer ID or Name"
-                        value={searchText}
-                        onChange={(e) => setSearchText(e.target.value)}
-                        className="border rounded p-2 w-64"
-                    />
-                    <Button variant='black' onClick={fetchData}>Refresh</Button>
+                    <Button 
+                        variant={isQuickDateRangeActive(7) ? 'black' : 'secondary'}
+                        onClick={() => setQuickDateRange(7)}
+                        className="text-sm px-3 py-1"
+                    >
+                        7 Days
+                    </Button>
+                    <Button 
+                        variant={isQuickDateRangeActive(30) ? 'black' : 'secondary'}
+                        onClick={() => setQuickDateRange(30)}
+                        className="text-sm px-3 py-1"
+                    >
+                        30 Days
+                    </Button>
+                    <Button 
+                        variant={isQuickDateRangeActive(90) ? 'black' : 'secondary'}
+                        onClick={() => setQuickDateRange(90)}
+                        className="text-sm px-3 py-1"
+                    >
+                        90 Days
+                    </Button>
                 </div>
-            )}
+            </div>
+            
+            {/* Custom Date Range */}
+            <div className="flex items-center space-x-3">
+                <span className="text-sm font-medium text-gray-700">Custom:</span>
+                <input
+                    type="date"
+                    value={dateRange.from}
+                    onChange={(e) => handleDateRangeChange('from', e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+                <span className="text-gray-500">to</span>
+                <input
+                    type="date"
+                    value={dateRange.to}
+                    onChange={(e) => handleDateRangeChange('to', e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1 text-sm"
+                />
+            </div>
+        </div>
+
+        {/* Customer Overview Summary Cards */}
+        {customerOverviewData && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                    <div className="text-center">
+                        <h3 className="text-lg font-semibold text-gray-700">Total Customers</h3>
+                        <p className="text-2xl font-bold text-blue-600">
+                            {customerOverviewData.newCustomers + customerOverviewData.returningCustomers}
+                        </p>
+                    </div>
+                </Card>
+                <Card>
+                    <div className="text-center">
+                        <h3 className="text-lg font-semibold text-gray-700">New Customers</h3>
+                        <p className="text-2xl font-bold text-green-600">{customerOverviewData.newCustomers}</p>
+                    </div>
+                </Card>
+                <Card>
+                    <div className="text-center">
+                        <h3 className="text-lg font-semibold text-gray-700">Returning Customers</h3>
+                        <p className="text-2xl font-bold text-purple-600">{customerOverviewData.returningCustomers}</p>
+                    </div>
+                </Card>
+            </div>
+        )}
+
+        {/* Charts Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Customer Overview Pie Chart */}
+            <Card title="Customer Overview">
+                {getCustomerOverviewPieData().length > 0 ? (
+                    <div className="h-96 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <PieChart>
+                                <Pie
+                                    data={getCustomerOverviewPieData()}
+                                    cx="50%"
+                                    cy="50%"
+                                    labelLine={false}
+                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                    outerRadius={100}
+                                    innerRadius={40}
+                                    fill="#8884d8"
+                                    dataKey="value"
+                                >
+                                    {getCustomerOverviewPieData().map((entry, index) => (
+                                        <Cell key={`cell-${index}`} fill={entry.color} />
+                                    ))}
+                                </Pie>
+                                <Tooltip content={<CustomPieTooltip />} />
+                                <Legend />
+                            </PieChart>
+                        </ResponsiveContainer>
+                    </div>
+                ) : (
+                    <div className="text-center py-16 text-gray-500">
+                        No customer overview data found for the selected date range
+                    </div>
+                )}
+            </Card>
+
+            {/* Customer Per Order Bar Chart */}
+            <Card title="Customer Per Order">
+                {customerPerOrderData && customerPerOrderData.length > 0 ? (
+                    <div className="h-96 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart
+                                data={customerPerOrderData}
+                                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                            >
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                <XAxis 
+                                    dataKey="date"
+                                    axisLine={true}
+                                    tickLine={true}
+                                    tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }}
+                                    height={80}
+                                    interval={0}
+                                    tickFormatter={formatDateForDisplay}
+                                />
+                                <YAxis 
+                                    axisLine={true}
+                                    tickLine={true}
+                                    tick={{ fontSize: 12 }}
+                                    label={{ value: 'Customers per Order', angle: -90, position: 'insideLeft' }}
+                                />
+                                <Tooltip content={<CustomerPerOrderTooltip />} />
+                                <Bar 
+                                    dataKey="customersPerOrder" 
+                                    fill="#8b5cf6"
+                                    radius={[4, 4, 0, 0]}
+                                />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                ) : (
+                    <div className="text-center py-16 text-gray-500">
+                        No customer per order data found for the selected date range
+                    </div>
+                )}
+            </Card>
+        </div>
+    </div>
+)}
+
         </div>
     )
 }
