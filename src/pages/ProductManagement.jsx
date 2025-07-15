@@ -3,7 +3,7 @@ import { apiRequest } from '../utils/api';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
-import { Info, Trash2, X } from 'lucide-react';
+import { Info, Trash2, Edit, X } from 'lucide-react';
 
 const categories = ['All', 'Meals', 'Starters', 'Desserts', 'Beverages'];
 
@@ -17,10 +17,12 @@ const ProductManagement = () => {
     const outletId = localStorage.getItem('outletId');
     
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [showRemoveModal, setShowRemoveModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [productToRemove, setProductToRemove] = useState(null);
+    const [productToEdit, setProductToEdit] = useState(null);
     
     // Form states
     const [formData, setFormData] = useState({
@@ -30,6 +32,19 @@ const ProductManagement = () => {
         imageUrl: '',
         category: '',
         threshold: '',
+        minValue: '',
+        outletId: outletId 
+    });
+
+    // Edit form states
+    const [editFormData, setEditFormData] = useState({
+        name: '',
+        description: '',
+        price: '',
+        imageUrl: '',
+        category: '',
+        threshold: '',
+        minValue: '',
         outletId: outletId 
     });
 
@@ -66,6 +81,7 @@ const ProductManagement = () => {
                 ...formData,
                 price: parseFloat(formData.price),
                 threshold: parseInt(formData.threshold) || 10,
+                minValue: parseInt(formData.minValue) || 0,
                 outletId: parseInt(formData.outletId)
             };
 
@@ -75,19 +91,37 @@ const ProductManagement = () => {
             });
 
             setShowAddModal(false);
-            setFormData({
-                name: '',
-                description: '',
-                price: '',
-                imageUrl: '',
-                category: '',
-                threshold: '',
-                outletId: outletId
-            });
+            resetFormData();
             fetchProducts();
             alert('Product added successfully!');
         } catch (err) {
             alert(err.message || 'Failed to add product');
+        }
+    };
+
+    const handleEditProduct = async (e) => {
+        e.preventDefault();
+        try {
+            const productData = {
+                ...editFormData,
+                price: parseFloat(editFormData.price),
+                threshold: parseInt(editFormData.threshold) || 10,
+                minValue: parseInt(editFormData.minValue) || 0,
+                outletId: parseInt(editFormData.outletId)
+            };
+
+            await apiRequest(`/admin/outlets/update-product/${productToEdit.id}`, {
+                method: 'PUT',
+                body: productData
+            });
+
+            setShowEditModal(false);
+            setProductToEdit(null);
+            resetEditFormData();
+            fetchProducts();
+            alert('Product updated successfully!');
+        } catch (err) {
+            alert(err.message || 'Failed to update product');
         }
     };
 
@@ -116,6 +150,40 @@ const ProductManagement = () => {
         }));
     };
 
+    const handleEditInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+    };
+
+    const resetFormData = () => {
+        setFormData({
+            name: '',
+            description: '',
+            price: '',
+            imageUrl: '',
+            category: '',
+            threshold: '',
+            minValue: '',
+            outletId: outletId
+        });
+    };
+
+    const resetEditFormData = () => {
+        setEditFormData({
+            name: '',
+            description: '',
+            price: '',
+            imageUrl: '',
+            category: '',
+            threshold: '',
+            minValue: '',
+            outletId: outletId
+        });
+    };
+
     const openRemoveModal = (product) => {
         setProductToRemove(product);
         setShowRemoveModal(true);
@@ -124,6 +192,21 @@ const ProductManagement = () => {
     const openDetailsModal = (product) => {
         setSelectedProduct(product);
         setShowDetailsModal(true);
+    };
+
+    const openEditModal = (product) => {
+        setProductToEdit(product);
+        setEditFormData({
+            name: product.name,
+            description: product.description,
+            price: product.price.toString(),
+            imageUrl: product.imageUrl || '',
+            category: product.category,
+            threshold: product.inventory?.threshold?.toString() || '',
+            minValue: product.minValue?.toString() || '0',
+            outletId: product.outletId.toString()
+        });
+        setShowEditModal(true);
     };
 
     if (loading) {
@@ -203,15 +286,30 @@ const ProductManagement = () => {
                                             </span>
                                         </div>
                                         
+                                        {/* Stock Info */}
+                                        <div className="text-sm text-gray-600">
+                                            <div>Stock: {product.inventory?.quantity || 0}</div>
+                                            <div>Min Value: {product.minValue || 0}</div>
+                                        </div>
+                                        
                                         {/* Action Buttons */}
                                         <div className="flex justify-between items-center pt-2">
-                                            <button
-                                                onClick={() => openDetailsModal(product)}
-                                                className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
-                                            >
-                                                <Info className="w-4 h-4 mr-1" />
-                                                Details
-                                            </button>
+                                            <div className="flex space-x-2">
+                                                <button
+                                                    onClick={() => openDetailsModal(product)}
+                                                    className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
+                                                >
+                                                    <Info className="w-4 h-4 mr-1" />
+                                                    Details
+                                                </button>
+                                                <button
+                                                    onClick={() => openEditModal(product)}
+                                                    className="flex items-center text-green-600 hover:text-green-800 text-sm"
+                                                >
+                                                    <Edit className="w-4 h-4 mr-1" />
+                                                    Edit
+                                                </button>
+                                            </div>
                                             <button
                                                 onClick={() => openRemoveModal(product)}
                                                 className="flex items-center text-red-600 hover:text-red-800 text-sm"
@@ -335,10 +433,10 @@ const ProductManagement = () => {
                         />
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Threshold
+                                Alert Threshold
                             </label>
                             <input
                                 type="number"
@@ -353,6 +451,25 @@ const ProductManagement = () => {
                         
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Min Value *
+                            </label>
+                            <input
+                                type="number"
+                                name="minValue"
+                                value={formData.minValue}
+                                onChange={handleInputChange}
+                                required
+                                min="0"
+                                placeholder="0"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Stock will reset to this value daily at midnight
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Outlet ID *
                             </label>
                             <input
@@ -360,6 +477,159 @@ const ProductManagement = () => {
                                 name="outletId"
                                 value={formData.outletId}
                                 onChange={handleInputChange}
+                                required
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                </form>
+            </Modal>
+
+            {/* Edit Product Modal */}
+            <Modal
+                isOpen={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                title="Edit Product"
+                footer={
+                    <div className="flex space-x-2">
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowEditModal(false)}
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            variant="success"
+                            onClick={handleEditProduct}
+                        >
+                            Update Product
+                        </Button>
+                    </div>
+                }
+            >
+                <form onSubmit={handleEditProduct} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Product Name *
+                        </label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={editFormData.name}
+                            onChange={handleEditInputChange}
+                            required
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Description *
+                        </label>
+                        <textarea
+                            name="description"
+                            value={editFormData.description}
+                            onChange={handleEditInputChange}
+                            required
+                            rows={3}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Price *
+                            </label>
+                            <input
+                                type="number"
+                                name="price"
+                                value={editFormData.price}
+                                onChange={handleEditInputChange}
+                                required
+                                step="0.01"
+                                min="0"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Category *
+                            </label>
+                            <select
+                                name="category"
+                                value={editFormData.category}
+                                onChange={handleEditInputChange}
+                                required
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            >
+                                <option value="">Select Category</option>
+                                {categories.filter(cat => cat !== 'All').map(cat => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Image URL
+                        </label>
+                        <input
+                            type="url"
+                            name="imageUrl"
+                            value={editFormData.imageUrl}
+                            onChange={handleEditInputChange}
+                            placeholder="https://example.com/image.jpg"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+                    
+                    <div className="grid grid-cols-3 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Alert Threshold
+                            </label>
+                            <input
+                                type="number"
+                                name="threshold"
+                                value={editFormData.threshold}
+                                onChange={handleEditInputChange}
+                                min="0"
+                                placeholder="10"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Min Value *
+                            </label>
+                            <input
+                                type="number"
+                                name="minValue"
+                                value={editFormData.minValue}
+                                onChange={handleEditInputChange}
+                                required
+                                min="0"
+                                placeholder="0"
+                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Stock will reset to this value daily at midnight
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                Outlet ID *
+                            </label>
+                            <input
+                                type="number"
+                                name="outletId"
+                                value={editFormData.outletId}
+                                onChange={handleEditInputChange}
                                 required
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
@@ -401,12 +671,23 @@ const ProductManagement = () => {
                 onClose={() => setShowDetailsModal(false)}
                 title="Product Details"
                 footer={
-                    <Button
-                        variant="secondary"
-                        onClick={() => setShowDetailsModal(false)}
-                    >
-                        Close
-                    </Button>
+                    <div className="flex space-x-2">
+                        <Button
+                            variant="secondary"
+                            onClick={() => setShowDetailsModal(false)}
+                        >
+                            Close
+                        </Button>
+                        <Button
+                            variant="primary"
+                            onClick={() => {
+                                setShowDetailsModal(false);
+                                openEditModal(selectedProduct);
+                            }}
+                        >
+                            Edit Product
+                        </Button>
+                    </div>
                 }
             >
                 {selectedProduct && (
@@ -440,6 +721,10 @@ const ProductManagement = () => {
                                 <span>{selectedProduct.category}</span>
                             </div>
                             <div>
+                                <span className="font-semibold">Min Value: </span>
+                                <span className="text-blue-600 font-semibold">{selectedProduct.minValue || 0}</span>
+                            </div>
+                            <div>
                                 <span className="font-semibold">Outlet ID: </span>
                                 <span>{selectedProduct.outletId}</span>
                             </div>
@@ -447,10 +732,10 @@ const ProductManagement = () => {
                                 <>
                                     <div>
                                         <span className="font-semibold">Current Stock: </span>
-                                        <span>{selectedProduct.inventory.quantity}</span>
+                                        <span className="text-orange-600 font-semibold">{selectedProduct.inventory.quantity}</span>
                                     </div>
                                     <div>
-                                        <span className="font-semibold">Threshold: </span>
+                                        <span className="font-semibold">Alert Threshold: </span>
                                         <span>{selectedProduct.inventory.threshold}</span>
                                     </div>
                                 </>
