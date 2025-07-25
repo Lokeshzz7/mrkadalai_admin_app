@@ -7,6 +7,7 @@ import Modal from '../../components/ui/Modal';
 import college from '../../assets/college.jpg';
 import Header from '../../components/Header.jsx';
 import { apiRequest } from '../../utils/api.js';
+import Onboarding from '../../components/dashboard/Onboarding.jsx';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('admin');
@@ -233,6 +234,16 @@ const AdminDashboard = () => {
                             onClick={() => setActiveTab('outlet')}
                         >
                             Outlet
+                        </Button>
+                        <Button
+                            variant={activeTab === 'Onboarding' ? 'black' : 'secondary'}
+                            onClick={() => setActiveTab('Onboarding')}>
+                            OnBoarding
+                        </Button>
+                        <Button
+                            variant={activeTab === 'AdminManagement' ? 'black' : 'secondary'}
+                            onClick={() => setActiveTab('AdminManagement')}>
+                            Admin Management
                         </Button>
                     </div>
 
@@ -594,6 +605,18 @@ const AdminDashboard = () => {
                                 </div>
                             ))}
                         </div>
+                    )}
+
+                    {activeTab === 'Onboarding' && (
+                        <>
+                            <Onboarding />
+                        </>
+                    )}
+
+                    {activeTab === 'AdminManagement' && (
+                        <>
+                            
+                        </>
                     )}
                 </div>
             </main>
