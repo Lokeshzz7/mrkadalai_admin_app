@@ -16,6 +16,41 @@ export const authService = {
         });
     },
 
+    adminSignUp: async (adminData) => {
+        return await apiRequest(API_ENDPOINTS.ADMIN_SIGN_UP, {
+            method: 'POST',
+            body: adminData,
+        });
+    },
+
+    adminSignIn: async (credentials) => {
+        return await apiRequest(API_ENDPOINTS.ADMIN_SIGN_IN, {
+            method: 'POST',
+            body: credentials,
+        });
+    },
+
+    staffSignUp: async (staffData) => {
+        return await apiRequest(API_ENDPOINTS.STAFF_SIGN_UP, {
+            method: 'POST',
+            body: staffData,
+        });
+    },
+
+    staffSignIn: async (credentials) => {
+        return await apiRequest(API_ENDPOINTS.STAFF_SIGN_IN, {
+            method: 'POST',
+            body: credentials,
+        });
+    },
+
+    superAdminSignIn: async (credentials) => {
+        return await apiRequest(API_ENDPOINTS.SUPERADMIN_SIGN_IN, {
+            method: 'POST',
+            body: credentials,
+        });
+    },
+
     signOut: async () => {
         return await apiRequest(API_ENDPOINTS.SIGN_OUT, {
             method: 'POST',

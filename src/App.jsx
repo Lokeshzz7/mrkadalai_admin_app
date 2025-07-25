@@ -35,7 +35,7 @@ function App() {
         <Routes>
           {/* Public routes - these should render without Layout */}
           <Route path="/signin" element={<SignIn />} />
-          <Route path="/signup" element={<SignUp />} />
+          <Route path="/admin-signup" element={<SignUp />} />
 
           {/* Protected routes - each wrapped individually */}
           <Route

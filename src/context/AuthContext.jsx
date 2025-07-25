@@ -95,6 +95,34 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
+    const adminSignIn = async (credentials) => {
+        dispatch({ type: 'LOADING' });
+        try {
+            const response = await authService.adminSignIn(credentials);
+            console.log('Admin SignIn success:', response);
+            dispatch({ type: 'LOGIN_SUCCESS', payload: response.admin });
+            return response;
+        } catch (error) {
+            console.error('Admin SignIn error:', error);
+            dispatch({ type: 'ERROR', payload: error.message });
+            throw error;
+        }
+    };
+
+    const superAdminSignIn = async (credentials) => {
+        dispatch({ type: 'LOADING' });
+        try {
+            const response = await authService.superAdminSignIn(credentials);
+            console.log('SuperAdmin SignIn success:', response);
+            dispatch({ type: 'LOGIN_SUCCESS', payload: response.user });
+            return response;
+        } catch (error) {
+            console.error('SuperAdmin SignIn error:', error);
+            dispatch({ type: 'ERROR', payload: error.message });
+            throw error;
+        }
+    }
+
 
     const signOut = async () => {
         dispatch({ type: 'LOADING' });
@@ -112,6 +140,8 @@ export const AuthProvider = ({ children }) => {
         signUp,
         signIn,
         signOut,
+        adminSignIn,
+        superAdminSignIn,
         clearError,
     };
 

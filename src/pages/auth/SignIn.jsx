@@ -1,44 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth.js';
+import { authService } from '../../services/authService.js';
 import Input from '../../components/ui/Input.jsx';
 import Button from '../../components/ui/Button.jsx';
 import Card from '../../components/ui/Card.jsx';
 import { ROUTES } from '../../utils/constants.js';
+import { useAuth } from '../../hooks/useAuth.js';
 
 const SignIn = () => {
+    const [userType, setUserType] = useState('admin'); // 'admin' or 'superadmin'
     const [formData, setFormData] = useState({
         email: '',
         password: '',
     });
     const [formErrors, setFormErrors] = useState({});
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
-    const { signIn, loading, error, clearError, isAuthenticated } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
 
-    // *  Redirect if already authenticated
-    useEffect(() => {
-        if (isAuthenticated) {
-            const from = ROUTES.DASHBOARD;
-            navigate(from, { replace: true });
-        }
-    }, [isAuthenticated, navigate, location]);
+    const { adminSignIn, superAdminSignIn } = useAuth();
 
-    useEffect(() => {
-        return () => {
-            if (clearError) clearError();
-        };
-    }, [clearError]);
-
+    // Clear error after 5 seconds
     useEffect(() => {
         if (error) {
             const timer = setTimeout(() => {
-                if (clearError) clearError();
+                setError('');
             }, 5000);
             return () => clearTimeout(timer);
         }
-    }, [error, clearError]);
+    }, [error]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -52,6 +44,12 @@ const SignIn = () => {
                 [name]: ''
             }));
         }
+    };
+
+    const handleUserTypeChange = (type) => {
+        setUserType(type);
+        setError(''); // Clear any existing errors when switching types
+        setFormErrors({});
     };
 
     const validateForm = () => {
@@ -76,34 +74,103 @@ const SignIn = () => {
 
         if (!validateForm()) return;
 
+        setLoading(true);
+        setError('');
+
         try {
-            await signIn(formData);
+            let response;
+            
+            if (userType === 'superadmin') {
+                response = await superAdminSignIn(formData);
+            } else {
+                response = await adminSignIn(formData);
+            }
+
+            console.log('Sign in successful:', response);
+            navigate(ROUTES.DASHBOARD, { replace: true });
+            
         } catch (err) {
+            console.error('Sign in error:', err);
+            setError(err.message || 'Sign in failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-md w-full space-y-8">
                 <div>
+                    <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-indigo-100">
+                        <svg className="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                        </svg>
+                    </div>
                     <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
                         Sign in to your account
                     </h2>
                     <p className="mt-2 text-center text-sm text-gray-600">
-                        Or{' '}
-                        <Link
-                            to={ROUTES.SIGN_UP}
-                            className="font-medium text-blue-600 hover:text-blue-500"
-                        >
-                            create a new account
-                        </Link>
+                        {userType === 'admin' ? (
+                            <>
+                                Or{' '}
+                                <Link
+                                    to={ROUTES.ADMIN_SIGN_UP}
+                                    className="font-medium text-indigo-600 hover:text-indigo-500 transition-colors"
+                                >
+                                    create a new admin account
+                                </Link>
+                            </>
+                        ) : (
+                            <span className="text-gray-500">SuperAdmin Access Only</span>
+                        )}
                     </p>
                 </div>
 
                 <Card className="p-8">
+                    {/* User Type Toggle */}
+                    <div className="mb-6">
+                        <div className="flex rounded-lg bg-gray-100 p-1">
+                            <button
+                                type="button"
+                                onClick={() => handleUserTypeChange('admin')}
+                                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                                    userType === 'admin'
+                                        ? 'bg-white text-indigo-700 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                <div className="flex items-center justify-center">
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                    Admin
+                                </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => handleUserTypeChange('superadmin')}
+                                className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-all ${
+                                    userType === 'superadmin'
+                                        ? 'bg-white text-indigo-700 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                            >
+                                <div className="flex items-center justify-center">
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                    </svg>
+                                    SuperAdmin
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+
                     <form className="space-y-6" onSubmit={handleSubmit}>
                         {error && (
-                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-md">
+                            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+                                <svg className="w-5 h-5 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
                                 {error}
                             </div>
                         )}
@@ -117,7 +184,7 @@ const SignIn = () => {
                             value={formData.email}
                             onChange={handleChange}
                             error={formErrors.email}
-                            placeholder="Enter your email"
+                            placeholder={`Enter your ${userType === 'superadmin' ? 'SuperAdmin' : 'Admin'} email`}
                         />
 
                         <Input
@@ -138,9 +205,59 @@ const SignIn = () => {
                             loading={loading}
                             disabled={loading}
                         >
-                            Sign in
+                            {loading ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    Signing in...
+                                </>
+                            ) : (
+                                <>
+                                    Sign in as {userType === 'superadmin' ? 'SuperAdmin' : 'Admin'}
+                                </>
+                            )}
                         </Button>
                     </form>
+
+                    {/* Additional Info Based on User Type */}
+                    {userType === 'admin' && (
+                        <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium text-blue-800">
+                                        Admin Access
+                                    </h3>
+                                    <div className="mt-2 text-sm text-blue-700">
+                                        <p>Sign in with your verified admin credentials. If you don't have an account, create one and wait for SuperAdmin verification.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {userType === 'superadmin' && (
+                        <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                            <div className="flex">
+                                <div className="flex-shrink-0">
+                                    <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" clipRule="evenodd" />
+                                    </svg>
+                                </div>
+                                <div className="ml-3">
+                                    <h3 className="text-sm font-medium text-amber-800">
+                                        SuperAdmin Access
+                                    </h3>
+                                    <div className="mt-2 text-sm text-amber-700">
+                                        <p>Restricted access for SuperAdmin users only</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </Card>
             </div>
         </div>
