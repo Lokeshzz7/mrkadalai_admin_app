@@ -4,10 +4,9 @@ import Button from '../ui/Button'
 import { useNavigate } from 'react-router-dom'
 import { User, Mail, Phone, Briefcase } from 'lucide-react';
 import { apiRequest } from '../../utils/api';
-import toast from 'react-hot-toast';
 
 
-const Onboarding = () => {
+const AdminManagment = () => {
     const navigate = useNavigate()
     const [adminList, setadminList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -19,25 +18,13 @@ const Onboarding = () => {
         fetchadminList();
     }, []);
 
-    const handleVerify = async (adminId) => {
-        try {
-            // eslint-disable-next-line no-unused-vars
-            const response = await apiRequest(`/superadmin/verify-admin/${adminId}`, {
-                method: 'POST',
-            });
-            toast.success('Admin verified successfully!');
-            setadminList(prev => prev.filter(admin => admin.id !== adminId));
-        } catch (err) {
-            console.error('Verification failed:', err.message);
-            toast.error(err.message || 'Verification failed');
-        }
-    };
+
 
 
     const fetchadminList = async () => {
         try {
             setLoading(true);
-            const response = await apiRequest('/superadmin/pending-admins');
+            const response = await apiRequest('/superadmin/verified-admins');
             console.log(response);
             setadminList(response);
         } catch (err) {
@@ -109,17 +96,7 @@ const Onboarding = () => {
                                     <Briefcase className="w-4 h-4" />
                                     admin
                                 </p>
-                                <div className='flex flex-row gap-5 mt-3'>
-                                    <Button>
-                                        View
-                                    </Button>
-                                    <Button onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleVerify(admin.id);
-                                    }}>
-                                        Verify
-                                    </Button>
-                                </div>
+
 
                             </div>
 
@@ -141,4 +118,4 @@ const Onboarding = () => {
     )
 }
 
-export default Onboarding
+export default AdminManagment

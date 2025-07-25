@@ -8,6 +8,7 @@ import college from '../../assets/college.jpg';
 import Header from '../../components/Header.jsx';
 import { apiRequest } from '../../utils/api.js';
 import Onboarding from '../../components/dashboard/Onboarding.jsx';
+import AdminManagment from '../../components/dashboard/AdminManagement.jsx';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('admin');
@@ -615,7 +616,7 @@ const AdminDashboard = () => {
 
                     {activeTab === 'AdminManagement' && (
                         <>
-                            
+                            <AdminManagment />
                         </>
                     )}
                 </div>

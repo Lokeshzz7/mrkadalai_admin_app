@@ -27,11 +27,14 @@ import AppManagement from './pages/AppManagement.jsx';
 import StaffDetails from './pages/StaffDetails.jsx';
 import ProductManagement from './pages/ProductManagement.jsx';
 import AddStaff from './pages/staff/AddStaff.jsx';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <Toaster position="bottom-right" reverseOrder={false} />
+
         <Routes>
           {/* Public routes - these should render without Layout */}
           <Route path="/signin" element={<SignIn />} />
@@ -70,10 +73,10 @@ function App() {
           />
           <Route path="/staff/add" element={
             <ProtectedRoute>
-                <Layout>
-                  <AddStaff/>
-                </Layout>
-              </ProtectedRoute>
+              <Layout>
+                <AddStaff />
+              </Layout>
+            </ProtectedRoute>
           } />
           <Route
             path="/staff/:id"
