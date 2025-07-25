@@ -44,47 +44,47 @@ const AddStaff = () => {
 
   const validateForm = () => {
     const { name, email, phone, staffRole, password, confirmPassword } = formData;
-    
+
     if (!name.trim()) {
       alert('Please enter full name');
       return false;
     }
-    
+
     if (!email.trim()) {
       alert('Please enter email address');
       return false;
     }
-    
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       alert('Please enter a valid email address');
       return false;
     }
-    
+
     if (!phone.trim()) {
       alert('Please enter phone number');
       return false;
     }
-    
+
     if (!staffRole.trim()) {
       alert('Please enter staff role');
       return false;
     }
-    
+
     if (!password.trim()) {
       alert('Please enter password');
       return false;
     }
-    
+
     if (password.length < 6) {
       alert('Password must be at least 6 characters long');
       return false;
     }
-    
+
     if (password !== confirmPassword) {
       alert('Passwords do not match');
       return false;
     }
-    
+
     return true;
   };
 
@@ -95,7 +95,7 @@ const AddStaff = () => {
 
     try {
       setLoading(true);
-      
+
       // Prepare data for API
       const staffData = {
         name: formData.name,
@@ -107,14 +107,14 @@ const AddStaff = () => {
         permissions: formData.permissions
       };
 
-      const response = await apiRequest('/admin/outlets/add-staff/', {
+      const response = await apiRequest('/superadmin/outlets/add-staff/', {
         method: 'POST',
         body: staffData
       });
 
       alert('Staff account created successfully!');
       navigate('/staff');
-      
+
     } catch (error) {
       console.error('Error creating staff account:', error);
       alert(error.message || 'Failed to create staff account');
@@ -284,8 +284,8 @@ const AddStaff = () => {
 
         {/* Create Button */}
         <div className="flex justify-end pt-4">
-          <Button 
-            variant="black" 
+          <Button
+            variant="black"
             onClick={handleCreateAccount}
             disabled={loading}
           >

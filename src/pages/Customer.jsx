@@ -13,7 +13,7 @@ const Customer = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const outletId = localStorage.getItem('outletId'); 
+  const outletId = localStorage.getItem('outletId');
 
   useEffect(() => {
     fetchCustomers()
@@ -23,9 +23,9 @@ const Customer = () => {
     try {
       setLoading(true)
       setError(null)
-      
-      const response = await apiRequest(`/admin/outlets/customers/${outletId}/`)
-      
+
+      const response = await apiRequest(`/superadmin/outlets/customers/${outletId}/`)
+
       console.log('API Response:', response)
 
       const transformedCustomers = response.customers.map(customer => {
@@ -35,16 +35,16 @@ const Customer = () => {
           name: String(customer.name || 'N/A'),
           year: String(customer.yearOfStudy || 'N/A'),
           phoneNumber: String(customer.phoneNo || 'N/A'),
-          email: String(customer.email || 'N/A'), 
+          email: String(customer.email || 'N/A'),
           walletBalance: `₹${customer.walletBalance?.toLocaleString() || '0'}`,
           totalOrders: String(customer.totalOrders || '0'),
           totalPurchase: `₹${customer.totalPurchaseCost?.toLocaleString() || '0'}`,
-          lastOrderDate: customer.lastOrderDate 
+          lastOrderDate: customer.lastOrderDate
             ? new Date(customer.lastOrderDate).toLocaleDateString('en-IN')
             : 'N/A',
         }
       })
-      
+
       console.log('Transformed customers:', transformedCustomers)
       setCustomersData(transformedCustomers)
     } catch (err) {
@@ -61,10 +61,10 @@ const Customer = () => {
       const walletId = String(customer.walletId || '').toLowerCase()
       const name = String(customer.name || '').toLowerCase()
       const query = searchQuery.toLowerCase()
-      
-      return customerId.includes(query) || 
-             walletId.includes(query) || 
-             name.includes(query)
+
+      return customerId.includes(query) ||
+        walletId.includes(query) ||
+        name.includes(query)
     }
   )
 

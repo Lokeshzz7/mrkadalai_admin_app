@@ -15,7 +15,7 @@ const ProductManagement = () => {
     const [error, setError] = useState(null);
 
     const outletId = localStorage.getItem('outletId');
-    
+
     const [showAddModal, setShowAddModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showRemoveModal, setShowRemoveModal] = useState(false);
@@ -23,7 +23,7 @@ const ProductManagement = () => {
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [productToRemove, setProductToRemove] = useState(null);
     const [productToEdit, setProductToEdit] = useState(null);
-    
+
     // Form states
     const [formData, setFormData] = useState({
         name: '',
@@ -33,7 +33,7 @@ const ProductManagement = () => {
         category: '',
         threshold: '',
         minValue: '',
-        outletId: outletId 
+        outletId: outletId
     });
 
     // Edit form states
@@ -45,7 +45,7 @@ const ProductManagement = () => {
         category: '',
         threshold: '',
         minValue: '',
-        outletId: outletId 
+        outletId: outletId
     });
 
     useEffect(() => {
@@ -63,7 +63,7 @@ const ProductManagement = () => {
     const fetchProducts = async () => {
         try {
             setLoading(true);
-            const response = await apiRequest(`/admin/outlets/get-products/${outletId}`);
+            const response = await apiRequest(`/superadmin/outlets/get-products/${outletId}`);
             setProducts(response.data || []);
             setError(null);
         } catch (err) {
@@ -85,7 +85,7 @@ const ProductManagement = () => {
                 outletId: parseInt(formData.outletId)
             };
 
-            await apiRequest('/admin/outlets/add-product/', {
+            await apiRequest('/superadmin/outlets/add-product/', {
                 method: 'POST',
                 body: productData
             });
@@ -110,7 +110,7 @@ const ProductManagement = () => {
                 outletId: parseInt(editFormData.outletId)
             };
 
-            await apiRequest(`/admin/outlets/update-product/${productToEdit.id}`, {
+            await apiRequest(`/superadmin/outlets/update-product/${productToEdit.id}`, {
                 method: 'PUT',
                 body: productData
             });
@@ -127,12 +127,12 @@ const ProductManagement = () => {
 
     const handleRemoveProduct = async () => {
         if (!productToRemove) return;
-        
+
         try {
-            await apiRequest(`/admin/outlets/delete-product/${productToRemove.id}`, {
+            await apiRequest(`/superadmin/outlets/delete-product/${productToRemove.id}`, {
                 method: 'DELETE'
             });
-            
+
             setShowRemoveModal(false);
             setProductToRemove(null);
             fetchProducts();
@@ -242,8 +242,8 @@ const ProductManagement = () => {
                 </div>
 
                 <div className="flex space-x-2">
-                    <Button 
-                        variant='success' 
+                    <Button
+                        variant='success'
                         onClick={() => setShowAddModal(true)}
                     >
                         Add Product
@@ -263,7 +263,7 @@ const ProductManagement = () => {
                                         <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
                                             {product.category}
                                         </h3>
-                                        
+
                                         {/* Product Image */}
                                         <div className="aspect-square overflow-hidden rounded-md">
                                             <img
@@ -275,7 +275,7 @@ const ProductManagement = () => {
                                                 }}
                                             />
                                         </div>
-                                        
+
                                         {/* Product Name and Price */}
                                         <div className="flex justify-between items-center">
                                             <h4 className="font-medium text-gray-900 truncate flex-1 mr-2">
@@ -285,13 +285,13 @@ const ProductManagement = () => {
                                                 ${product.price}
                                             </span>
                                         </div>
-                                        
+
                                         {/* Stock Info */}
                                         <div className="text-sm text-gray-600">
                                             <div>Stock: {product.inventory?.quantity || 0}</div>
                                             <div>Min Value: {product.minValue || 0}</div>
                                         </div>
-                                        
+
                                         {/* Action Buttons */}
                                         <div className="flex justify-between items-center pt-2">
                                             <div className="flex space-x-2">
@@ -323,7 +323,7 @@ const ProductManagement = () => {
                             </div>
                         ))}
                     </div>
-                    
+
                     {filteredProducts.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                             No products found for the selected category.
@@ -368,7 +368,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Description *
@@ -382,7 +382,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -399,7 +399,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Category *
@@ -418,7 +418,7 @@ const ProductManagement = () => {
                             </select>
                         </div>
                     </div>
-                    
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Image URL
@@ -432,7 +432,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -448,7 +448,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Min Value *
@@ -467,7 +467,7 @@ const ProductManagement = () => {
                                 Stock will reset to this value daily at midnight
                             </p>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Outlet ID *
@@ -521,7 +521,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Description *
@@ -535,7 +535,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -552,7 +552,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Category *
@@ -571,7 +571,7 @@ const ProductManagement = () => {
                             </select>
                         </div>
                     </div>
-                    
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Image URL
@@ -585,7 +585,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-                    
+
                     <div className="grid grid-cols-3 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -601,7 +601,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Min Value *
@@ -620,7 +620,7 @@ const ProductManagement = () => {
                                 Stock will reset to this value daily at midnight
                             </p>
                         </div>
-                        
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Outlet ID *
@@ -702,7 +702,7 @@ const ProductManagement = () => {
                                 }}
                             />
                         </div>
-                        
+
                         <div className="space-y-2">
                             <div>
                                 <span className="font-semibold">Name: </span>

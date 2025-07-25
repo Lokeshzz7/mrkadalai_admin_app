@@ -36,7 +36,7 @@ const StaffDetails = () => {
   const fetchStaffDetails = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest(`/admin/outlets/staff/${id}`);
+      const response = await apiRequest(`/superadmin/outlets/staff/${id}`);
       const staffMember = response.staff;
 
       if (staffMember) {
@@ -101,7 +101,7 @@ const StaffDetails = () => {
   // Save staff details only
   const saveStaffDetails = async () => {
     try {
-      await apiRequest(`/admin/outlets/update-staff/${staff.id}`, {
+      await apiRequest(`/superadmin/outlets/update-staff/${staff.id}`, {
         method: 'PUT',
         body: {
           name: formData.name,
@@ -130,7 +130,7 @@ const StaffDetails = () => {
       };
 
       for (const key of Object.keys(permissionTypeMap)) {
-        await apiRequest('/admin/outlets/permissions/', {
+        await apiRequest('/superadmin/outlets/permissions/', {
           method: 'POST',
           body: {
             staffId: staff.id,
@@ -155,7 +155,7 @@ const StaffDetails = () => {
     );
     if (confirmDelete) {
       try {
-        await apiRequest(`/admin/outlets/delete-staff/${staff.id}`, {
+        await apiRequest(`/superadmin/outlets/delete-staff/${staff.id}`, {
           method: 'DELETE',
         });
         alert('Staff member deleted successfully');
@@ -236,9 +236,8 @@ const StaffDetails = () => {
                   value={formData[field]}
                   onChange={handleChange}
                   disabled={!isEditingDetails}
-                  className={`mt-1 block w-full border rounded-md px-3 py-2 text-gray-900 disabled:bg-gray-100 ${
-                    !isEditingDetails ? 'cursor-not-allowed' : ''
-                  }`}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 text-gray-900 disabled:bg-gray-100 ${!isEditingDetails ? 'cursor-not-allowed' : ''
+                    }`}
                 />
               </div>
             ))}
@@ -281,9 +280,8 @@ const StaffDetails = () => {
                 <div key={item.key} className="flex items-center justify-between">
                   <span>{item.label}</span>
                   <label
-                    className={`relative inline-flex items-center ${
-                      !isEditingPermissions ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                    }`}
+                    className={`relative inline-flex items-center ${!isEditingPermissions ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                      }`}
                   >
                     <input
                       type="checkbox"
@@ -293,9 +291,8 @@ const StaffDetails = () => {
                       onChange={(e) => handlePermissionChange(item.key, e.target.checked)}
                     />
                     <div
-                      className={`w-11 h-6 rounded-full transition-colors duration-200 ${
-                        formData[item.key] ? 'bg-theme' : 'bg-black'
-                      }`}
+                      className={`w-11 h-6 rounded-full transition-colors duration-200 ${formData[item.key] ? 'bg-theme' : 'bg-black'
+                        }`}
                     ></div>
                     <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
                   </label>

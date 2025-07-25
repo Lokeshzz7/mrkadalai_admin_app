@@ -36,8 +36,8 @@ const AdminDashboard = () => {
     const [topSellingItems, setTopSellingItems] = useState([]);
     const [peakTimeSlots, setPeakTimeSlots] = useState([]);
     const [dateRange, setDateRange] = useState({
-        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 
-        to: new Date().toISOString().split('T')[0] 
+        from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        to: new Date().toISOString().split('T')[0]
     });
     const [loading, setLoading] = useState(true);
 
@@ -54,7 +54,7 @@ const AdminDashboard = () => {
 
     const fetchOutlets = async () => {
         try {
-            const data = await apiRequest('/admin/get-outlets/');
+            const data = await apiRequest('/superadmin/get-outlets/');
             setOutlets(data.outlets);
         } catch (error) {
             console.error(error.message);
@@ -64,7 +64,7 @@ const AdminDashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const data = await apiRequest('/admin/dashboard/overview');
+            const data = await apiRequest('/superadmin/dashboard/overview');
             setDashboardData(data);
         } catch (error) {
             console.error('Failed to fetch dashboard overview:', error);
@@ -76,30 +76,30 @@ const AdminDashboard = () => {
         setLoading(true);
         try {
             const [revenueResponse, statusResponse, sourceResponse, topItemsResponse, peakSlotsResponse] = await Promise.all([
-                apiRequest('/admin/dashboard/revenue-trend', {
+                apiRequest('/superadmin/dashboard/revenue-trend', {
                     method: 'POST',
                     body: dateRange
                 }),
-                apiRequest('/admin/dashboard/order-status-distribution', {
+                apiRequest('/superadmin/dashboard/order-status-distribution', {
                     method: 'POST',
                     body: dateRange
                 }),
-                apiRequest('/admin/dashboard/order-source-distribution', {
+                apiRequest('/superadmin/dashboard/order-source-distribution', {
                     method: 'POST',
                     body: dateRange
                 }),
-                apiRequest('/admin/dashboard/top-selling-items', {
+                apiRequest('/superadmin/dashboard/top-selling-items', {
                     method: 'POST',
                     body: dateRange
                 }),
-                apiRequest('/admin/dashboard/peak-time-slots', {
+                apiRequest('/superadmin/dashboard/peak-time-slots', {
                     method: 'POST',
                     body: dateRange
                 })
             ]);
 
             setRevenueData(revenueResponse);
-            
+
             const statusData = [
                 { name: 'Delivered', value: statusResponse.delivered, color: '#10B981' },
                 { name: 'Pending', value: statusResponse.pending, color: '#F59E0B' },
@@ -134,7 +134,7 @@ const AdminDashboard = () => {
 
     const handleSave = async () => {
         try {
-            await apiRequest('/admin/add-outlet/', {
+            await apiRequest('/superadmin/add-outlet/', {
                 method: 'POST',
                 body: formData,
             });
@@ -151,7 +151,7 @@ const AdminDashboard = () => {
     const handleRemove = async () => {
         if (!selectedOutlet) return alert('Select a valid outlet to remove');
         try {
-            await apiRequest(`/admin/remove-outlet/${selectedOutlet.id}/`, {
+            await apiRequest(`/superadmin/remove-outlet/${selectedOutlet.id}/`, {
                 method: 'DELETE',
             });
             alert('Outlet removed successfully');
@@ -166,7 +166,7 @@ const AdminDashboard = () => {
 
     const handleCollege = (college) => {
         localStorage.setItem('outletName', college.name);
-        localStorage.setItem('outletId', college.id); 
+        localStorage.setItem('outletId', college.id);
         navigate('/order-history');
     };
 
@@ -216,7 +216,7 @@ const AdminDashboard = () => {
     return (
         <div className="h-screen flex flex-col bg-gray-100 overflow-hidden">
             <div className="w-full z-30">
-                <Header onMenuClick={() => {}} />
+                <Header onMenuClick={() => { }} />
             </div>
 
             <main className="flex-1 bg-bg p-4 sm:p-6 overflow-auto ml-0">
@@ -361,7 +361,7 @@ const AdminDashboard = () => {
                         <div className="space-y-4">
                             <p className="text-gray-600">Select an outlet to remove:</p>
                             <select
-                                value={selectedOutlet ? selectedOutlet.id: ''}
+                                value={selectedOutlet ? selectedOutlet.id : ''}
                                 onChange={(e) => {
                                     const outlet = outlets.find(o => o.id === parseInt(e.target.value));
                                     setSelectedOutlet(outlet);
@@ -531,7 +531,7 @@ const AdminDashboard = () => {
                                                                 <p className="text-sm">Orders: {topSellingItems[0].totalOrders}</p>
                                                                 <p className="text-sm">Revenue: {formatCurrency(topSellingItems[0].totalRevenue)}</p>
                                                             </div>
-                                                            
+
                                                             {/* Other top items */}
                                                             {topSellingItems.slice(1).map((item, index) => (
                                                                 <div key={item.productId} className="bg-gray-50 p-3 rounded-lg">

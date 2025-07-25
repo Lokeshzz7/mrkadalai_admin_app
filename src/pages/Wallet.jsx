@@ -44,17 +44,17 @@ const Wallet = () => {
     }
 
     const fetchWalletSummary = async () => {
-        const response = await apiRequest(`/admin/outlets/wallet-history/${outletId}/`)
+        const response = await apiRequest(`/superadmin/outlets/wallet-history/${outletId}/`)
         setWalletSummaryData(response.data || [])
     }
 
     const fetchRechargeHistory = async () => {
-        const response = await apiRequest(`/admin/outlets/recharge-history/${outletId}/`)
+        const response = await apiRequest(`/superadmin/outlets/recharge-history/${outletId}/`)
         setRechargeHistoryData(response.data || [])
     }
 
     const fetchPaidOrders = async () => {
-        const response = await apiRequest('/admin/outlets/paid-wallet/')
+        const response = await apiRequest('/superadmin/outlets/paid-wallet/')
         setPaidOrdersData(response.data || [])
     }
 
@@ -69,9 +69,9 @@ const Wallet = () => {
 
     const getFilteredData = (data, searchFields) => {
         if (!searchText) return data
-        
-        return data.filter(item => 
-            searchFields.some(field => 
+
+        return data.filter(item =>
+            searchFields.some(field =>
                 item[field]?.toString().toLowerCase().includes(searchText.toLowerCase())
             )
         )
@@ -98,8 +98,8 @@ const Wallet = () => {
         formatDate(recharge.date),
         recharge.method || 'N/A',
         <Badge
-            variant={recharge.status?.toLowerCase() === 'completed' ? 'success' : 
-                    recharge.status?.toLowerCase() === 'pending' ? 'pending' : 'secondary'}
+            variant={recharge.status?.toLowerCase() === 'completed' ? 'success' :
+                recharge.status?.toLowerCase() === 'pending' ? 'pending' : 'secondary'}
             key={recharge.rechargeId}
         >
             {recharge.status || 'Unknown'}
@@ -177,8 +177,8 @@ const Wallet = () => {
                         type="text"
                         placeholder={
                             activeTab === 'summary' ? "Search by Wallet ID or Name" :
-                            activeTab === 'history' ? "Search by Recharge ID or Name" :
-                            "Search by Order ID or Name"
+                                activeTab === 'history' ? "Search by Recharge ID or Name" :
+                                    "Search by Order ID or Name"
                         }
                         value={searchText}
                         onChange={(e) => setSearchText(e.target.value)}

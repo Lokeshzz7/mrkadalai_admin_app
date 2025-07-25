@@ -20,7 +20,7 @@ const Staff = () => {
     const fetchStaffList = async () => {
         try {
             setLoading(true);
-            const response = await apiRequest(`/admin/outlets/get-staffs/${outletId}`);
+            const response = await apiRequest(`/superadmin/outlets/get-staffs/${outletId}`);
             console.log(response);
             setStaffList(response.staffs || []);
         } catch (err) {

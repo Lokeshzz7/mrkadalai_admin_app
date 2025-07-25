@@ -22,7 +22,7 @@ const Expenditure = () => {
     const fetchExpenses = async () => {
         setLoading(true);
         try {
-            const data = await apiRequest(`/admin/outlets/get-expenses/${outletId}/`);
+            const data = await apiRequest(`/superadmin/outlets/get-expenses/${outletId}/`);
             setAllExpense(data.expenses || []);
         } catch (error) {
             console.error('Error fetching expenses:', error);
@@ -32,10 +32,10 @@ const Expenditure = () => {
 
     const fetchExpensesByDateRange = async () => {
         if (!startDate || !endDate) return;
-        
+
         setLoading(true);
         try {
-            const data = await apiRequest('/admin/outlets/get-expenses-bydate/', {
+            const data = await apiRequest('/superadmin/outlets/get-expenses-bydate/', {
                 method: 'GET',
                 body: {
                     outletId: outletId,
@@ -107,9 +107,9 @@ const Expenditure = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
-        
+
         try {
-            const data = await apiRequest('/admin/outlets/add-expenses/', {
+            const data = await apiRequest('/superadmin/outlets/add-expenses/', {
                 method: 'POST',
                 body: {
                     outletId: outletId,

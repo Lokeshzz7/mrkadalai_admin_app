@@ -25,10 +25,10 @@ const OrderHistory = () => {
         try {
             setLoading(true);
             setError(null);
-            const response = await apiRequest(`/admin/outlets/${outletId}/orders/`);
+            const response = await apiRequest(`/superadmin/outlets/${outletId}/orders/`);
 
             console.log(response);
-            
+
             const transformedOrders = response.map(order => ({
                 orderId: `ORD${order.orderId.toString().padStart(3, '0')}`,
                 name: order.customerName,
@@ -40,12 +40,12 @@ const OrderHistory = () => {
                     quantity: item.quantity,
                     unitPrice: item.unitPrice
                 })),
-                timeStamp: new Date(order.orderTime).toLocaleDateString('en-CA') + ' ' + 
-                          new Date(order.orderTime).toLocaleTimeString('en-US', { 
-                              hour12: false, 
-                              hour: '2-digit', 
-                              minute: '2-digit' 
-                          }),
+                timeStamp: new Date(order.orderTime).toLocaleDateString('en-CA') + ' ' +
+                    new Date(order.orderTime).toLocaleTimeString('en-US', {
+                        hour12: false,
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    }),
                 totalAmount: order.totalAmount,
                 paymentMethod: order.paymentMethod
             }));
@@ -77,7 +77,7 @@ const OrderHistory = () => {
 
     // Status mapping for badge variants
     const getStatusVariant = (status) => {
-        switch(status.toLowerCase()) {
+        switch (status.toLowerCase()) {
             case 'delivered':
             case 'completed':
                 return 'success';

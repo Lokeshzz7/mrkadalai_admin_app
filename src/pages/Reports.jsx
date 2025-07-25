@@ -14,7 +14,7 @@ const Reports = () => {
 
     const [dateRange, setDateRange] = useState({
         from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        to: new Date().toISOString().split('T')[0] 
+        to: new Date().toISOString().split('T')[0]
     })
 
     const [salesReportData, setSalesReportData] = useState([])
@@ -65,7 +65,7 @@ const Reports = () => {
 
     const fetchSalesReport = async () => {
         try {
-            const response = await apiRequest(`/admin/outlets/sales-report/${outletId}/`, {
+            const response = await apiRequest(`/superadmin/outlets/sales-report/${outletId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -84,7 +84,7 @@ const Reports = () => {
     const fetchRevenueAnalytics = async () => {
         try {
             // Fetch revenue by items
-            const revenueByItemsResponse = await apiRequest(`/admin/outlets/revenue-report/${outletId}/`, {
+            const revenueByItemsResponse = await apiRequest(`/superadmin/outlets/revenue-report/${outletId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -97,7 +97,7 @@ const Reports = () => {
             setRevenueByItemsData(revenueByItemsResponse || [])
 
             // Fetch revenue split
-            const revenueSplitResponse = await apiRequest(`/admin/outlets/revenue-split/${outletId}/`, {
+            const revenueSplitResponse = await apiRequest(`/superadmin/outlets/revenue-split/${outletId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ const Reports = () => {
             setRevenueSplitData(revenueSplitResponse || null)
 
             // Fetch wallet recharge by day
-            const walletRechargeResponse = await apiRequest(`/admin/outlets/wallet-recharge-by-day/${outletId}/`, {
+            const walletRechargeResponse = await apiRequest(`/superadmin/outlets/wallet-recharge-by-day/${outletId}/`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -126,60 +126,60 @@ const Reports = () => {
         }
     }
 
-const fetchProfitLossReport = async () => {
-    try {
-        // Fetch profit/loss trends data
-        const profitLossTrendsResponse = await apiRequest(`/admin/outlets/profit-loss-trends/${outletId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                year: selectedYear
+    const fetchProfitLossReport = async () => {
+        try {
+            // Fetch profit/loss trends data
+            const profitLossTrendsResponse = await apiRequest(`/superadmin/outlets/profit-loss-trends/${outletId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    year: selectedYear
+                })
             })
-        })
-        setProfitLossTrendsData(profitLossTrendsResponse || [])
+            setProfitLossTrendsData(profitLossTrendsResponse || [])
 
-    } catch (error) {
-        console.error('Error fetching profit/loss report:', error)
-        setProfitLossData([])
-        setProfitLossTrendsData([])
+        } catch (error) {
+            console.error('Error fetching profit/loss report:', error)
+            setProfitLossData([])
+            setProfitLossTrendsData([])
+        }
     }
-}
 
 
-const fetchCustomerTrends = async () => {
-    try {
-        // Fetch customer overview
-        const customerOverviewResponse = await apiRequest(`/admin/outlets/customer-overview/${outletId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                from: dateRange.from,
-                to: dateRange.to
+    const fetchCustomerTrends = async () => {
+        try {
+            // Fetch customer overview
+            const customerOverviewResponse = await apiRequest(`/superadmin/outlets/customer-overview/${outletId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: dateRange.from,
+                    to: dateRange.to
+                })
             })
-        })
-        setCustomerOverviewData(customerOverviewResponse || null)
+            setCustomerOverviewData(customerOverviewResponse || null)
 
-        const customerPerOrderResponse = await apiRequest(`/admin/outlets/customer-per-order/${outletId}/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                from: dateRange.from,
-                to: dateRange.to
+            const customerPerOrderResponse = await apiRequest(`/superadmin/outlets/customer-per-order/${outletId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    from: dateRange.from,
+                    to: dateRange.to
+                })
             })
-        })
-        setCustomerPerOrderData(customerPerOrderResponse || [])
-    } catch (error) {
-        console.error('Error fetching customer trends:', error)
-        setCustomerOverviewData(null)
-        setCustomerPerOrderData([])
+            setCustomerPerOrderData(customerPerOrderResponse || [])
+        } catch (error) {
+            console.error('Error fetching customer trends:', error)
+            setCustomerOverviewData(null)
+            setCustomerPerOrderData([])
+        }
     }
-}
 
     const formatCurrency = (amount) => {
         return `₹${amount || 0}`
@@ -193,9 +193,9 @@ const fetchCustomerTrends = async () => {
     const formatDateForDisplay = (dateString) => {
         if (!dateString) return 'N/A'
         const date = new Date(dateString)
-        return date.toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
         })
     }
 
@@ -204,23 +204,23 @@ const fetchCustomerTrends = async () => {
             ...item,
             month: getMonthName(item.month),
             originalProfit: item.profit,
-            profit: item.profit < 0 ? 0 : item.profit 
+            profit: item.profit < 0 ? 0 : item.profit
         }))
     }
 
     const getCustomerOverviewPieData = () => {
         if (!customerOverviewData) return []
-        
+
         return [
-            { 
-                name: 'New Customers', 
-                value: customerOverviewData.newCustomers, 
-                color: '#3b82f6' 
+            {
+                name: 'New Customers',
+                value: customerOverviewData.newCustomers,
+                color: '#3b82f6'
             },
-            { 
-                name: 'Returning Customers', 
-                value: customerOverviewData.returningCustomers, 
-                color: '#10b981' 
+            {
+                name: 'Returning Customers',
+                value: customerOverviewData.returningCustomers,
+                color: '#10b981'
             }
         ].filter(item => item.value > 0)
     }
@@ -240,49 +240,49 @@ const fetchCustomerTrends = async () => {
     }
 
     const ProfitLossTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
-                <p className="font-semibold">{`Month: ${label}`}</p>
-                {payload.map((entry, index) => {
-                    let value = entry.value;
-                    let displayValue = formatCurrency(value);
-                    
-                    // For profit, show original value (including negative) in tooltip
-                    if (entry.dataKey === 'profit') {
-                        const originalProfit = entry.payload.originalProfit;
-                        displayValue = formatCurrency(originalProfit);
+        if (active && payload && payload.length) {
+            return (
+                <div className="bg-white p-3 border border-gray-300 rounded shadow-lg">
+                    <p className="font-semibold">{`Month: ${label}`}</p>
+                    {payload.map((entry, index) => {
+                        let value = entry.value;
+                        let displayValue = formatCurrency(value);
+
+                        // For profit, show original value (including negative) in tooltip
+                        if (entry.dataKey === 'profit') {
+                            const originalProfit = entry.payload.originalProfit;
+                            displayValue = formatCurrency(originalProfit);
+                            return (
+                                <p key={index} style={{ color: entry.color }}>
+                                    {`${entry.name}: ${displayValue}`}
+                                    {originalProfit < 0 && <span className="text-red-500 ml-1">(Loss)</span>}
+                                </p>
+                            );
+                        }
+
                         return (
                             <p key={index} style={{ color: entry.color }}>
                                 {`${entry.name}: ${displayValue}`}
-                                {originalProfit < 0 && <span className="text-red-500 ml-1">(Loss)</span>}
                             </p>
                         );
-                    }
-                    
-                    return (
-                        <p key={index} style={{ color: entry.color }}>
-                            {`${entry.name}: ${displayValue}`}
-                        </p>
-                    );
-                })}
-            </div>
-        );
+                    })}
+                </div>
+            );
+        }
+        return null;
     }
-    return null;
-}
 
     const getMonthName = (monthNumber) => {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
-                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-    return months[monthNumber - 1]
-}
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        return months[monthNumber - 1]
+    }
 
     const getFilteredData = (data, searchFields) => {
         if (!searchText) return data
-        
-        return data.filter(item => 
-            searchFields.some(field => 
+
+        return data.filter(item =>
+            searchFields.some(field =>
                 item[field]?.toString().toLowerCase().includes(searchText.toLowerCase())
             )
         )
@@ -349,7 +349,7 @@ const fetchCustomerTrends = async () => {
     // Prepare pie chart data
     const getPieChartData = () => {
         if (!revenueSplitData) return []
-        
+
         return [
             { name: 'App Orders', value: revenueSplitData.revenueByAppOrder, color: '#3b82f6' },
             { name: 'Manual Orders', value: revenueSplitData.revenueByManualOrder, color: '#10b981' },
@@ -384,8 +384,8 @@ const fetchCustomerTrends = async () => {
         formatCurrency(customer.averageOrderValue),
         formatDate(customer.lastOrder),
         <Badge
-            variant={customer.frequency === 'High' ? 'success' : 
-                    customer.frequency === 'Medium' ? 'pending' : 'secondary'}
+            variant={customer.frequency === 'High' ? 'success' :
+                customer.frequency === 'Medium' ? 'pending' : 'secondary'}
             key={customer.customerId}
         >
             {customer.frequency || 'Low'}
@@ -452,21 +452,21 @@ const fetchCustomerTrends = async () => {
                         <div className="flex items-center space-x-4">
                             <span className="text-sm font-medium text-gray-700">Date Range:</span>
                             <div className="flex space-x-2">
-                                <Button 
+                                <Button
                                     variant={isQuickDateRangeActive(7) ? 'black' : 'secondary'}
                                     onClick={() => setQuickDateRange(7)}
                                     className="text-sm px-3 py-1"
                                 >
                                     7 Days
                                 </Button>
-                                <Button 
+                                <Button
                                     variant={isQuickDateRangeActive(30) ? 'black' : 'secondary'}
                                     onClick={() => setQuickDateRange(30)}
                                     className="text-sm px-3 py-1"
                                 >
                                     30 Days
                                 </Button>
-                                <Button 
+                                <Button
                                     variant={isQuickDateRangeActive(90) ? 'black' : 'secondary'}
                                     onClick={() => setQuickDateRange(90)}
                                     className="text-sm px-3 py-1"
@@ -475,7 +475,7 @@ const fetchCustomerTrends = async () => {
                                 </Button>
                             </div>
                         </div>
-                        
+
                         {/* Custom Date Range */}
                         <div className="flex items-center space-x-3">
                             <span className="text-sm font-medium text-gray-700">Custom:</span>
@@ -505,7 +505,7 @@ const fetchCustomerTrends = async () => {
                                         margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis 
+                                        <XAxis
                                             dataKey="productName"
                                             axisLine={true}
                                             tickLine={true}
@@ -513,15 +513,15 @@ const fetchCustomerTrends = async () => {
                                             height={80}
                                             interval={0}
                                         />
-                                        <YAxis 
+                                        <YAxis
                                             axisLine={true}
                                             tickLine={true}
                                             tick={{ fontSize: 12 }}
                                             label={{ value: 'Number of Orders', angle: -90, position: 'insideLeft' }}
                                         />
                                         <Tooltip content={<CustomTooltip />} />
-                                        <Bar 
-                                            dataKey="totalOrders" 
+                                        <Bar
+                                            dataKey="totalOrders"
                                             fill="#3b82f6"
                                             radius={[4, 4, 0, 0]}
                                         />
@@ -550,21 +550,21 @@ const fetchCustomerTrends = async () => {
                         <div className="flex items-center space-x-4">
                             <span className="text-sm font-medium text-gray-700">Date Range:</span>
                             <div className="flex space-x-2">
-                                <Button 
+                                <Button
                                     variant={isQuickDateRangeActive(7) ? 'black' : 'secondary'}
                                     onClick={() => setQuickDateRange(7)}
                                     className="text-sm px-3 py-1"
                                 >
                                     7 Days
                                 </Button>
-                                <Button 
+                                <Button
                                     variant={isQuickDateRangeActive(30) ? 'black' : 'secondary'}
                                     onClick={() => setQuickDateRange(30)}
                                     className="text-sm px-3 py-1"
                                 >
                                     30 Days
                                 </Button>
-                                <Button 
+                                <Button
                                     variant={isQuickDateRangeActive(90) ? 'black' : 'secondary'}
                                     onClick={() => setQuickDateRange(90)}
                                     className="text-sm px-3 py-1"
@@ -573,7 +573,7 @@ const fetchCustomerTrends = async () => {
                                 </Button>
                             </div>
                         </div>
-                        
+
                         {/* Custom Date Range */}
                         <div className="flex items-center space-x-3">
                             <span className="text-sm font-medium text-gray-700">Custom:</span>
@@ -635,7 +635,7 @@ const fetchCustomerTrends = async () => {
                                             margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                                         >
                                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                            <XAxis 
+                                            <XAxis
                                                 dataKey="productName"
                                                 axisLine={true}
                                                 tickLine={true}
@@ -643,15 +643,15 @@ const fetchCustomerTrends = async () => {
                                                 height={80}
                                                 interval={0}
                                             />
-                                            <YAxis 
+                                            <YAxis
                                                 axisLine={true}
                                                 tickLine={true}
                                                 tick={{ fontSize: 12 }}
                                                 label={{ value: 'Revenue (₹)', angle: -90, position: 'insideLeft' }}
                                             />
                                             <Tooltip content={<CustomTooltip />} />
-                                            <Bar 
-                                                dataKey="revenue" 
+                                            <Bar
+                                                dataKey="revenue"
                                                 fill="#3b82f6"
                                                 radius={[4, 4, 0, 0]}
                                             />
@@ -708,7 +708,7 @@ const fetchCustomerTrends = async () => {
                                         margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis 
+                                        <XAxis
                                             dataKey="date"
                                             axisLine={true}
                                             tickLine={true}
@@ -717,15 +717,15 @@ const fetchCustomerTrends = async () => {
                                             interval={0}
                                             tickFormatter={formatDateForDisplay}
                                         />
-                                        <YAxis 
+                                        <YAxis
                                             axisLine={true}
                                             tickLine={true}
                                             tick={{ fontSize: 12 }}
                                             label={{ value: 'Revenue (₹)', angle: -90, position: 'insideLeft' }}
                                         />
                                         <Tooltip content={<CustomTooltip />} />
-                                        <Bar 
-                                            dataKey="revenue" 
+                                        <Bar
+                                            dataKey="revenue"
                                             fill="#f59e0b"
                                             radius={[4, 4, 0, 0]}
                                         />
@@ -764,7 +764,7 @@ const fetchCustomerTrends = async () => {
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                                 className="border border-gray-300 rounded px-3 py-2 text-sm"
                             >
-                                {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(year => (
+                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
                                     <option key={year} value={year}>{year}</option>
                                 ))}
                             </select>
@@ -781,14 +781,14 @@ const fetchCustomerTrends = async () => {
                                         margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis 
+                                        <XAxis
                                             dataKey="month"
                                             axisLine={true}
                                             tickLine={true}
                                             tick={{ fontSize: 12 }}
                                             height={60}
                                         />
-                                        <YAxis 
+                                        <YAxis
                                             axisLine={true}
                                             tickLine={true}
                                             tick={{ fontSize: 12 }}
@@ -796,20 +796,20 @@ const fetchCustomerTrends = async () => {
                                         />
                                         <Tooltip content={<ProfitLossTooltip />} />
                                         <Legend />
-                                        <Bar 
-                                            dataKey="sales" 
+                                        <Bar
+                                            dataKey="sales"
                                             fill="#10b981"
                                             name="Sales"
                                             radius={[2, 2, 0, 0]}
                                         />
-                                        <Bar 
-                                            dataKey="expenses" 
+                                        <Bar
+                                            dataKey="expenses"
                                             fill="#ef4444"
                                             name="Expenses"
                                             radius={[2, 2, 0, 0]}
                                         />
-                                        <Bar 
-                                            dataKey="profit" 
+                                        <Bar
+                                            dataKey="profit"
                                             fill="#3b82f6"
                                             name="Profit"
                                             radius={[2, 2, 0, 0]}
@@ -820,167 +820,167 @@ const fetchCustomerTrends = async () => {
                         ) : (
                             <div className="text-center py-16 text-gray-500">
                                 No profit/loss trends data found for {selectedYear}
+                            </div>
+                        )}
+                    </Card>
+                </div>
+            )}
+
+            {/* Customer Trends Tab */}
+            {activeTab === 'customer' && (
+                <div className="space-y-6">
+                    {/* Date Range Controls */}
+                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-4">
+                            <span className="text-sm font-medium text-gray-700">Date Range:</span>
+                            <div className="flex space-x-2">
+                                <Button
+                                    variant={isQuickDateRangeActive(7) ? 'black' : 'secondary'}
+                                    onClick={() => setQuickDateRange(7)}
+                                    className="text-sm px-3 py-1"
+                                >
+                                    7 Days
+                                </Button>
+                                <Button
+                                    variant={isQuickDateRangeActive(30) ? 'black' : 'secondary'}
+                                    onClick={() => setQuickDateRange(30)}
+                                    className="text-sm px-3 py-1"
+                                >
+                                    30 Days
+                                </Button>
+                                <Button
+                                    variant={isQuickDateRangeActive(90) ? 'black' : 'secondary'}
+                                    onClick={() => setQuickDateRange(90)}
+                                    className="text-sm px-3 py-1"
+                                >
+                                    90 Days
+                                </Button>
+                            </div>
+                        </div>
+
+                        {/* Custom Date Range */}
+                        <div className="flex items-center space-x-3">
+                            <span className="text-sm font-medium text-gray-700">Custom:</span>
+                            <input
+                                type="date"
+                                value={dateRange.from}
+                                onChange={(e) => handleDateRangeChange('from', e.target.value)}
+                                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                            />
+                            <span className="text-gray-500">to</span>
+                            <input
+                                type="date"
+                                value={dateRange.to}
+                                onChange={(e) => handleDateRangeChange('to', e.target.value)}
+                                className="border border-gray-300 rounded px-2 py-1 text-sm"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Customer Overview Summary Cards */}
+                    {customerOverviewData && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Card>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-semibold text-gray-700">Total Customers</h3>
+                                    <p className="text-2xl font-bold text-blue-600">
+                                        {customerOverviewData.newCustomers + customerOverviewData.returningCustomers}
+                                    </p>
+                                </div>
+                            </Card>
+                            <Card>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-semibold text-gray-700">New Customers</h3>
+                                    <p className="text-2xl font-bold text-green-600">{customerOverviewData.newCustomers}</p>
+                                </div>
+                            </Card>
+                            <Card>
+                                <div className="text-center">
+                                    <h3 className="text-lg font-semibold text-gray-700">Returning Customers</h3>
+                                    <p className="text-2xl font-bold text-purple-600">{customerOverviewData.returningCustomers}</p>
+                                </div>
+                            </Card>
+                        </div>
+                    )}
+
+                    {/* Charts Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Customer Overview Pie Chart */}
+                        <Card title="Customer Overview">
+                            {getCustomerOverviewPieData().length > 0 ? (
+                                <div className="h-96 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <PieChart>
+                                            <Pie
+                                                data={getCustomerOverviewPieData()}
+                                                cx="50%"
+                                                cy="50%"
+                                                labelLine={false}
+                                                label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                                                outerRadius={100}
+                                                innerRadius={40}
+                                                fill="#8884d8"
+                                                dataKey="value"
+                                            >
+                                                {getCustomerOverviewPieData().map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip content={<CustomPieTooltip />} />
+                                            <Legend />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 text-gray-500">
+                                    No customer overview data found for the selected date range
+                                </div>
+                            )}
+                        </Card>
+
+                        {/* Customer Per Order Bar Chart */}
+                        <Card title="Customer Per Order">
+                            {customerPerOrderData && customerPerOrderData.length > 0 ? (
+                                <div className="h-96 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={customerPerOrderData}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis
+                                                dataKey="date"
+                                                axisLine={true}
+                                                tickLine={true}
+                                                tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }}
+                                                height={80}
+                                                interval={0}
+                                                tickFormatter={formatDateForDisplay}
+                                            />
+                                            <YAxis
+                                                axisLine={true}
+                                                tickLine={true}
+                                                tick={{ fontSize: 12 }}
+                                                label={{ value: 'Customers per Order', angle: -90, position: 'insideLeft' }}
+                                            />
+                                            <Tooltip content={<CustomerPerOrderTooltip />} />
+                                            <Bar
+                                                dataKey="customersPerOrder"
+                                                fill="#8b5cf6"
+                                                radius={[4, 4, 0, 0]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 text-gray-500">
+                                    No customer per order data found for the selected date range
                                 </div>
                             )}
                         </Card>
                     </div>
-                )}
-
-            {/* Customer Trends Tab */}
-            {activeTab === 'customer' && (
-    <div className="space-y-6">
-        {/* Date Range Controls */}
-        <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center space-x-4">
-                <span className="text-sm font-medium text-gray-700">Date Range:</span>
-                <div className="flex space-x-2">
-                    <Button 
-                        variant={isQuickDateRangeActive(7) ? 'black' : 'secondary'}
-                        onClick={() => setQuickDateRange(7)}
-                        className="text-sm px-3 py-1"
-                    >
-                        7 Days
-                    </Button>
-                    <Button 
-                        variant={isQuickDateRangeActive(30) ? 'black' : 'secondary'}
-                        onClick={() => setQuickDateRange(30)}
-                        className="text-sm px-3 py-1"
-                    >
-                        30 Days
-                    </Button>
-                    <Button 
-                        variant={isQuickDateRangeActive(90) ? 'black' : 'secondary'}
-                        onClick={() => setQuickDateRange(90)}
-                        className="text-sm px-3 py-1"
-                    >
-                        90 Days
-                    </Button>
                 </div>
-            </div>
-            
-            {/* Custom Date Range */}
-            <div className="flex items-center space-x-3">
-                <span className="text-sm font-medium text-gray-700">Custom:</span>
-                <input
-                    type="date"
-                    value={dateRange.from}
-                    onChange={(e) => handleDateRangeChange('from', e.target.value)}
-                    className="border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-                <span className="text-gray-500">to</span>
-                <input
-                    type="date"
-                    value={dateRange.to}
-                    onChange={(e) => handleDateRangeChange('to', e.target.value)}
-                    className="border border-gray-300 rounded px-2 py-1 text-sm"
-                />
-            </div>
-        </div>
-
-        {/* Customer Overview Summary Cards */}
-        {customerOverviewData && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                    <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">Total Customers</h3>
-                        <p className="text-2xl font-bold text-blue-600">
-                            {customerOverviewData.newCustomers + customerOverviewData.returningCustomers}
-                        </p>
-                    </div>
-                </Card>
-                <Card>
-                    <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">New Customers</h3>
-                        <p className="text-2xl font-bold text-green-600">{customerOverviewData.newCustomers}</p>
-                    </div>
-                </Card>
-                <Card>
-                    <div className="text-center">
-                        <h3 className="text-lg font-semibold text-gray-700">Returning Customers</h3>
-                        <p className="text-2xl font-bold text-purple-600">{customerOverviewData.returningCustomers}</p>
-                    </div>
-                </Card>
-            </div>
-        )}
-
-        {/* Charts Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Customer Overview Pie Chart */}
-            <Card title="Customer Overview">
-                {getCustomerOverviewPieData().length > 0 ? (
-                    <div className="h-96 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                                <Pie
-                                    data={getCustomerOverviewPieData()}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={false}
-                                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                                    outerRadius={100}
-                                    innerRadius={40}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                >
-                                    {getCustomerOverviewPieData().map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={entry.color} />
-                                    ))}
-                                </Pie>
-                                <Tooltip content={<CustomPieTooltip />} />
-                                <Legend />
-                            </PieChart>
-                        </ResponsiveContainer>
-                    </div>
-                ) : (
-                    <div className="text-center py-16 text-gray-500">
-                        No customer overview data found for the selected date range
-                    </div>
-                )}
-            </Card>
-
-            {/* Customer Per Order Bar Chart */}
-            <Card title="Customer Per Order">
-                {customerPerOrderData && customerPerOrderData.length > 0 ? (
-                    <div className="h-96 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart
-                                data={customerPerOrderData}
-                                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                            >
-                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                <XAxis 
-                                    dataKey="date"
-                                    axisLine={true}
-                                    tickLine={true}
-                                    tick={{ fontSize: 12, angle: -45, textAnchor: 'end' }}
-                                    height={80}
-                                    interval={0}
-                                    tickFormatter={formatDateForDisplay}
-                                />
-                                <YAxis 
-                                    axisLine={true}
-                                    tickLine={true}
-                                    tick={{ fontSize: 12 }}
-                                    label={{ value: 'Customers per Order', angle: -90, position: 'insideLeft' }}
-                                />
-                                <Tooltip content={<CustomerPerOrderTooltip />} />
-                                <Bar 
-                                    dataKey="customersPerOrder" 
-                                    fill="#8b5cf6"
-                                    radius={[4, 4, 0, 0]}
-                                />
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                ) : (
-                    <div className="text-center py-16 text-gray-500">
-                        No customer per order data found for the selected date range
-                    </div>
-                )}
-            </Card>
-        </div>
-    </div>
-)}
+            )}
 
         </div>
     )

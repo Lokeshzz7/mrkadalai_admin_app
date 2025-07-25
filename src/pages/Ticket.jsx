@@ -23,7 +23,7 @@ const Ticket = () => {
   const [sendingReply, setSendingReply] = useState(false);
 
   const outletId = localStorage.getItem('outletId');
-  
+
   useEffect(() => {
     fetchTickets();
   }, [outletId]);
@@ -31,8 +31,8 @@ const Ticket = () => {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const response = await apiRequest(`/admin/outlets/tickets/${outletId}`);
-      
+      const response = await apiRequest(`/superadmin/outlets/tickets/${outletId}`);
+
       const transformedTickets = response.tickets.map(ticket => ({
         ticketId: `#TCK${ticket.ticketId.toString().padStart(3, '0')}`,
         date: new Date(ticket.createdAt).toLocaleDateString('en-GB').replaceAll('/', '-'),
@@ -45,7 +45,7 @@ const Ticket = () => {
         resolutionNote: ticket.resolutionNote || null,
         resolvedAt: ticket.resolvedAt ? new Date(ticket.resolvedAt).toISOString().split('T')[0] : null
       }));
-      
+
       setTicketsData(transformedTickets);
       setError(null);
     } catch (err) {
@@ -66,12 +66,12 @@ const Ticket = () => {
     const matchesSearch = ticket.ticketId.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       ticket.raisedBy.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter;
-    
+
     return matchesSearch && matchesPriority;
   });
-  
+
   // const filteredTickets = ticketsData.filter(ticket =>
   //   ticket.ticketId.toLowerCase().includes(searchQuery.toLowerCase()) ||
   //   ticket.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -126,8 +126,8 @@ const Ticket = () => {
 
     try {
       setSendingReply(true);
-      
-      await apiRequest('/admin/outlets/ticket-close/', {
+
+      await apiRequest('/superadmin/outlets/ticket-close/', {
         method: 'POST',
         body: {
           ticketId: selectedTicketForChat.originalId,
@@ -137,27 +137,27 @@ const Ticket = () => {
       });
 
       // Update local state
-      setChatReplies(prev => ({ 
-        ...prev, 
-        [selectedTicketForChat.ticketId]: chatInput.trim() 
+      setChatReplies(prev => ({
+        ...prev,
+        [selectedTicketForChat.ticketId]: chatInput.trim()
       }));
 
       // Update ticket status in local state
-      setTicketsData(prev => prev.map(ticket => 
-        ticket.ticketId === selectedTicketForChat.ticketId 
-          ? { 
-              ...ticket, 
-              status: 'closed',
-              resolutionNote: chatInput.trim(),
-              resolvedAt: new Date().toISOString().split('T')[0]
-            }
+      setTicketsData(prev => prev.map(ticket =>
+        ticket.ticketId === selectedTicketForChat.ticketId
+          ? {
+            ...ticket,
+            status: 'closed',
+            resolutionNote: chatInput.trim(),
+            resolvedAt: new Date().toISOString().split('T')[0]
+          }
           : ticket
       ));
 
       // Update selected ticket
       setSelectedTicketForChat(prev => ({ ...prev, status: 'closed' }));
       setChatInput('');
-      
+
     } catch (err) {
       console.error('Error closing ticket:', err);
       setError(err.message || 'Failed to close ticket');
@@ -237,7 +237,7 @@ const Ticket = () => {
           <Button variant='black' onClick={fetchTickets}>Refresh</Button>
         </div>
       </div>
-      
+
       <Card>
         <Table
           headers={[

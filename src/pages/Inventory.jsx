@@ -8,7 +8,7 @@ import { apiRequest } from '../utils/api'
 
 const Inventory = () => {
     const getFormattedDate = (date) => {
-        return date.toISOString().split('T')[0]; 
+        return date.toISOString().split('T')[0];
     }
 
     const today = new Date();
@@ -31,7 +31,7 @@ const Inventory = () => {
     const [error, setError] = useState('')
     const [modalLoading, setModalLoading] = useState(false)
 
-    const outletId = localStorage.getItem('outletId'); 
+    const outletId = localStorage.getItem('outletId');
 
     useEffect(() => {
         fetchStocks()
@@ -42,7 +42,7 @@ const Inventory = () => {
         setLoading(true)
         setError('')
         try {
-            const response = await apiRequest(`/admin/outlets/get-stocks/${outletId}`)
+            const response = await apiRequest(`/superadmin/outlets/get-stocks/${outletId}`)
             if (response.stocks) {
                 const transformedData = response.stocks.map(stock => [
                     stock.name,
@@ -71,7 +71,7 @@ const Inventory = () => {
         setLoading(true)
         setError('')
         try {
-            const response = await apiRequest('/admin/outlets/get-stock-history', {
+            const response = await apiRequest('/superadmin/outlets/get-stock-history', {
                 method: 'POST',
                 body: {
                     outletId,
@@ -79,7 +79,7 @@ const Inventory = () => {
                     endDate: dateTo
                 }
             })
-            
+
             if (response.history) {
                 const transformedHistory = response.history.map(item => [
                     item.product.name,
@@ -107,7 +107,7 @@ const Inventory = () => {
         setModalLoading(true)
         setError('')
         try {
-            const response = await apiRequest('/admin/outlets/add-stocks/', {
+            const response = await apiRequest('/superadmin/outlets/add-stocks/', {
                 method: 'POST',
                 body: {
                     productId: selectedItem.id,
@@ -115,13 +115,13 @@ const Inventory = () => {
                     addedQuantity: parseInt(quantity)
                 }
             })
-            
-            console.log('Add stock response:', response) 
-            
+
+            console.log('Add stock response:', response)
+
             handleCloseModal()
             await fetchStocks()
             console.log('Stock added successfully')
-            
+
         } catch (err) {
             setError(err.message || 'Error adding stock')
             console.error('Error adding stock:', err)
@@ -139,7 +139,7 @@ const Inventory = () => {
         setModalLoading(true)
         setError('')
         try {
-            const response = await apiRequest('/admin/outlets/deduct-stocks/', {
+            const response = await apiRequest('/superadmin/outlets/deduct-stocks/', {
                 method: 'POST',
                 body: {
                     productId: selectedItem.id,
@@ -147,14 +147,14 @@ const Inventory = () => {
                     quantity: parseInt(quantity)
                 }
             })
-            
+
             console.log('Deduct stock response:', response)
 
             handleCloseModal()
 
             await fetchStocks()
             console.log('Stock deducted successfully')
-            
+
         } catch (err) {
             setError(err.message || 'Error deducting stock')
             console.error('Error deducting stock:', err)
@@ -300,28 +300,28 @@ const Inventory = () => {
                                 threshold,
                                 stock,
                                 <div className="flex space-x-2">
-                                <Button
-                                    variant="success"
-                                    className="px-3 py-1 text-xs"
-                                    onClick={() => {
-                                    setSelectedItem({ item, category, stock, id, price, threshold })
-                                    setModalMode('add')
-                                    setShowAddModal(true)
-                                    }}
-                                >
-                                    Add
-                                </Button>
-                                <Button
-                                    variant="danger"
-                                    className="px-3 py-1 text-xs"
-                                    onClick={() => {
-                                    setSelectedItem({ item, category, stock, id, price, threshold })
-                                    setModalMode('deduct')
-                                    setShowAddModal(true)
-                                    }}
-                                >
-                                    Deduct
-                                </Button>
+                                    <Button
+                                        variant="success"
+                                        className="px-3 py-1 text-xs"
+                                        onClick={() => {
+                                            setSelectedItem({ item, category, stock, id, price, threshold })
+                                            setModalMode('add')
+                                            setShowAddModal(true)
+                                        }}
+                                    >
+                                        Add
+                                    </Button>
+                                    <Button
+                                        variant="danger"
+                                        className="px-3 py-1 text-xs"
+                                        onClick={() => {
+                                            setSelectedItem({ item, category, stock, id, price, threshold })
+                                            setModalMode('deduct')
+                                            setShowAddModal(true)
+                                        }}
+                                    >
+                                        Deduct
+                                    </Button>
                                 </div>
                             ])}
                         />
@@ -349,14 +349,14 @@ const Inventory = () => {
                 title={`${modalMode === 'add' ? 'Add' : 'Deduct'} Stock`}
                 footer={
                     <div className="space-x-2">
-                        <Button 
-                            variant="secondary" 
+                        <Button
+                            variant="secondary"
                             onClick={handleCloseModal}
                             disabled={modalLoading}
                         >
                             Cancel
                         </Button>
-                        <Button 
+                        <Button
                             variant={modalMode === 'add' ? 'success' : 'danger'}
                             onClick={handleStockAction}
                             disabled={modalLoading || !quantity}
@@ -374,7 +374,7 @@ const Inventory = () => {
                                 {error}
                             </div>
                         )}
-                        
+
                         {/* Table-style display for item details */}
                         <table className="w-full text-sm border border-gray-300 rounded">
                             <thead className="bg-gray-100">
@@ -392,7 +392,7 @@ const Inventory = () => {
                                 </tr>
                             </tbody>
                         </table>
-                        
+
                         {/* Quantity input */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
