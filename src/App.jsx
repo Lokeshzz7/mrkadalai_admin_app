@@ -28,6 +28,7 @@ import StaffDetails from './pages/StaffDetails.jsx';
 import ProductManagement from './pages/ProductManagement.jsx';
 import AddStaff from './pages/staff/AddStaff.jsx';
 import { Toaster } from 'react-hot-toast';
+import AdminDetails from './pages/AdminDetails.jsx';
 
 function App() {
   return (
@@ -49,7 +50,15 @@ function App() {
               </ProtectedRoute>
             }
           />
+          <Route
+            path="/admin/:id"
+            element={
+              <ProtectedRoute>
 
+                <AdminDetails />
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/home"
