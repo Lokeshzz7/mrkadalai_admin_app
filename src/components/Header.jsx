@@ -1,6 +1,6 @@
-import React, { useContext,useEffect } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { useLocation } from 'react-router-dom';
-import { Search, Bell, User, Menu } from 'lucide-react'
+import { Search, Bell, User, Menu, LogOut } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
 import logo from '../assets/logo.png'
 
@@ -58,11 +58,13 @@ const Header = ({ onMenuClick }) => {
 
                     {/* Right Section */}
                     <div className="flex items-center space-x-2 sm:space-x-4">
-                        {/* Notifications */}
-                        <button className="relative p-2 text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-full">
-                            <Bell className="h-5 w-5 sm:h-6 sm:w-6" />
-                            <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+                        <button
+                            onClick={signOut}
+                            className="relative p-2 border-2 border-black rounded-full text-black hover:bg-black hover:text-white transition"
+                        >
+                            <LogOut className="h-5 w-5 sm:h-6 sm:w-6" />
                         </button>
+
 
                         {/* Profile */}
                         <div className="flex items-center space-x-2 sm:space-x-3">
