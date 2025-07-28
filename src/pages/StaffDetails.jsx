@@ -4,6 +4,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { User } from 'lucide-react';
 import { apiRequest } from '../utils/api';
+import toast from 'react-hot-toast';
 
 const StaffDetails = () => {
   const [activeTab, setActiveTab] = useState('details');
@@ -110,12 +111,12 @@ const StaffDetails = () => {
           staffRole: formData.staffRole,
         },
       });
-      alert('Staff details updated successfully');
+      toast.success('Staff details updated successfully');
       setIsEditingDetails(false);
       await fetchStaffDetails();
     } catch (err) {
       console.error('Error saving staff details:', err);
-      alert('Failed to save staff details');
+      toast.error('Failed to save staff details');
     }
   };
 
@@ -140,12 +141,12 @@ const StaffDetails = () => {
         });
       }
 
-      alert('Permissions updated successfully');
+      toast.success('Permissions updated successfully');
       setIsEditingPermissions(false);
       await fetchStaffDetails();
     } catch (err) {
       console.error('Error saving permissions:', err);
-      alert('Failed to save permissions');
+      toast.error('Failed to save permissions');
     }
   };
 
@@ -158,11 +159,11 @@ const StaffDetails = () => {
         await apiRequest(`/superadmin/outlets/delete-staff/${staff.id}`, {
           method: 'DELETE',
         });
-        alert('Staff member deleted successfully');
+        toast.success('Staff member deleted successfully');
         navigate('/staff');
       } catch (err) {
         console.error('Error deleting staff:', err);
-        alert('Failed to delete staff member');
+        toast.error('Failed to delete staff member');
       }
     }
   };

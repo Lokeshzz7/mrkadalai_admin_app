@@ -4,6 +4,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import { Info, Trash2, Edit, X } from 'lucide-react';
+import toast from 'react-hot-toast';
 
 const categories = ['All', 'Meals', 'Starters', 'Desserts', 'Beverages'];
 
@@ -93,9 +94,9 @@ const ProductManagement = () => {
             setShowAddModal(false);
             resetFormData();
             fetchProducts();
-            alert('Product added successfully!');
+            toast.success('Product added successfully!');
         } catch (err) {
-            alert(err.message || 'Failed to add product');
+            toast.error(err.message || 'Failed to add product');
         }
     };
 
@@ -119,9 +120,9 @@ const ProductManagement = () => {
             setProductToEdit(null);
             resetEditFormData();
             fetchProducts();
-            alert('Product updated successfully!');
+            toast.success('Product updated successfully!');
         } catch (err) {
-            alert(err.message || 'Failed to update product');
+            toast.error(err.message || 'Failed to update product');
         }
     };
 
@@ -136,9 +137,9 @@ const ProductManagement = () => {
             setShowRemoveModal(false);
             setProductToRemove(null);
             fetchProducts();
-            alert('Product removed successfully!');
+            toast.success('Product removed successfully!');
         } catch (err) {
-            alert(err.message || 'Failed to remove product');
+            toast.error(err.message || 'Failed to remove product');
         }
     };
 

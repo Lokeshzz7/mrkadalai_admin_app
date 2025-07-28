@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../../components/ui/Card';
 import Button from '../../components/ui/Button';
 import { apiRequest } from '../../utils/api';
+import toast from 'react-hot-toast';
 
 const PERMISSIONS_LIST = [
   { key: 'BILLING', label: 'BILLING' },
@@ -46,42 +47,42 @@ const AddStaff = () => {
     const { name, email, phone, staffRole, password, confirmPassword } = formData;
 
     if (!name.trim()) {
-      alert('Please enter full name');
+      toast.error('Please enter full name');
       return false;
     }
 
     if (!email.trim()) {
-      alert('Please enter email address');
+      toast.error('Please enter email address');
       return false;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      alert('Please enter a valid email address');
+      toast.error('Please enter a valid email address');
       return false;
     }
 
     if (!phone.trim()) {
-      alert('Please enter phone number');
+      toast.error('Please enter phone number');
       return false;
     }
 
     if (!staffRole.trim()) {
-      alert('Please enter staff role');
+      toast.error('Please enter staff role');
       return false;
     }
 
     if (!password.trim()) {
-      alert('Please enter password');
+      toast.error('Please enter password');
       return false;
     }
 
     if (password.length < 6) {
-      alert('Password must be at least 6 characters long');
+      toast.error('Password must be at least 6 characters long');
       return false;
     }
 
     if (password !== confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return false;
     }
 
@@ -112,12 +113,12 @@ const AddStaff = () => {
         body: staffData
       });
 
-      alert('Staff account created successfully!');
+      toast.success('Staff account created successfully!');
       navigate('/staff');
 
     } catch (error) {
       console.error('Error creating staff account:', error);
-      alert(error.message || 'Failed to create staff account');
+      toast.error(error.message || 'Failed to create staff account');
     } finally {
       setLoading(false);
     }

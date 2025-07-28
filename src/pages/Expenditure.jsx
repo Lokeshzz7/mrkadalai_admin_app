@@ -3,6 +3,7 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import { apiRequest } from '../utils/api'; // Adjust the path based on your file structure
+import toast from 'react-hot-toast';
 
 const Expenditure = () => {
     const [activeTab, setActiveTab] = useState('tracker');
@@ -122,12 +123,12 @@ const Expenditure = () => {
                 }
             });
 
-            alert("Expense Added Successfully");
+            toast.success("Expense Added Successfully");
             handleReset();
             fetchExpenses(); // Refresh the expense list
         } catch (error) {
             console.error('Error adding expense:', error);
-            alert(`Error: ${error.message}`);
+            toast.error(`Error: ${error.message}`);
         }
         setLoading(false);
     };

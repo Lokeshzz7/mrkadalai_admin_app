@@ -9,6 +9,7 @@ import Header from '../../components/Header.jsx';
 import { apiRequest } from '../../utils/api.js';
 import Onboarding from '../../components/dashboard/Onboarding.jsx';
 import AdminManagment from '../../components/dashboard/AdminManagement.jsx';
+import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('admin');
@@ -60,7 +61,7 @@ const AdminDashboard = () => {
             setOutlets(data.outlets);
         } catch (error) {
             console.error(error.message);
-            alert('Failed to load outlets');
+            toast.error('Failed to load outlets');
         }
     };
 
@@ -70,7 +71,7 @@ const AdminDashboard = () => {
             setDashboardData(data);
         } catch (error) {
             console.error('Failed to fetch dashboard overview:', error);
-            alert('Failed to load dashboard data');
+            toast.error('Failed to load dashboard data');
         }
     };
 
@@ -120,7 +121,7 @@ const AdminDashboard = () => {
             setPeakTimeSlots(peakSlotsResponse);
         } catch (error) {
             console.error('Failed to fetch charts data:', error);
-            alert('Failed to load charts data');
+            toast.error('Failed to load charts data');
         } finally {
             setLoading(false);
         }
@@ -140,29 +141,29 @@ const AdminDashboard = () => {
                 method: 'POST',
                 body: formData,
             });
-            alert('Outlet added successfully');
+            toast.success('Outlet added successfully');
             setFormData({ name: '', address: '', phone: '', email: '', staffCount: 0 });
             setIsModalOpen(false);
             fetchOutlets();
         } catch (err) {
             console.error(err.message);
-            alert(err.message || 'Error adding outlet');
+            toast.error(err.message || 'Error adding outlet');
         }
     };
 
     const handleRemove = async () => {
-        if (!selectedOutlet) return alert('Select a valid outlet to remove');
+        if (!selectedOutlet) return toast.error('Select a valid outlet to remove');
         try {
             await apiRequest(`/superadmin/remove-outlet/${selectedOutlet.id}/`, {
                 method: 'DELETE',
             });
-            alert('Outlet removed successfully');
+            toast.success('Outlet removed successfully');
             setSelectedOutlet(null);
             setIsModalOpen(false);
             fetchOutlets();
         } catch (err) {
             console.error(err.message);
-            alert(err.message || 'Error removing outlet');
+            toast.error(err.message || 'Error removing outlet');
         }
     };
 

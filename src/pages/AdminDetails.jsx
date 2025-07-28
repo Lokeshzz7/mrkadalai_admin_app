@@ -4,6 +4,7 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import { User } from 'lucide-react';
 import { apiRequest } from '../utils/api';
+import toast from 'react-hot-toast';
 
 const AdminDetails = () => {
     const [activeTab, setActiveTab] = useState('details');
@@ -114,12 +115,12 @@ const AdminDetails = () => {
                     adminRole: formData.adminRole,
                 },
             });
-            alert('admin details updated successfully');
+            toast.success('admin details updated successfully');
             setIsEditingDetails(false);
             await fetchadminDetails();
         } catch (err) {
             console.error('Error saving admin details:', err);
-            alert('Failed to save admin details');
+            toast.error('Failed to save admin details');
         }
     };
 
@@ -144,12 +145,12 @@ const AdminDetails = () => {
                 });
             }
 
-            alert('Permissions updated successfully');
+            toast.success('Permissions updated successfully');
             setIsEditingPermissions(false);
             await fetchadminDetails();
         } catch (err) {
             console.error('Error saving permissions:', err);
-            alert('Failed to save permissions');
+            toast.error('Failed to save permissions');
         }
     };
 
@@ -162,11 +163,11 @@ const AdminDetails = () => {
                 await apiRequest(`/superadmin/outlets/delete-admin/${admin.id}`, {
                     method: 'DELETE',
                 });
-                alert('admin member deleted successfully');
+                toast.success('admin member deleted successfully');
                 navigate('/admin');
             } catch (err) {
                 console.error('Error deleting admin:', err);
-                alert('Failed to delete admin member');
+                toast.error('Failed to delete admin member');
             }
         }
     };
