@@ -10,6 +10,7 @@ import { apiRequest } from '../../utils/api.js';
 import Onboarding from '../../components/dashboard/Onboarding.jsx';
 import AdminManagment from '../../components/dashboard/AdminManagement.jsx';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('admin');
@@ -44,12 +45,23 @@ const AdminDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
 
+    const { user } = useAuth(); 
+    
+    const isSuperAdmin = user?.role === 'SUPERADMIN';
+
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchOutlets();
         fetchDashboardData();
     }, []);
+
+
+    useEffect(() => {
+        if (!isSuperAdmin && (activeTab === 'Onboarding' || activeTab === 'AdminManagement')) {
+            setActiveTab('admin');
+        }
+    }, [isSuperAdmin, activeTab]);
 
     useEffect(() => {
         fetchChartsData();
@@ -237,16 +249,20 @@ const AdminDashboard = () => {
                         >
                             Outlet
                         </Button>
-                        <Button
-                            variant={activeTab === 'Onboarding' ? 'black' : 'secondary'}
-                            onClick={() => setActiveTab('Onboarding')}>
-                            OnBoarding
-                        </Button>
-                        <Button
-                            variant={activeTab === 'AdminManagement' ? 'black' : 'secondary'}
-                            onClick={() => setActiveTab('AdminManagement')}>
-                            Admin Management
-                        </Button>
+                        {isSuperAdmin && (
+                                <>
+                                    <Button
+                                        variant={activeTab === 'Onboarding' ? 'black' : 'secondary'}
+                                        onClick={() => setActiveTab('Onboarding')}>
+                                        OnBoarding
+                                    </Button>
+                                    <Button
+                                        variant={activeTab === 'AdminManagement' ? 'black' : 'secondary'}
+                                        onClick={() => setActiveTab('AdminManagement')}>
+                                        Admin Management
+                                    </Button>
+                                </>
+                            )}
                     </div>
 
                     {activeTab === 'outlet' && (
@@ -609,13 +625,13 @@ const AdminDashboard = () => {
                         </div>
                     )}
 
-                    {activeTab === 'Onboarding' && (
-                        <>
-                            <Onboarding />
-                        </>
-                    )}
+                    {activeTab === 'Onboarding' && isSuperAdmin && (
+                            <>
+                                <Onboarding />
+                            </>
+                        )}
 
-                    {activeTab === 'AdminManagement' && (
+                    {activeTab === 'AdminManagement' && isSuperAdmin && (
                         <>
                             <AdminManagment />
                         </>
