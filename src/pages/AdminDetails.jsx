@@ -8,6 +8,8 @@ import toast from 'react-hot-toast';
 
 const AdminDetails = () => {
     const [activeTab, setActiveTab] = useState('details');
+    const [selectedOutletId, setSelectedOutletId] = useState('');
+
     const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -17,6 +19,7 @@ const AdminDetails = () => {
 
     const [isEditingDetails, setIsEditingDetails] = useState(false);
     const [isEditingPermissions, setIsEditingPermissions] = useState(false);
+    const [isSavingPermissions, setIsSavingPermissions] = useState(false); // NEW STATE
 
     const [formData, setFormData] = useState({
         name: '',
@@ -110,6 +113,7 @@ const AdminDetails = () => {
 
     const savePermissions = async () => {
         try {
+            setIsSavingPermissions(true); // START LOADING
             // Build the permissions object based on the updated state
             const permissionsPayload = {};
             admin.outlets.forEach((outlet) => {
@@ -138,6 +142,8 @@ const AdminDetails = () => {
         } catch (err) {
             console.error('Error saving permissions:', err);
             toast.error('Failed to save permissions');
+        } finally {
+            setIsSavingPermissions(false); // STOP LOADING
         }
     };
 
@@ -147,7 +153,7 @@ const AdminDetails = () => {
         );
         if (confirmDelete) {
             try {
-                await apiRequest(`/superadmin/outlets/delete-admin/${admin.id}`, {
+                await apiRequest(`/superadmin/admin/${admin.id}`, {
                     method: 'DELETE',
                 });
                 toast.success('Admin deleted successfully');
@@ -260,58 +266,74 @@ const AdminDetails = () => {
             {/* Permissions Tab */}
             {activeTab === 'permission' && (
                 <Card title="Outlet-wise Permissions" className="max-w-4xl mx-auto mt-8">
-                    <div className="space-y-8">
-                        {admin.outlets.map((outlet) => (
-                            <div key={outlet.outletId} className="border-b pb-4">
-                                <h3 className="text-lg font-semibold mb-4">
+                    {/* Dropdown to select outlet */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Select Outlet</label>
+                        <select
+                            className="border rounded-md px-3 py-2 w-full"
+                            value={selectedOutletId}
+                            onChange={(e) => setSelectedOutletId(Number(e.target.value))}
+                        >
+                            <option value="">-- Select an Outlet --</option>
+                            {admin.outlets.map((outlet) => (
+                                <option key={outlet.outletId} value={outlet.outletId}>
                                     {outlet.outlet.name} ({outlet.outlet.address})
-                                </h3>
-                                <div className="space-y-3">
-                                    {outlet.permissions.map((perm) => (
-                                        <div
-                                            key={perm.type}
-                                            className="flex items-center justify-between"
-                                        >
-                                            <span>{perm.type.replace(/_/g, ' ')}</span>
-                                            <label
-                                                className={`relative inline-flex items-center ${!isEditingPermissions
-                                                    ? 'opacity-50 cursor-not-allowed'
-                                                    : 'cursor-pointer'
-                                                    }`}
-                                            >
-                                                <input
-                                                    type="checkbox"
-                                                    className="sr-only peer"
-                                                    checked={perm.isGranted}
-                                                    disabled={!isEditingPermissions}
-                                                    onChange={(e) =>
-                                                        handlePermissionChange(
-                                                            outlet.outletId,
-                                                            perm.type,
-                                                            e.target.checked
-                                                        )
-                                                    }
-                                                />
-                                                <div
-                                                    className={`w-11 h-6 rounded-full transition-colors duration-200 ${perm.isGranted ? 'bg-theme' : 'bg-black'
-                                                        }`}
-                                                ></div>
-                                                <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
-                                            </label>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
+                    {/* Show permissions for the selected outlet */}
+                    {selectedOutletId ? (
+                        <div className="space-y-3">
+                            {admin.outlets
+                                .find((outlet) => outlet.outletId === selectedOutletId)
+                                ?.permissions
+                                .slice()
+                                .sort((a, b) => a.type.localeCompare(b.type))  // SORT ALPHABETICALLY
+                                .map((perm) => (
+                                    <div key={perm.type} className="flex items-center justify-between">
+                                        <span>{perm.type.replace(/_/g, ' ')}</span>
+                                        <label
+                                            className={`relative inline-flex items-center ${!isEditingPermissions
+                                                ? 'opacity-50 cursor-not-allowed'
+                                                : 'cursor-pointer'
+                                                }`}
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                className="sr-only peer"
+                                                checked={perm.isGranted}
+                                                disabled={!isEditingPermissions}
+                                                onChange={(e) =>
+                                                    handlePermissionChange(
+                                                        selectedOutletId,
+                                                        perm.type,
+                                                        e.target.checked
+                                                    )
+                                                }
+                                            />
+                                            <div
+                                                className={`w-11 h-6 rounded-full transition-colors duration-200 ${perm.isGranted ? 'bg-theme' : 'bg-black'
+                                                    }`}
+                                            ></div>
+                                            <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
+                                        </label>
+                                    </div>
+                                ))}
+                        </div>
+                    ) : (
+                        <div className="text-gray-500 text-center mt-4">Please select an outlet to view permissions.</div>
+                    )}
+
+                    {/* Save/Cancel buttons */}
                     <div className="flex justify-center mt-6 gap-4">
                         {isEditingPermissions ? (
                             <>
-                                <Button variant="primary" onClick={savePermissions}>
-                                    Save Permissions
+                                <Button variant="primary" onClick={savePermissions} disabled={isSavingPermissions}>
+                                    {isSavingPermissions ? 'Saving...' : 'Save Permissions'}
                                 </Button>
-                                <Button variant="secondary" onClick={() => setIsEditingPermissions(false)}>
+                                <Button variant="secondary" onClick={() => setIsEditingPermissions(false)} disabled={isSavingPermissions}>
                                     Cancel
                                 </Button>
                             </>
@@ -323,6 +345,7 @@ const AdminDetails = () => {
                     </div>
                 </Card>
             )}
+
         </div>
     );
 };
