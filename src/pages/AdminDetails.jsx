@@ -8,14 +8,13 @@ import toast from 'react-hot-toast';
 
 const AdminDetails = () => {
     const [activeTab, setActiveTab] = useState('details');
-    const [admin, setadmin] = useState(null);
+    const [admin, setAdmin] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     const { id } = useParams();
     const navigate = useNavigate();
 
-    // Separate editing states for each tab
     const [isEditingDetails, setIsEditingDetails] = useState(false);
     const [isEditingPermissions, setIsEditingPermissions] = useState(false);
 
@@ -24,61 +23,34 @@ const AdminDetails = () => {
         email: '',
         phone: '',
         adminRole: '',
-        billing: false,
-        productsInsight: false,
-        inventory: false,
-        reports: false,
     });
 
     useEffect(() => {
-        fetchadminDetails();
+        fetchAdminDetails();
     }, [id]);
 
-    const fetchadminDetails = async () => {
+    const fetchAdminDetails = async () => {
         try {
             setLoading(true);
-            const response = await apiRequest(`/superadmin/verify-admin/${id}`, {
+            const response = await apiRequest(`/superadmin/admin/${id}`, {
                 method: 'POST'
             });
-            console.groupCollapsed("Admin Data");
-            console.log(response);
-            const adminMember = response.admin;
-            console.log(adminMember)
+
+            // Check if API is returning array or object
+            const adminMember = Array.isArray(response)
+                ? response[0]   // Take first element if it's an array
+                : response.admin || response; // else handle object
+
             if (adminMember) {
-                setadmin(adminMember);
-
-                // const permissions = {};
-                // adminMember.permissions?.forEach((perm) => {
-                //     switch (perm.type) {
-                //         case 'BILLING':
-                //             permissions.billing = perm.isGranted;
-                //             break;
-                //         case 'PRODUCT_INSIGHTS':
-                //             permissions.productsInsight = perm.isGranted;
-                //             break;
-                //         case 'INVENTORY':
-                //             permissions.inventory = perm.isGranted;
-                //             break;
-                //         case 'REPORTS':
-                //             permissions.reports = perm.isGranted;
-                //             break;
-                //         default:
-                //             break;
-                //     }
-                // });
-
+                setAdmin(adminMember);
                 setFormData({
                     name: adminMember.name || '',
                     email: adminMember.email || '',
-                    // phone: adminMember.user?.phone || '',
-                    // adminRole: adminMember.adminRole || '',
-                    // billing: permissions.billing || false,
-                    // productsInsight: permissions.productsInsight || false,
-                    // inventory: permissions.inventory || false,
-                    // reports: permissions.reports || false,
+                    phone: adminMember.phone || '',
+                    adminRole: adminMember.adminRole || '',
                 });
             } else {
-                setError('admin member not found');
+                setError('Admin not found');
             }
         } catch (err) {
             setError('Failed to fetch admin details');
@@ -88,6 +60,7 @@ const AdminDetails = () => {
         }
     };
 
+
     const handleChange = (e) => {
         const { name, value } = e.target;
         setFormData((prev) => ({
@@ -96,15 +69,26 @@ const AdminDetails = () => {
         }));
     };
 
-    const handlePermissionChange = (permission, checked) => {
-        setFormData((prev) => ({
-            ...prev,
-            [permission]: checked,
-        }));
+    const handlePermissionChange = (outletId, permType, checked) => {
+        setAdmin((prev) => {
+            const updatedOutlets = prev.outlets.map((outlet) => {
+                if (outlet.outletId === outletId) {
+                    return {
+                        ...outlet,
+                        permissions: outlet.permissions.map((perm) =>
+                            perm.type === permType
+                                ? { ...perm, isGranted: checked }
+                                : perm
+                        ),
+                    };
+                }
+                return outlet;
+            });
+            return { ...prev, outlets: updatedOutlets };
+        });
     };
 
-    // Save admin details only
-    const saveadminDetails = async () => {
+    const saveAdminDetails = async () => {
         try {
             await apiRequest(`/superadmin/outlets/update-admin/${admin.id}`, {
                 method: 'PUT',
@@ -115,59 +99,62 @@ const AdminDetails = () => {
                     adminRole: formData.adminRole,
                 },
             });
-            toast.success('admin details updated successfully');
+            toast.success('Admin details updated successfully');
             setIsEditingDetails(false);
-            await fetchadminDetails();
+            await fetchAdminDetails();
         } catch (err) {
             console.error('Error saving admin details:', err);
             toast.error('Failed to save admin details');
         }
     };
 
-    // Save permissions only
     const savePermissions = async () => {
         try {
-            const permissionTypeMap = {
-                billing: 'BILLING',
-                productsInsight: 'PRODUCT_INSIGHTS',
-                inventory: 'INVENTORY',
-                reports: 'REPORTS',
-            };
+            // Build the permissions object based on the updated state
+            const permissionsPayload = {};
+            admin.outlets.forEach((outlet) => {
+                permissionsPayload[outlet.outletId] = outlet.permissions.map((perm) => ({
+                    type: perm.type,
+                    isGranted: perm.isGranted
+                }));
+            });
 
-            for (const key of Object.keys(permissionTypeMap)) {
-                await apiRequest('/superadmin/outlets/permissions/', {
-                    method: 'POST',
-                    body: {
-                        adminId: admin.id,
-                        permission: permissionTypeMap[key],
-                        grant: formData[key],
-                    },
-                });
-            }
+            console.groupCollapsed();
+            console.log(permissionsPayload);
+
+            // Call new API with all permissions at once
+
+            await apiRequest('/superadmin/assign-admin-permissions', {
+                method: 'POST',
+                body: {
+                    adminId: admin.id,
+                    permissions: permissionsPayload,
+                },
+            });
 
             toast.success('Permissions updated successfully');
             setIsEditingPermissions(false);
-            await fetchadminDetails();
+            await fetchAdminDetails();
         } catch (err) {
             console.error('Error saving permissions:', err);
             toast.error('Failed to save permissions');
         }
     };
 
-    const handleDeleteadmin = async () => {
+    const handleDeleteAdmin = async () => {
         const confirmDelete = window.confirm(
-            'Are you sure you want to remove this admin member?'
+            'Are you sure you want to remove this admin?'
         );
         if (confirmDelete) {
             try {
                 await apiRequest(`/superadmin/outlets/delete-admin/${admin.id}`, {
                     method: 'DELETE',
                 });
-                toast.success('admin member deleted successfully');
+                toast.success('Admin deleted successfully');
                 navigate('/admin');
             } catch (err) {
                 console.error('Error deleting admin:', err);
-                toast.error('Failed to delete admin member');
+                toast.error('Failed to delete admin');
             }
         }
     };
@@ -183,14 +170,14 @@ const AdminDetails = () => {
     if (error || !admin) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="text-red-500">{error || 'admin member not found'}</div>
+                <div className="text-red-500">{error || 'Admin not found'}</div>
             </div>
         );
     }
 
     return (
         <div className="space-y-6 p-10">
-            {/* Top Row: Back button + Tabs */}
+            {/* Tabs */}
             <div className="flex justify-start items-center gap-4">
                 <button
                     onClick={() => navigate(-1)}
@@ -206,13 +193,13 @@ const AdminDetails = () => {
                         variant={activeTab === 'details' ? 'black' : 'secondary'}
                         onClick={() => setActiveTab('details')}
                     >
-                        admin Details
+                        Admin Details
                     </Button>
                     <Button
                         variant={activeTab === 'permission' ? 'black' : 'secondary'}
                         onClick={() => setActiveTab('permission')}
                     >
-                        Permission
+                        Permissions
                     </Button>
                 </div>
             </div>
@@ -227,7 +214,6 @@ const AdminDetails = () => {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-                        {console.log(formData)}
                         {[
                             ['name', 'Name'],
                             ['adminRole', 'Position'],
@@ -249,11 +235,10 @@ const AdminDetails = () => {
                         ))}
                     </div>
 
-                    {/* Buttons */}
                     <div className="flex justify-center gap-4">
                         {isEditingDetails ? (
                             <>
-                                <Button variant="primary" onClick={saveadminDetails}>
+                                <Button variant="primary" onClick={saveAdminDetails}>
                                     Save Details
                                 </Button>
                                 <Button variant="secondary" onClick={() => setIsEditingDetails(false)}>
@@ -265,49 +250,61 @@ const AdminDetails = () => {
                                 Update Details
                             </Button>
                         )}
-                        <Button variant="danger" onClick={handleDeleteadmin}>
-                            Remove admin
+                        <Button variant="danger" onClick={handleDeleteAdmin}>
+                            Remove Admin
                         </Button>
                     </div>
                 </Card>
             )}
 
-            {/* Permission Tab */}
+            {/* Permissions Tab */}
             {activeTab === 'permission' && (
-                <Card title="Enable Permissions" className="max-w-4xl mx-auto mt-8">
-                    <div className="grid grid-cols-1 gap-8 items-center">
-                        <div className="space-y-6 text-lg">
-                            {[
-                                { key: 'billing', label: 'Billing' },
-                                { key: 'productsInsight', label: 'Product Insight' },
-                                { key: 'inventory', label: 'Inventory' },
-                                { key: 'reports', label: 'Reports' },
-                            ].map((item) => (
-                                <div key={item.key} className="flex items-center justify-between">
-                                    <span>{item.label}</span>
-                                    <label
-                                        className={`relative inline-flex items-center ${!isEditingPermissions ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                                            }`}
-                                    >
-                                        <input
-                                            type="checkbox"
-                                            className="sr-only peer"
-                                            checked={formData[item.key] || false}
-                                            disabled={!isEditingPermissions}
-                                            onChange={(e) => handlePermissionChange(item.key, e.target.checked)}
-                                        />
+                <Card title="Outlet-wise Permissions" className="max-w-4xl mx-auto mt-8">
+                    <div className="space-y-8">
+                        {admin.outlets.map((outlet) => (
+                            <div key={outlet.outletId} className="border-b pb-4">
+                                <h3 className="text-lg font-semibold mb-4">
+                                    {outlet.outlet.name} ({outlet.outlet.address})
+                                </h3>
+                                <div className="space-y-3">
+                                    {outlet.permissions.map((perm) => (
                                         <div
-                                            className={`w-11 h-6 rounded-full transition-colors duration-200 ${formData[item.key] ? 'bg-theme' : 'bg-black'
-                                                }`}
-                                        ></div>
-                                        <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
-                                    </label>
+                                            key={perm.type}
+                                            className="flex items-center justify-between"
+                                        >
+                                            <span>{perm.type.replace(/_/g, ' ')}</span>
+                                            <label
+                                                className={`relative inline-flex items-center ${!isEditingPermissions
+                                                    ? 'opacity-50 cursor-not-allowed'
+                                                    : 'cursor-pointer'
+                                                    }`}
+                                            >
+                                                <input
+                                                    type="checkbox"
+                                                    className="sr-only peer"
+                                                    checked={perm.isGranted}
+                                                    disabled={!isEditingPermissions}
+                                                    onChange={(e) =>
+                                                        handlePermissionChange(
+                                                            outlet.outletId,
+                                                            perm.type,
+                                                            e.target.checked
+                                                        )
+                                                    }
+                                                />
+                                                <div
+                                                    className={`w-11 h-6 rounded-full transition-colors duration-200 ${perm.isGranted ? 'bg-theme' : 'bg-black'
+                                                        }`}
+                                                ></div>
+                                                <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
+                                            </label>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
 
-                    {/* Buttons */}
                     <div className="flex justify-center mt-6 gap-4">
                         {isEditingPermissions ? (
                             <>
