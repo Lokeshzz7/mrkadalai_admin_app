@@ -1,9 +1,10 @@
-// Fixed App.jsx - Simplified routing structure
+// Updated App.jsx with permission-based routing
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import AdminPermissionRoute from './components/AdminPermissionRoute.jsx'
 
 // Auth pages
 import SignIn from './pages/auth/SignIn.jsx';
@@ -39,9 +40,9 @@ function App() {
           reverseOrder={false}
           toastOptions={{
             style: {
-              fontSize: '20px',      
-              padding: '18px 28px',  
-              minWidth: '320px',     
+              fontSize: '20px',
+              padding: '18px 28px',
+              minWidth: '320px',
             },
           }}
         />
@@ -51,7 +52,7 @@ function App() {
           <Route path="/signin" element={<SignIn />} />
           <Route path="/admin-signup" element={<SignUp />} />
 
-          {/* Protected routes - each wrapped individually */}
+          {/* Home route - always accessible */}
           <Route
             path='/'
             element={
@@ -60,16 +61,18 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Admin details route */}
           <Route
             path="/admin/:id"
             element={
               <ProtectedRoute>
-
                 <AdminDetails />
               </ProtectedRoute>
             }
           />
 
+          {/* Regular dashboard */}
           <Route
             path="/home"
             element={
@@ -80,40 +83,69 @@ function App() {
               </ProtectedRoute>
             }
           />
+
+          {/* Permission-protected routes */}
           <Route
             path="/staff"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Staff />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="STAFF_MANAGEMENT">
+                  <Layout>
+                    <Staff />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
-          <Route path="/staff/add" element={
-            <ProtectedRoute>
-              <Layout>
-                <AddStaff />
-              </Layout>
-            </ProtectedRoute>
-          } />
+
+          <Route
+            path="/staff/add"
+            element={
+              <ProtectedRoute>
+                <AdminPermissionRoute requiredPermission="STAFF_MANAGEMENT">
+                  <Layout>
+                    <AddStaff />
+                  </Layout>
+                </AdminPermissionRoute>
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/staff/:id"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <StaffDetails />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="STAFF_MANAGEMENT">
+                  <Layout>
+                    <StaffDetails />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/order-history"
+            element={
+              <ProtectedRoute>
+                <AdminPermissionRoute requiredPermission="ORDER_MANAGEMENT">
+                  <Layout>
+                    <OrderHistory />
+                  </Layout>
+                </AdminPermissionRoute>
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/expenditure"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Expenditure />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="EXPENDITURE_MANAGEMENT">
+                  <Layout>
+                    <Expenditure />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
@@ -122,113 +154,128 @@ function App() {
             path="/customers"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Customer />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/tickets"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <Ticket />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="CUSTOMER_MANAGEMENT">
+                  <Layout>
+                    <Customer />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
 
+          <Route
+            path="/tickets"
+            element={
+              <ProtectedRoute>
+                <AdminPermissionRoute requiredPermission="TICKET_MANAGEMENT">
+                  <Layout>
+                    <Ticket />
+                  </Layout>
+                </AdminPermissionRoute>
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/notifications"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Notifications />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/app"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <AppManagement />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="NOTIFICATIONS_MANAGEMENT">
+                  <Layout>
+                    <Notifications />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
 
+          <Route
+            path="/app"
+            element={
+              <ProtectedRoute>
+                <AdminPermissionRoute requiredPermission="APP_MANAGEMENT">
+                  <Layout>
+                    <AppManagement />
+                  </Layout>
+                </AdminPermissionRoute>
+              </ProtectedRoute>
+            }
+          />
 
           <Route
             path="/manual-order"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <ManualOrder />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="ORDER_MANAGEMENT">
+                  <Layout>
+                    <ManualOrder />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/order-history"
-            element={
-              <ProtectedRoute>
-                <Layout>
-                  <OrderHistory />
-                </Layout>
-              </ProtectedRoute>
-            }
-          />
+
           <Route
             path="/inventory"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Inventory />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="INVENTORY_MANAGEMENT">
+                  <Layout>
+                    <Inventory />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/product"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <ProductManagement />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="PRODUCT_MANAGEMENT">
+                  <Layout>
+                    <ProductManagement />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/wallet"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Wallet />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="WALLET_MANAGEMENT">
+                  <Layout>
+                    <Wallet />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/reports"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Reports />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="REPORTS_ANALYTICS">
+                  <Layout>
+                    <Reports />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />
+
           <Route
             path="/settings"
             element={
               <ProtectedRoute>
-                <Layout>
-                  <Settings />
-                </Layout>
+                <AdminPermissionRoute requiredPermission="SETTINGS">
+                  <Layout>
+                    <Settings />
+                  </Layout>
+                </AdminPermissionRoute>
               </ProtectedRoute>
             }
           />

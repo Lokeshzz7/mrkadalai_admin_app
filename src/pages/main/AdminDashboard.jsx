@@ -25,6 +25,7 @@ const AdminDashboard = () => {
         email: '',
         staffCount: 0
     });
+    const { setCurrentOutlet, getAccessibleRoutes } = useAuth();
 
     // Dashboard data states
     const [dashboardData, setDashboardData] = useState({
@@ -45,8 +46,8 @@ const AdminDashboard = () => {
     });
     const [loading, setLoading] = useState(true);
 
-    const { user } = useAuth(); 
-    
+    const { user } = useAuth();
+
     const isSuperAdmin = user?.role === 'SUPERADMIN';
 
     const navigate = useNavigate();
@@ -180,9 +181,53 @@ const AdminDashboard = () => {
     };
 
     const handleCollege = (college) => {
+        // Set the outlet information
         localStorage.setItem('outletName', college.name);
         localStorage.setItem('outletId', college.id);
-        navigate('/order-history');
+
+        // Get accessible routes for this specific outlet (before setting it as current)
+        const accessibleRoutes = getAccessibleRoutes(college.id);
+
+        // Find the first accessible route (excluding home page if possible)
+        let targetRoute = '/'; // fallback to home
+        let showNoRouteAlert = false;
+
+        if (accessibleRoutes.length > 0) {
+            // Try to find a route other than home first
+            const nonHomeRoute = accessibleRoutes.find(route => route.href !== '/');
+            if (nonHomeRoute) {
+                targetRoute = nonHomeRoute.href;
+            } else {
+                // Only home route is accessible
+                targetRoute = accessibleRoutes[0].href;
+                showNoRouteAlert = true;
+            }
+        } else {
+            // No routes accessible at all
+            showNoRouteAlert = true;
+        }
+
+        // Set the current outlet in context AFTER determining the route
+        setCurrentOutlet(college.id);
+
+        // Show alert if only home route or no routes available
+        if (showNoRouteAlert) {
+            // Option 1: Using window.alert
+            toast.error(`No accessible routes found for ${college.name}. You will be redirected to the dashboard.`);
+
+            // Option 2: Using react-hot-toast (if you have it imported)
+            // toast.warning(`No accessible routes found for ${college.name}. Redirecting to dashboard.`);
+
+            // Option 3: Using a custom notification system
+            // showNotification({
+            //     type: 'warning',
+            //     title: 'Limited Access',
+            //     message: `No accessible routes found for ${college.name}. You will be redirected to the dashboard.`
+            // });
+        }
+
+        // Navigate to the determined route
+        navigate(targetRoute);
     };
 
     const openAddModal = () => {
@@ -250,19 +295,19 @@ const AdminDashboard = () => {
                             Outlet
                         </Button>
                         {isSuperAdmin && (
-                                <>
-                                    <Button
-                                        variant={activeTab === 'Onboarding' ? 'black' : 'secondary'}
-                                        onClick={() => setActiveTab('Onboarding')}>
-                                        OnBoarding
-                                    </Button>
-                                    <Button
-                                        variant={activeTab === 'AdminManagement' ? 'black' : 'secondary'}
-                                        onClick={() => setActiveTab('AdminManagement')}>
-                                        Admin Management
-                                    </Button>
-                                </>
-                            )}
+                            <>
+                                <Button
+                                    variant={activeTab === 'Onboarding' ? 'black' : 'secondary'}
+                                    onClick={() => setActiveTab('Onboarding')}>
+                                    OnBoarding
+                                </Button>
+                                <Button
+                                    variant={activeTab === 'AdminManagement' ? 'black' : 'secondary'}
+                                    onClick={() => setActiveTab('AdminManagement')}>
+                                    Admin Management
+                                </Button>
+                            </>
+                        )}
                     </div>
 
                     {activeTab === 'outlet' && (
@@ -626,10 +671,10 @@ const AdminDashboard = () => {
                     )}
 
                     {activeTab === 'Onboarding' && isSuperAdmin && (
-                            <>
-                                <Onboarding />
-                            </>
-                        )}
+                        <>
+                            <Onboarding />
+                        </>
+                    )}
 
                     {activeTab === 'AdminManagement' && isSuperAdmin && (
                         <>
