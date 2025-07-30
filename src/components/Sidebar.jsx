@@ -1,5 +1,5 @@
 import React, { useContext } from 'react'
-import { href, NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import {
     LayoutDashboard,
     Bell,
@@ -13,33 +13,159 @@ import {
     Clock,
     Ticket,
     PersonStanding,
-    ChefHat
+    ChefHat,
+    Lock,
+    Building2
 } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
+import { useAuth } from '../hooks/useAuth'
 
-const Sidebar = ({ onClose }) => {
-    const { user, signOut } = useContext(AuthContext)
+const AdminSidebar = ({ onClose }) => {
+    const { user, signOut, currentOutletId } = useContext(AuthContext)
+    const { hasAdminPermission, getCurrentOutlet, getAccessibleOutlets, setCurrentOutlet } = useAuth()
+
     const navigation = [
-        {name:'Home',href:'/',icon: LayoutDashboard},
-        // { name: 'Dashboard', href: '/home', icon: LayoutDashboard },
-        { name: 'Order Management', href: '/order-history', icon: Clock },
-        { name: 'Staff Management', href: '/staff', icon: Bell },
-        { name: 'Inventory Management', href: '/inventory', icon: Package },
-        { name: 'Expenditure Management', href: '/expenditure', icon: PlusCircle },
-        { name: 'Wallet Management', href: '/wallet', icon: Wallet },
-        { name: 'Customer Management', href: '/customers', icon: PersonStanding },
-        { name: 'Ticket Management', href: '/tickets', icon: Ticket },
-        { name: 'Notifications Management', href: '/notifications', icon: Bell },
-        { name: 'Product Management', href: '/product', icon: ChefHat },
-        { name: 'App Management', href: '/app', icon: Wallet },
-        { name: 'Reports & Analytics', href: '/reports', icon: BarChart3 },
+        {
+            name: 'Home',
+            href: '/',
+            icon: LayoutDashboard,
+            permission: null // No permission required
+        },
+        {
+            name: 'Order Management',
+            href: '/order-history',
+            icon: Clock,
+            permission: 'ORDER_MANAGEMENT'
+        },
+        {
+            name: 'Staff Management',
+            href: '/staff',
+            icon: Bell,
+            permission: 'STAFF_MANAGEMENT'
+        },
+        {
+            name: 'Inventory Management',
+            href: '/inventory',
+            icon: Package,
+            permission: 'INVENTORY_MANAGEMENT'
+        },
+        {
+            name: 'Expenditure Management',
+            href: '/expenditure',
+            icon: PlusCircle,
+            permission: 'EXPENDITURE_MANAGEMENT'
+        },
+        {
+            name: 'Wallet Management',
+            href: '/wallet',
+            icon: Wallet,
+            permission: 'WALLET_MANAGEMENT'
+        },
+        {
+            name: 'Customer Management',
+            href: '/customers',
+            icon: PersonStanding,
+            permission: 'CUSTOMER_MANAGEMENT'
+        },
+        {
+            name: 'Ticket Management',
+            href: '/tickets',
+            icon: Ticket,
+            permission: 'TICKET_MANAGEMENT'
+        },
+        {
+            name: 'Notifications Management',
+            href: '/notifications',
+            icon: Bell,
+            permission: 'NOTIFICATIONS_MANAGEMENT'
+        },
+        {
+            name: 'Product Management',
+            href: '/product',
+            icon: ChefHat,
+            permission: 'PRODUCT_MANAGEMENT'
+        },
+        {
+            name: 'App Management',
+            href: '/app',
+            icon: Wallet,
+            permission: 'APP_MANAGEMENT'
+        },
+        {
+            name: 'Reports & Analytics',
+            href: '/reports',
+            icon: BarChart3,
+            permission: 'REPORTS_ANALYTICS'
+        },
     ]
+
+    // Check if admin has permission for a navigation item
+    const hasAccess = (item) => {
+        return !item.permission || hasAdminPermission(item.permission, currentOutletId);
+    }
+
+    // Get appropriate styling based on access and active state
+    const getNavLinkClass = (item, isActive) => {
+        const baseClass = 'flex items-center px-2 py-[5.9px] text-sm font-medium rounded-lg transition-colors';
+        const hasUserAccess = hasAccess(item);
+
+        if (!hasUserAccess) {
+            return `${baseClass} text-gray-500 cursor-not-allowed opacity-50`;
+        }
+
+        if (isActive) {
+            return `${baseClass} bg-black text-white`;
+        }
+
+        return `${baseClass} text-primary hover:bg-none hover:text-black`;
+    }
+
+    // Render navigation item (with or without permission)
+    const renderNavItem = (item) => {
+        const hasUserAccess = hasAccess(item);
+
+        if (!hasUserAccess) {
+            return (
+                <li key={item.name}>
+                    <div
+                        className={getNavLinkClass(item, false)}
+                        title={`You don't have permission to access ${item.name} for this outlet`}
+                    >
+                        <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                        <span className="truncate">{item.name}</span>
+                        <Lock className="ml-auto h-4 w-4 flex-shrink-0" />
+                    </div>
+                </li>
+            );
+        }
+
+        return (
+            <li key={item.name}>
+                <NavLink
+                    to={item.href}
+                    onClick={() => onClose && onClose()}
+                    className={({ isActive }) => getNavLinkClass(item, isActive)}
+                >
+                    <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                    <span className="truncate">{item.name}</span>
+                </NavLink>
+            </li>
+        );
+    }
+
+    // Get current outlet details
+    const currentOutlet = getCurrentOutlet();
+    const accessibleOutlets = getAccessibleOutlets();
+
+    // Handle outlet change
+    const handleOutletChange = (outletId) => {
+        setCurrentOutlet(parseInt(outletId));
+    };
 
     return (
         <div className="bg-nav text-primary w-64 h-full flex flex-col overflow-hidden">
             {/* Logo and close button */}
             <div className="lg:hidden p-6 flex items-center justify-between">
-                {/* Close button (only mobile) */}
                 <button
                     type="button"
                     className="lg:hidden p-1 rounded-md text-primary hover:text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-white"
@@ -49,26 +175,55 @@ const Sidebar = ({ onClose }) => {
                 </button>
             </div>
 
+            {/* Outlet Selector */}
+            {accessibleOutlets.length > 1 && (
+                <div className="px-4 py-2 border-b border-gray-700">
+                    <label className="block text-xs font-medium text-gray-400 mb-2">
+                        Current Outlet
+                    </label>
+                    <div className="relative">
+                        <select
+                            value={currentOutletId || ''}
+                            onChange={(e) => handleOutletChange(e.target.value)}
+                            className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
+                        >
+                            {accessibleOutlets.map((outlet) => (
+                                <option key={outlet.id} value={outlet.id}>
+                                    {outlet.name}
+                                </option>
+                            ))}
+                        </select>
+                        <Building2 className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+                    </div>
+                    {currentOutlet && (
+                        <p className="text-xs text-gray-400 mt-1 truncate">
+                            {currentOutlet.outlet.address}
+                        </p>
+                    )}
+                </div>
+            )}
+
+            {/* Current outlet info for single outlet admins */}
+            {accessibleOutlets.length === 1 && currentOutlet && (
+                <div className="px-4 py-2 border-b border-gray-700">
+                    <div className="flex items-center">
+                        <Building2 className="h-4 w-4 text-gray-400 mr-2" />
+                        <div>
+                            <p className="text-sm font-medium text-white truncate">
+                                {currentOutlet.outlet.name}
+                            </p>
+                            <p className="text-xs text-gray-400 truncate">
+                                {currentOutlet.outlet.address}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Navigation */}
             <nav className="flex-1 px-4 py-6 overflow-y-auto">
                 <ul className="space-y-2">
-                    {navigation.map((item) => (
-                        <li key={item.name}>
-                            <NavLink
-                                to={item.href}
-                                onClick={() => onClose && onClose()}
-                                className={({ isActive }) =>
-                                    `flex items-center px-2 py-[5.9px] text-sm font-medium rounded-lg transition-colors ${isActive
-                                        ? 'bg-black text-white'
-                                        : 'text-primary hover:bg-none hover:text-black'
-                                    }`
-                                }
-                            >
-                                <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-                                <span className="truncate">{item.name}</span>
-                            </NavLink>
-                        </li>
-                    ))}
+                    {navigation.map(renderNavItem)}
                 </ul>
             </nav>
 
@@ -78,18 +233,26 @@ const Sidebar = ({ onClose }) => {
                     to="/settings"
                     onClick={() => onClose && onClose()}
                     className={({ isActive }) =>
-                        `flex items-center w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${isActive
-                            ? 'bg-theme text-white'
-                            : 'text-primary hover:bg-gray-800 hover:text-white'
+                        `flex items-center w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${hasAdminPermission('SETTINGS', currentOutletId)
+                            ? isActive
+                                ? 'bg-theme text-white'
+                                : 'text-primary hover:bg-gray-800 hover:text-white'
+                            : 'text-gray-500 cursor-not-allowed opacity-50'
                         }`
                     }
+                    style={!hasAdminPermission('SETTINGS', currentOutletId) ? { pointerEvents: 'none' } : {}}
                 >
                     <Settings className="mr-3 h-5 w-5 flex-shrink-0" />
                     <span className="truncate">Settings</span>
+                    {!hasAdminPermission('SETTINGS', currentOutletId) && (
+                        <Lock className="ml-auto h-4 w-4 flex-shrink-0" />
+                    )}
                 </NavLink>
 
                 <button
-                    onClick={signOut} className="flex items-center w-full px-4 py-2 text-sm font-medium text-primary rounded-lg hover:bg-gray-800 hover:text-white transition-colors mt-2">
+                    onClick={signOut}
+                    className="flex items-center w-full px-4 py-2 text-sm font-medium text-primary rounded-lg hover:bg-gray-800 hover:text-white transition-colors mt-2"
+                >
                     <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
                     <span className="truncate">Logout</span>
                 </button>
@@ -98,4 +261,4 @@ const Sidebar = ({ onClose }) => {
     )
 }
 
-export default Sidebar
+export default AdminSidebar
