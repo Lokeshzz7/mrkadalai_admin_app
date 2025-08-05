@@ -14,22 +14,22 @@ import {
     Ticket,
     PersonStanding,
     ChefHat,
-    Lock,
-    Building2
+    Building2,
+    Crown
 } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
 import { useAuth } from '../hooks/useAuth'
 
 const AdminSidebar = ({ onClose }) => {
     const { user, signOut, currentOutletId } = useContext(AuthContext)
-    const { hasAdminPermission, getCurrentOutlet, getAccessibleOutlets, setCurrentOutlet } = useAuth()
+    const { hasAdminPermission, getCurrentOutlet, getAccessibleOutlets, setCurrentOutlet, isSuperAdmin } = useAuth()
 
     const navigation = [
         {
             name: 'Home',
             href: '/',
             icon: LayoutDashboard,
-            permission: null // No permission required
+            permission: null
         },
         {
             name: 'Order Management',
@@ -99,41 +99,35 @@ const AdminSidebar = ({ onClose }) => {
         },
     ]
 
-    // Check if admin has permission for a navigation item
+    // Super admin has access to everything, regular admin needs permission check
     const hasAccess = (item) => {
         return !item.permission || hasAdminPermission(item.permission, currentOutletId);
     }
 
-    // Get appropriate styling based on access and active state
     const getNavLinkClass = (item, isActive) => {
         const baseClass = 'flex items-center px-2 py-[5.9px] text-sm font-medium rounded-lg transition-colors';
-        const hasUserAccess = hasAccess(item);
-
-        if (!hasUserAccess) {
-            return `${baseClass} text-gray-500 cursor-not-allowed opacity-50`;
-        }
-
+        
         if (isActive) {
             return `${baseClass} bg-black text-white`;
         }
-
+        
         return `${baseClass} text-primary hover:bg-none hover:text-black`;
     }
 
-    // Render navigation item (with or without permission)
     const renderNavItem = (item) => {
         const hasUserAccess = hasAccess(item);
 
-        if (!hasUserAccess) {
+        // For super admin, show all items as accessible
+        // For regular admin, show locked items if no access
+        if (!hasUserAccess && !isSuperAdmin()) {
             return (
                 <li key={item.name}>
                     <div
-                        className={getNavLinkClass(item, false)}
+                        className="flex items-center px-2 py-[5.9px] text-sm font-medium rounded-lg transition-colors text-gray-500 cursor-not-allowed opacity-50"
                         title={`You don't have permission to access ${item.name} for this outlet`}
                     >
                         <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
                         <span className="truncate">{item.name}</span>
-                        <Lock className="ml-auto h-4 w-4 flex-shrink-0" />
                     </div>
                 </li>
             );
@@ -153,11 +147,9 @@ const AdminSidebar = ({ onClose }) => {
         );
     }
 
-    // Get current outlet details
     const currentOutlet = getCurrentOutlet();
     const accessibleOutlets = getAccessibleOutlets();
 
-    // Handle outlet change
     const handleOutletChange = (outletId) => {
         setCurrentOutlet(parseInt(outletId));
     };
@@ -175,8 +167,18 @@ const AdminSidebar = ({ onClose }) => {
                 </button>
             </div>
 
-            {/* Outlet Selector */}
-            {accessibleOutlets.length > 1 && (
+            {/* Super Admin Indicator */}
+            {isSuperAdmin() && (
+                <div className="px-4 py-2 border-b border-gray-700">
+                    <div className="flex items-center justify-center bg-gradient-to-r from-yellow-600 to-yellow-500 text-white text-xs font-bold py-2 px-3 rounded-lg">
+                        <Crown className="h-4 w-4 mr-2" />
+                        SUPER ADMIN
+                    </div>
+                </div>
+            )}
+
+            {/* Outlet Selector - Only for regular admins with multiple outlets */}
+            {!isSuperAdmin() && accessibleOutlets.length > 1 && (
                 <div className="px-4 py-2 border-b border-gray-700">
                     <label className="block text-xs font-medium text-gray-400 mb-2">
                         Current Outlet
@@ -203,8 +205,8 @@ const AdminSidebar = ({ onClose }) => {
                 </div>
             )}
 
-            {/* Current outlet info for single outlet admins */}
-            {accessibleOutlets.length === 1 && currentOutlet && (
+            {/* Current outlet info for single outlet regular admins */}
+            {!isSuperAdmin() && accessibleOutlets.length === 1 && currentOutlet && (
                 <div className="px-4 py-2 border-b border-gray-700">
                     <div className="flex items-center">
                         <Building2 className="h-4 w-4 text-gray-400 mr-2" />
@@ -214,6 +216,23 @@ const AdminSidebar = ({ onClose }) => {
                             </p>
                             <p className="text-xs text-gray-400 truncate">
                                 {currentOutlet.outlet.address}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Super Admin Global Access Info */}
+            {isSuperAdmin() && (
+                <div className="px-4 py-2 border-b border-gray-700">
+                    <div className="flex items-center">
+                        <Building2 className="h-4 w-4 text-gray-400 mr-2" />
+                        <div>
+                            <p className="text-sm font-medium text-white truncate">
+                                Global Access
+                            </p>
+                            <p className="text-xs text-gray-400 truncate">
+                                All outlets and functions
                             </p>
                         </div>
                     </div>
@@ -233,20 +252,18 @@ const AdminSidebar = ({ onClose }) => {
                     to="/settings"
                     onClick={() => onClose && onClose()}
                     className={({ isActive }) =>
-                        `flex items-center w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${hasAdminPermission('SETTINGS', currentOutletId)
-                            ? isActive
-                                ? 'bg-theme text-white'
-                                : 'text-primary hover:bg-gray-800 hover:text-white'
-                            : 'text-gray-500 cursor-not-allowed opacity-50'
+                        `flex items-center w-full px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
+                            isSuperAdmin() || hasAdminPermission('SETTINGS', currentOutletId)
+                                ? isActive
+                                    ? 'bg-theme text-white'
+                                    : 'text-primary hover:bg-gray-800 hover:text-white'
+                                : 'text-gray-500 cursor-not-allowed opacity-50'
                         }`
                     }
-                    style={!hasAdminPermission('SETTINGS', currentOutletId) ? { pointerEvents: 'none' } : {}}
+                    style={!isSuperAdmin() && !hasAdminPermission('SETTINGS', currentOutletId) ? { pointerEvents: 'none' } : {}}
                 >
                     <Settings className="mr-3 h-5 w-5 flex-shrink-0" />
                     <span className="truncate">Settings</span>
-                    {!hasAdminPermission('SETTINGS', currentOutletId) && (
-                        <Lock className="ml-auto h-4 w-4 flex-shrink-0" />
-                    )}
                 </NavLink>
 
                 <button
