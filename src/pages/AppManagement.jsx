@@ -4,25 +4,20 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
 
 const AppManagement = () => {
-    const [activeTab, setActiveTab] = useState('staff');
+    const [activeTab, setActiveTab] = useState('mobile');
     const [isEditing, setIsEditing] = useState(false);
     const [selectedDates, setSelectedDates] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
 
-    const [staffFormData, setStaffFormData] = useState({
-        billing: false,
-        ProductsInsight: false,
-        Inventory: false,
-        Expenditure: false,
-        Reports: false
+    const [mobileFormData, setMobileFormData] = useState({
+        App: false,
+        UPI: false,
+        'Live Counter': false,
+        Coupons: false
     });
 
-    const [mobileFormData, setMobileFormData] = useState({
-        'Wallet': false,
-        'Wallet UPI': false,
-        'UPI': false,
-        'Pre Order': false,
-        'Discounts / Offer': false
+    const [preorderFormData, setPreorderFormData] = useState({
+        // Add any preorder specific toggles here if needed in the future
     });
 
     const navigate = useNavigate();
@@ -58,7 +53,7 @@ const AppManagement = () => {
 
     const handleToggleEdit = () => {
         if (isEditing) {
-            console.log("Saving data:", activeTab === 'staff' ? staffFormData : mobileFormData);
+            console.log("Saving data:", activeTab === 'mobile' ? mobileFormData : preorderFormData);
             console.log("Selected dates:", selectedDates);
 
             if (selectedDates.length > 0) {
@@ -252,66 +247,19 @@ const AppManagement = () => {
             <div className="flex justify-between items-center">
                 <div className='flex space-x-4'>
                     <Button
-                        variant={activeTab === 'staff' ? 'black' : 'secondary'}
-                        onClick={() => setActiveTab('staff')}
-                    >
-                        Staff App
-                    </Button>
-                    <Button
                         variant={activeTab === 'mobile' ? 'black' : 'secondary'}
                         onClick={() => setActiveTab('mobile')}
                     >
                         Mobile App
                     </Button>
+                    <Button
+                        variant={activeTab === 'preorder' ? 'black' : 'secondary'}
+                        onClick={() => setActiveTab('preorder')}
+                    >
+                        Preorder Settings
+                    </Button>
                 </div>
             </div>
-
-            {activeTab === 'staff' && (
-                <div>
-                    <Card title='Staff Permission' className="max-w-4xl mx-auto mt-8">
-                        <div className="grid grid-cols-1 gap-8 items-center">
-                            <div className="space-y-6 text-lg">
-                                {[
-                                    { key: 'billing', label: 'Billing' },
-                                    { key: 'ProductsInsight', label: 'Product Insight' },
-                                    { key: 'Inventory', label: 'Inventory' },
-                                    { key: 'Expenditure', label: 'Expenditure' },
-                                    { key: 'Reports', label: 'Reports' },
-                                ].map((item) => (
-                                    <div key={item.key} className="flex items-center justify-between">
-                                        <span>{item.label}</span>
-                                        <label className={`relative inline-flex items-center ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
-                                            <input
-                                                type="checkbox"
-                                                className="sr-only peer"
-                                                checked={staffFormData[item.key] || false}
-                                                disabled={!isEditing}
-                                                onChange={(e) =>
-                                                    setStaffFormData((prev) => ({
-                                                        ...prev,
-                                                        [item.key]: e.target.checked
-                                                    }))
-                                                }
-                                            />
-                                            <div className={`w-11 h-6 rounded-full transition-colors duration-200 ${staffFormData[item.key] ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                                            <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
-                                        </label>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        <div className="flex justify-between mt-6">
-                            <Button variant="outline" onClick={() => navigate(-1)}>
-                                &larr; Back
-                            </Button>
-                            <Button variant={isEditing ? "success" : "primary"} onClick={handleToggleEdit}>
-                                {isEditing ? "Save Details" : "Update Details"}
-                            </Button>
-                        </div>
-                    </Card>
-                </div>
-            )}
 
             {activeTab === 'mobile' && (
                 <div>
@@ -319,11 +267,10 @@ const AppManagement = () => {
                         <div className="grid grid-cols-1 gap-8 items-center">
                             <div className="space-y-6 text-lg">
                                 {[
-                                    { key: 'Wallet', label: 'Wallet' },
-                                    { key: 'Wallet UPI', label: 'Wallet & UPI' },
+                                    { key: 'App', label: 'App' },
                                     { key: 'UPI', label: 'UPI' },
-                                    { key: 'Pre Order', label: 'Pre Order' },
-                                    { key: 'Discounts / Offer', label: 'Discounts / Offer' },
+                                    { key: 'Live Counter', label: 'Live Counter' },
+                                    { key: 'Coupons', label: 'Coupons' },
                                 ].map((item) => (
                                     <div key={item.key} className="flex items-center justify-between">
                                         <span>{item.label}</span>
@@ -348,15 +295,24 @@ const AppManagement = () => {
                             </div>
                         </div>
 
+                        <div className="flex justify-end mt-6">
+                            <Button variant={isEditing ? "success" : "primary"} onClick={handleToggleEdit}>
+                                {isEditing ? "Save Details" : "Update Details"}
+                            </Button>
+                        </div>
+                    </Card>
+                </div>
+            )}
+
+            {activeTab === 'preorder' && (
+                <div>
+                    <Card title='Preorder Settings' className="max-w-4xl mx-auto mt-8">
                         <div className="mt-8">
                             <h3 className="text-xl font-semibold mb-4 text-gray-800">Select Available Dates</h3>
                             {renderCalendar()}
                         </div>
 
-                        <div className="flex justify-between mt-6">
-                            <Button variant="outline" onClick={() => navigate(-1)}>
-                                &larr; Back
-                            </Button>
+                        <div className="flex justify-end mt-6">
                             <Button variant={isEditing ? "success" : "primary"} onClick={handleToggleEdit}>
                                 {isEditing ? "Save Details" : "Update Details"}
                             </Button>
