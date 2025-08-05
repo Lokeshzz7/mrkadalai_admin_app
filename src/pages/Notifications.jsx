@@ -1,13 +1,16 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import toast from 'react-hot-toast';
+import { apiRequest } from '../utils/api'; // Add this import
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState('notification');
   const [showCouponForm, setShowCouponForm] = useState(false);
   const [showCreateCouponForm, setShowCreateCouponForm] = useState(false);
+  const [coupons, setCoupons] = useState([]);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef();
 
   const [notificationFormData, setNotificationFormData] = useState({
@@ -31,30 +34,80 @@ const Notifications = () => {
   const [couponFormData, setCouponFormData] = useState({
     code: '',
     description: '',
-    trigger: '',
-    reward: '',
-    minOrder: '',
-    paymentMethod: '',
-    validity: '',
-    couponType: '',
+    rewardValue: '',
+    minOrderValue: '',
+    validFrom: '',
+    validUntil: '',
+    usageLimit: '',
   });
 
   const [autoSend, setAutoSend] = useState(false);
 
-  const couponHeaders = ["Code", "Description", "Reward", "Min Order", "Validity", "Actions"];
+  const couponHeaders = ["Code", "Description", "Reward", "Min Order", "Valid Until", "Usage", "Actions"];
 
-  const couponData = [
-    [
-      "SAVE20",
-      "Save ₹20 on orders above ₹100",
-      "₹20",
-      "₹100",
-      "2025-12-31",
-      <div className="text-right">
-        <Button variant="danger">Remove</Button>
-      </div>
-    ]
-  ];
+  // Fetch coupons on component mount and when tab changes to coupon
+  useEffect(() => {
+    if (activeTab === 'coupon') {
+      fetchCoupons();
+    }
+  }, [activeTab]);
+
+  const fetchCoupons = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      console.log('Token from localStorage:', token); // Debug token
+      
+      const data = await apiRequest('/superadmin/get-coupons/', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+      });
+      setCoupons(data);
+    } catch (error) {
+      console.error('Error fetching coupons:', error);
+      toast.error(error.message || 'Error fetching coupons');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteCoupon = async (couponId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await apiRequest(`/superadmin/delete-coupon/${couponId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      toast.success('Coupon deleted successfully');
+      fetchCoupons(); // Refresh the list
+    } catch (error) {
+      console.error('Error deleting coupon:', error);
+      toast.error(error.message || 'Error deleting coupon');
+    }
+  };
+
+  const couponData = coupons.map(coupon => [
+    coupon.code,
+    coupon.description || 'No description',
+    `₹${coupon.rewardValue}`,
+    `₹${coupon.minOrderValue}`,
+    new Date(coupon.validUntil).toLocaleDateString(),
+    `${coupon.usedCount}/${coupon.usageLimit}`,
+    <div className="text-right">
+      <Button 
+        variant="danger" 
+        onClick={() => deleteCoupon(coupon.id)}
+        disabled={loading}
+      >
+        Remove
+      </Button>
+    </div>
+  ]);
 
   const handleNotificationChange = (e) => {
     const { name, value, files } = e.target;
@@ -91,12 +144,86 @@ const Notifications = () => {
     toast.success("Promotion Sent");
   };
 
-  const handleCouponSubmit = (e) => {
+  const handleCouponSubmit = async (e) => {
     e.preventDefault();
-    console.log('Coupon Data:', couponFormData, 'Auto Send:', autoSend);
-    toast.success("Coupon Created");
-    setShowCreateCouponForm(false);
-    handleCouponReset();
+    
+    // Validation
+    if (!couponFormData.code || !couponFormData.rewardValue || !couponFormData.validFrom || 
+        !couponFormData.validUntil || !couponFormData.usageLimit) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    // Validate dates
+    const validFrom = new Date(couponFormData.validFrom);
+    const validUntil = new Date(couponFormData.validUntil);
+    const now = new Date();
+
+    if (validFrom < now) {
+      toast.error('Valid from date cannot be in the past');
+      return;
+    }
+
+    if (validUntil <= validFrom) {
+      toast.error('Valid until date must be after valid from date');
+      return;
+    }
+
+    if (parseFloat(couponFormData.rewardValue) <= 0) {
+      toast.error('Reward value must be greater than 0');
+      return;
+    }
+
+    if (parseFloat(couponFormData.minOrderValue) < 0) {
+      toast.error('Minimum order value cannot be negative');
+      return;
+    }
+
+    if (parseInt(couponFormData.usageLimit) <= 0) {
+      toast.error('Usage limit must be greater than 0');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const couponData = {
+        code: couponFormData.code.trim().toUpperCase(),
+        description: couponFormData.description.trim(),
+        rewardValue: parseFloat(couponFormData.rewardValue),
+        minOrderValue: parseFloat(couponFormData.minOrderValue),
+        validFrom: couponFormData.validFrom,
+        validUntil: couponFormData.validUntil,
+        usageLimit: parseInt(couponFormData.usageLimit),
+      };
+
+      console.log('Coupon data being sent:', couponData);
+
+      const result = await apiRequest('/superadmin/create-coupon/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: couponData,
+      });
+
+      toast.success('Coupon created successfully');
+      setShowCreateCouponForm(false);
+      handleCouponReset();
+      fetchCoupons(); 
+      
+      if (autoSend) {
+        // TODO: Implement notification sending logic
+        toast.success('Notification sent to users');
+      }
+    } catch (error) {
+      console.error('Error creating coupon:', error);
+      toast.error(error.message || 'Error creating coupon');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleNotificationReset = () => {
@@ -127,12 +254,11 @@ const Notifications = () => {
     setCouponFormData({
       code: '',
       description: '',
-      trigger: '',
-      reward: '',
-      minOrder: '',
-      paymentMethod: '',
-      validity: '',
-      couponType: '',
+      rewardValue: '',
+      minOrderValue: '',
+      validFrom: '',
+      validUntil: '',
+      usageLimit: '',
     });
     setAutoSend(false);
   };
@@ -197,7 +323,6 @@ const Notifications = () => {
         </Card>
       )}
 
-
       {/* Promotion Tab */}
       {activeTab === 'promotion' && (
         <Card title="Promotion Details">
@@ -245,6 +370,7 @@ const Notifications = () => {
           </form>
         </Card>
       )}
+
       {/* Coupon Tab */}
       {activeTab === 'coupon' && (
         <Card title={
@@ -258,7 +384,15 @@ const Notifications = () => {
           {!showCreateCouponForm ? (
             <>
               <h3 className="text-lg font-semibold mb-4 text-gray-700">Active Coupons</h3>
-              <Table headers={couponHeaders} data={couponData} className="border rounded mb-4" />
+              {loading ? (
+                <div className="text-center py-4">Loading coupons...</div>
+              ) : coupons.length > 0 ? (
+                <Table headers={couponHeaders} data={couponData} className="border rounded mb-4" />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No active coupons found. Create your first coupon!
+                </div>
+              )}
             </>
           ) : (
             <>
@@ -266,66 +400,137 @@ const Notifications = () => {
               <form className="space-y-4" onSubmit={handleCouponSubmit}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code</label>
-                    <input type="text" name="code" value={couponFormData.code} onChange={handleCouponChange} className="w-full border rounded px-3 py-2" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code *</label>
+                    <input 
+                      type="text" 
+                      name="code" 
+                      value={couponFormData.code} 
+                      onChange={handleCouponChange} 
+                      className="w-full border rounded px-3 py-2" 
+                      placeholder="e.g., SAVE20"
+                      required
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Trigger Condition</label>
-                    <input type="text" name="trigger" value={couponFormData.trigger} onChange={handleCouponChange} className="w-full border rounded px-3 py-2" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Reward Value (₹) *</label>
+                    <input 
+                      type="number" 
+                      name="rewardValue" 
+                      value={couponFormData.rewardValue} 
+                      onChange={handleCouponChange} 
+                      className="w-full border rounded px-3 py-2" 
+                      placeholder="e.g., 20"
+                      min="1"
+                      step="0.01"
+                      required
+                    />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea name="description" value={couponFormData.description} onChange={handleCouponChange} rows="2" className="w-full border rounded px-3 py-2" />
+                  <textarea 
+                    name="description" 
+                    value={couponFormData.description} 
+                    onChange={handleCouponChange} 
+                    rows="2" 
+                    className="w-full border rounded px-3 py-2" 
+                    placeholder="Describe your coupon offer"
+                  />
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Reward Value</label>
-                    <input type="text" name="reward" value={couponFormData.reward} onChange={handleCouponChange} className="w-full border rounded px-3 py-2" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Value (₹)</label>
+                    <input 
+                      type="number" 
+                      name="minOrderValue" 
+                      value={couponFormData.minOrderValue} 
+                      onChange={handleCouponChange} 
+                      className="w-full border rounded px-3 py-2" 
+                      placeholder="e.g., 100"
+                      min="0"
+                      step="0.01"
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Value</label>
-                    <input type="text" name="minOrder" value={couponFormData.minOrder} onChange={handleCouponChange} className="w-full border rounded px-3 py-2" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Usage Limit *</label>
+                    <input 
+                      type="number" 
+                      name="usageLimit" 
+                      value={couponFormData.usageLimit} 
+                      onChange={handleCouponChange} 
+                      className="w-full border rounded px-3 py-2" 
+                      placeholder="e.g., 100"
+                      min="1"
+                      required
+                    />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Valid Payment Method</label>
-                    <input type="text" name="paymentMethod" value={couponFormData.paymentMethod} onChange={handleCouponChange} className="w-full border rounded px-3 py-2" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Valid From *</label>
+                    <input 
+                      type="datetime-local" 
+                      name="validFrom" 
+                      value={couponFormData.validFrom} 
+                      onChange={handleCouponChange} 
+                      className="w-full border rounded px-3 py-2" 
+                      required
+                    />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Validity</label>
-                    <input type="date" name="validity" value={couponFormData.validity} onChange={handleCouponChange} className="w-full border rounded px-3 py-2" />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until *</label>
+                    <input 
+                      type="datetime-local" 
+                      name="validUntil" 
+                      value={couponFormData.validUntil} 
+                      onChange={handleCouponChange} 
+                      className="w-full border rounded px-3 py-2" 
+                      required
+                    />
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Type</label>
-                  <input type="text" name="couponType" value={couponFormData.couponType} onChange={handleCouponChange} className="w-full border rounded px-3 py-2" />
                 </div>
 
                 <div className="flex items-center space-x-3 mt-4">
                   <label className="text-sm font-medium text-gray-700">Auto Send Notification</label>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" checked={autoSend} onChange={() => setAutoSend(!autoSend)} />
+                    <input 
+                      type="checkbox" 
+                      className="sr-only peer" 
+                      checked={autoSend} 
+                      onChange={() => setAutoSend(!autoSend)} 
+                    />
                     <div className="w-11 h-6 bg-black rounded-full peer peer-focus:ring-2 peer-checked:bg-theme after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
                   </label>
                 </div>
 
                 <div className="flex justify-end space-x-2 pt-2">
-                  <Button type="button" variant="danger" onClick={() => { handleCouponReset(); setShowCreateCouponForm(false); }}>Cancel</Button>
-                  <Button type="submit" variant="success">Create Coupon</Button>
+                  <Button 
+                    type="button" 
+                    variant="danger" 
+                    onClick={() => { 
+                      handleCouponReset(); 
+                      setShowCreateCouponForm(false); 
+                    }}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    variant="success"
+                    disabled={loading}
+                  >
+                    {loading ? 'Creating...' : 'Create Coupon'}
+                  </Button>
                 </div>
               </form>
             </>
           )}
         </Card>
       )}
-
-
     </div>
   );
 };
