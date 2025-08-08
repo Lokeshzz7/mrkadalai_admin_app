@@ -2,13 +2,18 @@ import React, { useState, useEffect } from 'react'
 import Button from '../components/ui/Button.jsx';
 import { useNavigate } from 'react-router-dom';
 import Card from '../components/ui/Card.jsx';
+import { apiRequest } from '../utils/api.js'; 
+import toast from 'react-hot-toast';
 
 const AppManagement = () => {
     const [activeTab, setActiveTab] = useState('mobile');
     const [isEditing, setIsEditing] = useState(false);
     const [selectedDates, setSelectedDates] = useState([]);
     const [currentDate, setCurrentDate] = useState(new Date());
-
+    const [loading, setLoading] = useState(false);
+    
+    const outletId = localStorage.getItem('outletId');
+    
     const [mobileFormData, setMobileFormData] = useState({
         App: false,
         UPI: false,
@@ -22,43 +27,87 @@ const AppManagement = () => {
 
     const navigate = useNavigate();
 
+    // Available time slots
+    const allSlots = [
+        "SLOT_11_12",
+        "SLOT_12_13", 
+        "SLOT_13_14",
+        "SLOT_14_15",
+        "SLOT_15_16",
+        "SLOT_16_17"
+    ];
+
     // Function to clear all selected dates
     const clearSelectedDates = () => {
         setSelectedDates([]);
-        localStorage.removeItem('selectedCalendarDates');
     };
 
-    // Load selected dates from localStorage on component mount
+    // Load non-availability data from backend on component mount
     useEffect(() => {
-        const savedDates = localStorage.getItem('selectedCalendarDates');
-        if (savedDates) {
-            try {
-                const parsedDates = JSON.parse(savedDates);
-                if (Array.isArray(parsedDates)) {
-                    setSelectedDates(parsedDates);
-                }
-            } catch (error) {
-                console.error('Error parsing saved dates:', error);
-                localStorage.removeItem('selectedCalendarDates');
+        if (activeTab === 'preorder' && outletId) {
+            fetchNonAvailabilityData();
+        }
+    }, [activeTab, outletId]);
+
+    // Fetch existing non-availability data from backend
+    const fetchNonAvailabilityData = async () => {
+        try {
+            setLoading(true);
+            
+            const response = await apiRequest(`/superadmin/outlets/get-non-availability-preview/${outletId}`, {
+                method: 'GET'
+            });
+
+            if (response && response.data) {
+                // Extract dates from the response
+                const nonAvailableDates = response.data.map(entry => entry.date);
+                setSelectedDates(nonAvailableDates);
             }
+        } catch (error) {
+            console.error('Error fetching non-availability data:', error);
+            toast.error('Failed to load non-availability data: ' + error.message);
+        } finally {
+            setLoading(false);
         }
-    }, []);
+    };
 
-    // Save selected dates to localStorage whenever selectedDates changes
-    useEffect(() => {
-        if (selectedDates.length > 0) {
-            localStorage.setItem('selectedCalendarDates', JSON.stringify(selectedDates));
+    // Save non-availability data to backend
+    const saveNonAvailabilityData = async () => {
+        try {
+            setLoading(true);
+
+            const nonAvailableDates = selectedDates.map(date => ({
+                date: date,
+                nonAvailableSlots: [...allSlots]
+            }));
+
+            const response = await apiRequest('/superadmin/outlets/set-availability/', {
+                method: 'POST',
+                body: {
+                    outletId: outletId,
+                    nonAvailableDates: nonAvailableDates
+                }
+            });
+
+            if (response) {
+                toast.success('Non-availability dates updated successfully!');
+            }
+        } catch (error) {
+            console.error('Error saving non-availability data:', error);
+            toast.error('Failed to save non-availability data: ' + error.message);
+        } finally {
+            setLoading(false);
         }
-    }, [selectedDates]);
+    };
 
-    const handleToggleEdit = () => {
+    const handleToggleEdit = async () => {
         if (isEditing) {
-            console.log("Saving data:", activeTab === 'mobile' ? mobileFormData : preorderFormData);
-            console.log("Selected dates:", selectedDates);
-
-            if (selectedDates.length > 0) {
-                localStorage.setItem('selectedCalendarDates', JSON.stringify(selectedDates));
-                console.log("Dates saved to localStorage:", selectedDates);
+            if (activeTab === 'mobile') {
+                console.log("Saving mobile data:", mobileFormData);
+                // Add your mobile data saving logic here if needed
+            } else if (activeTab === 'preorder') {
+                console.log("Saving preorder data - Selected non-available dates:", selectedDates);
+                await saveNonAvailabilityData();
             }
         }
         setIsEditing(!isEditing);
@@ -83,26 +132,25 @@ const AppManagement = () => {
     };
 
     const handleDateClick = (day) => {
-        if (!isEditing) return;
+        if (!isEditing || loading) return;
 
         const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); 
+        clickedDate.setHours(0, 0, 0, 0);
+
+        if (clickedDate < today) {
+            return;
+        }
+
         const dateStr = formatDate(clickedDate);
 
         setSelectedDates(prev => {
-            let newDates;
             if (prev.includes(dateStr)) {
-                newDates = prev.filter(date => date !== dateStr);
+                return prev.filter(date => date !== dateStr);
             } else {
-                newDates = [...prev, dateStr];
+                return [...prev, dateStr];
             }
-
-            if (newDates.length > 0) {
-                localStorage.setItem('selectedCalendarDates', JSON.stringify(newDates));
-            } else {
-                localStorage.removeItem('selectedCalendarDates');
-            }
-
-            return newDates;
         });
     };
 
@@ -133,28 +181,37 @@ const AppManagement = () => {
             const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             const isSelected = isDateSelected(date);
             const isToday = new Date().toDateString() === date.toDateString();
+            
+            // Check if date is in the past
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const dayDate = new Date(date);
+            dayDate.setHours(0, 0, 0, 0);
+            const isPastDate = dayDate < today;
 
             let dayClasses = "h-10 flex items-center justify-center text-sm rounded-lg transition-all duration-200";
 
-            if (isEditing) {
+            if (isEditing && !loading && !isPastDate) {
                 dayClasses += " cursor-pointer hover:bg-gray-100";
             } else {
                 dayClasses += " cursor-not-allowed";
             }
 
-            if (isSelected) {
-                dayClasses += " bg-green-500 text-white font-semibold";
-                if (isEditing) {
-                    dayClasses += " hover:bg-green-600";
+            if (isPastDate) {
+                dayClasses += " bg-gray-100 text-gray-400 cursor-not-allowed";
+            } else if (isSelected) {
+                dayClasses += " bg-red-500 text-white font-semibold";
+                if (isEditing && !loading) {
+                    dayClasses += " hover:bg-red-600";
                 }
             } else {
                 dayClasses += " bg-white text-gray-700";
-                if (!isEditing) {
+                if (!isEditing || loading) {
                     dayClasses += " text-gray-400";
                 }
             }
 
-            if (isToday && !isSelected) {
+            if (isToday && !isSelected && !isPastDate) {
                 dayClasses += " border-2 border-blue-500";
             } else {
                 dayClasses += " border border-gray-200";
@@ -177,6 +234,7 @@ const AppManagement = () => {
                     <button
                         onClick={() => navigateMonth(-1)}
                         className="p-2 rounded-lg transition-colors hover:bg-gray-100 text-gray-600 cursor-pointer"
+                        disabled={loading}
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -190,6 +248,7 @@ const AppManagement = () => {
                     <button
                         onClick={() => navigateMonth(1)}
                         className="p-2 rounded-lg transition-colors hover:bg-gray-100 text-gray-600 cursor-pointer"
+                        disabled={loading}
                     >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -197,7 +256,7 @@ const AppManagement = () => {
                     </button>
                 </div>
 
-                <div className="grid grid-cols-7 gap-1 mb-2 ">
+                <div className="grid grid-cols-7 gap-1 mb-2">
                     {dayNames.map(day => (
                         <div key={day} className="h-8 flex items-center justify-center text-sm font-medium text-gray-500">
                             {day}
@@ -209,13 +268,20 @@ const AppManagement = () => {
                     {days}
                 </div>
 
+                {loading && (
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-700">Loading...</p>
+                    </div>
+                )}
+
+
                 {selectedDates.length > 0 && (
-                    <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
                         <div className="flex items-center justify-between mb-2">
-                            <p className="text-sm font-medium text-gray-700">
-                                Selected Dates ({selectedDates.length}):
+                            <p className="text-sm font-medium text-red-700">
+                                Non-Available Dates ({selectedDates.length}):
                             </p>
-                            {isEditing && (
+                            {isEditing && !loading && (
                                 <button
                                     onClick={clearSelectedDates}
                                     className="text-xs text-red-600 hover:text-red-800 underline"
@@ -228,7 +294,7 @@ const AppManagement = () => {
                             {selectedDates.sort().map(date => (
                                 <span
                                     key={date}
-                                    className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full"
+                                    className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full"
                                 >
                                     {new Date(date + 'T00:00:00').toLocaleDateString()}
                                 </span>
@@ -236,25 +302,33 @@ const AppManagement = () => {
                         </div>
                     </div>
                 )}
+
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-xs text-gray-600">
+                        Select dates that should be marked as non-available (red dates). Past dates cannot be selected. All time slots will be marked as unavailable for selected dates.
+                    </p>
+                </div>
             </div>
         );
     };
 
     return (
         <div className='space-y-6'>
-            <h1 className='text-4xl font-bold'>App Management </h1>
+            <h1 className='text-4xl font-bold'>App Management</h1>
 
             <div className="flex justify-between items-center">
                 <div className='flex space-x-4'>
                     <Button
                         variant={activeTab === 'mobile' ? 'black' : 'secondary'}
                         onClick={() => setActiveTab('mobile')}
+                        disabled={loading}
                     >
                         Mobile App
                     </Button>
                     <Button
                         variant={activeTab === 'preorder' ? 'black' : 'secondary'}
                         onClick={() => setActiveTab('preorder')}
+                        disabled={loading}
                     >
                         Preorder Settings
                     </Button>
@@ -296,8 +370,12 @@ const AppManagement = () => {
                         </div>
 
                         <div className="flex justify-end mt-6">
-                            <Button variant={isEditing ? "success" : "primary"} onClick={handleToggleEdit}>
-                                {isEditing ? "Save Details" : "Update Details"}
+                            <Button 
+                                variant={isEditing ? "success" : "primary"} 
+                                onClick={handleToggleEdit}
+                                disabled={loading}
+                            >
+                                {loading ? "Loading..." : (isEditing ? "Save Details" : "Update Details")}
                             </Button>
                         </div>
                     </Card>
@@ -305,20 +383,20 @@ const AppManagement = () => {
             )}
 
             {activeTab === 'preorder' && (
-                <div>
-                    <Card title='Preorder Settings' className="max-w-4xl mx-auto mt-8">
-                        <div className="mt-8">
-                            <h3 className="text-xl font-semibold mb-4 text-gray-800">Select Available Dates</h3>
-                            {renderCalendar()}
-                        </div>
+                <Card title='Preorder Settings - Non-Availability Management' className="max-w-4xl mx-auto mt-8">
 
-                        <div className="flex justify-end mt-6">
-                            <Button variant={isEditing ? "success" : "primary"} onClick={handleToggleEdit}>
-                                {isEditing ? "Save Details" : "Update Details"}
-                            </Button>
-                        </div>
-                    </Card>
-                </div>
+                    {renderCalendar()}
+
+                    <div className="flex justify-end mt-6">
+                        <Button 
+                            variant={isEditing ? "success" : "primary"} 
+                            onClick={handleToggleEdit}
+                            disabled={loading}
+                        >
+                            {loading ? "Loading..." : (isEditing ? "Save Details" : "Update Details")}
+                        </Button>
+                    </div>
+                </Card>
             )}
         </div>
     )
