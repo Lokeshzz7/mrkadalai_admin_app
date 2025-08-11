@@ -13,6 +13,8 @@ const Notifications = () => {
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef();
 
+  const outletId = localStorage.getItem('outletId');
+
   const [notificationFormData, setNotificationFormData] = useState({
     title: '',
     type: '',
@@ -51,6 +53,7 @@ const Notifications = () => {
       fetchCoupons();
     }
   }, [activeTab]);
+  
 
   const fetchCoupons = async () => {
     try {
@@ -58,14 +61,14 @@ const Notifications = () => {
       const token = localStorage.getItem('token');
       console.log('Token from localStorage:', token); // Debug token
       
-      const data = await apiRequest('/superadmin/get-coupons/', {
+      const data = await apiRequest(`/superadmin/get-coupons/${outletId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
         },
       });
-      setCoupons(data);
+      setCoupons(data.data);
     } catch (error) {
       console.error('Error fetching coupons:', error);
       toast.error(error.message || 'Error fetching coupons');
@@ -191,11 +194,12 @@ const Notifications = () => {
       const couponData = {
         code: couponFormData.code.trim().toUpperCase(),
         description: couponFormData.description.trim(),
-        rewardValue: parseFloat(couponFormData.rewardValue),
+        rewardValue: `${couponFormData.rewardValue}%`,
         minOrderValue: parseFloat(couponFormData.minOrderValue),
         validFrom: couponFormData.validFrom,
         validUntil: couponFormData.validUntil,
         usageLimit: parseInt(couponFormData.usageLimit),
+        outletId: parseInt(outletId),
       };
 
       console.log('Coupon data being sent:', couponData);
