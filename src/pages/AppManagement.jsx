@@ -15,10 +15,10 @@ const AppManagement = () => {
     const outletId = localStorage.getItem('outletId');
     
     const [mobileFormData, setMobileFormData] = useState({
-        App: false,
+        APP: false,
         UPI: false,
-        'Live Counter': false,
-        Coupons: false
+        LIVE_COUNTER: false,
+        COUPONS: false
     });
 
     const [preorderFormData, setPreorderFormData] = useState({
@@ -27,7 +27,6 @@ const AppManagement = () => {
 
     const navigate = useNavigate();
 
-    // Available time slots
     const allSlots = [
         "SLOT_11_12",
         "SLOT_12_13", 
@@ -37,19 +36,67 @@ const AppManagement = () => {
         "SLOT_16_17"
     ];
 
-    // Function to clear all selected dates
     const clearSelectedDates = () => {
         setSelectedDates([]);
     };
 
-    // Load non-availability data from backend on component mount
     useEffect(() => {
-        if (activeTab === 'preorder' && outletId) {
-            fetchNonAvailabilityData();
+        if (outletId) {
+            if (activeTab === 'mobile') {
+                fetchMobileAppFeatures();
+            } else if (activeTab === 'preorder') {
+                fetchNonAvailabilityData();
+            }
         }
     }, [activeTab, outletId]);
 
-    // Fetch existing non-availability data from backend
+    const fetchMobileAppFeatures = async () => {
+        try {
+            setLoading(true);
+            
+            const response = await apiRequest(`/superadmin/outlets/app-features/${outletId}`, {
+                method: 'GET'
+            });
+
+            if (response && response.data) {
+                setMobileFormData(response.data);
+            }
+        } catch (error) {
+            console.error('Error fetching mobile app features:', error);
+            toast.error('Failed to load mobile app features: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const saveMobileAppFeatures = async () => {
+        try {
+            setLoading(true);
+
+            const features = Object.keys(mobileFormData).map(key => ({
+                feature: key,
+                isEnabled: mobileFormData[key]
+            }));
+
+            const response = await apiRequest('/superadmin/outlets/app-features/', {
+                method: 'POST',
+                body: {
+                    outletId: parseInt(outletId),
+                    features: features
+                }
+            });
+
+            if (response) {
+                toast.success('Mobile app features updated successfully!');
+            }
+        } catch (error) {
+            console.error('Error saving mobile app features:', error);
+            toast.error('Failed to save mobile app features: ' + error.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const fetchNonAvailabilityData = async () => {
         try {
             setLoading(true);
@@ -59,7 +106,6 @@ const AppManagement = () => {
             });
 
             if (response && response.data) {
-                // Extract dates from the response
                 const nonAvailableDates = response.data.map(entry => entry.date);
                 setSelectedDates(nonAvailableDates);
             }
@@ -71,7 +117,6 @@ const AppManagement = () => {
         }
     };
 
-    // Save non-availability data to backend
     const saveNonAvailabilityData = async () => {
         try {
             setLoading(true);
@@ -104,7 +149,7 @@ const AppManagement = () => {
         if (isEditing) {
             if (activeTab === 'mobile') {
                 console.log("Saving mobile data:", mobileFormData);
-                // Add your mobile data saving logic here if needed
+                await saveMobileAppFeatures();
             } else if (activeTab === 'preorder') {
                 console.log("Saving preorder data - Selected non-available dates:", selectedDates);
                 await saveNonAvailabilityData();
@@ -113,7 +158,6 @@ const AppManagement = () => {
         setIsEditing(!isEditing);
     };
 
-    // Calendar helper functions
     const getDaysInMonth = (date) => {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
     };
@@ -171,18 +215,15 @@ const AppManagement = () => {
         const days = [];
         const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-        // Empty cells for days before the first day of the month
         for (let i = 0; i < firstDay; i++) {
             days.push(<div key={`empty-${i}`} className="h-10"></div>);
         }
 
-        // Days of the month
         for (let day = 1; day <= daysInMonth; day++) {
             const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
             const isSelected = isDateSelected(date);
             const isToday = new Date().toDateString() === date.toDateString();
             
-            // Check if date is in the past
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const dayDate = new Date(date);
@@ -274,7 +315,6 @@ const AppManagement = () => {
                     </div>
                 )}
 
-
                 {selectedDates.length > 0 && (
                     <div className="mt-4 p-3 bg-red-50 rounded-lg border border-red-200">
                         <div className="flex items-center justify-between mb-2">
@@ -341,10 +381,10 @@ const AppManagement = () => {
                         <div className="grid grid-cols-1 gap-8 items-center">
                             <div className="space-y-6 text-lg">
                                 {[
-                                    { key: 'App', label: 'App' },
+                                    { key: 'APP', label: 'App' },
                                     { key: 'UPI', label: 'UPI' },
-                                    { key: 'Live Counter', label: 'Live Counter' },
-                                    { key: 'Coupons', label: 'Coupons' },
+                                    { key: 'LIVE_COUNTER', label: 'Live Counter' },
+                                    { key: 'COUPONS', label: 'Coupons' },
                                 ].map((item) => (
                                     <div key={item.key} className="flex items-center justify-between">
                                         <span>{item.label}</span>
