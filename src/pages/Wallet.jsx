@@ -82,9 +82,9 @@ const Wallet = () => {
     const walletSummaryMap = filteredWalletSummary.map(wallet => [
         `#WLT${wallet.walletId?.toString().padStart(3, '0') || 'N/A'}`,
         wallet.name,
-        formatCurrency(wallet.balance),
-        formatCurrency(wallet.totalRecharged),
-        formatCurrency(wallet.totalUsed),
+        formatCurrency(wallet.balance.toFixed(2)),
+        formatCurrency(wallet.totalRecharged.toFixed(2)),
+        formatCurrency(wallet.totalUsed.toFixed(2)),
         formatDate(wallet.lastRecharged),
         formatDate(wallet.lastOrder)
     ])
@@ -94,7 +94,7 @@ const Wallet = () => {
     const rechargeHistoryMap = filteredRechargeHistory.map(recharge => [
         `#RCH${recharge.rechargeId?.toString().padStart(3, '0')}`,
         recharge.customerName,
-        formatCurrency(recharge.amount),
+        formatCurrency(recharge.amount.toFixed(2)),
         formatDate(recharge.date),
         recharge.method || 'N/A',
         <Badge
@@ -111,7 +111,7 @@ const Wallet = () => {
     const paidOrdersMap = filteredPaidOrders.map(order => [
         `#ORD${order.orderId?.toString().padStart(3, '0')}`,
         order.customerName,
-        formatCurrency(order.orderTotal),
+        formatCurrency(order.orderTotal.toFixed(2)),
         formatDate(order.orderDate),
         <Badge
             variant="success"

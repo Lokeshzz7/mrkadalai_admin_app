@@ -47,7 +47,7 @@ const Inventory = () => {
                 const transformedData = response.stocks.map(stock => [
                     stock.name,
                     stock.category,
-                    `${stock.quantity} kg`,
+                    `${stock.quantity}`,
                     stock.id,
                     stock.price,
                     stock.threshold
@@ -85,7 +85,7 @@ const Inventory = () => {
                     item.product.name,
                     item.product.category,
                     new Date(item.timestamp).toISOString().split('T')[0],
-                    `${item.quantity} kg ${item.action === 'ADD' ? 'Added' : 'Deducted'}`
+                    `${item.quantity} ${item.action === 'ADD' ? 'Added' : 'Deducted'}`
                 ])
                 setActivityData(transformedHistory)
                 setFilteredHistory(transformedHistory)
@@ -296,7 +296,7 @@ const Inventory = () => {
                             data={filteredStock.map(([item, category, stock, id, price, threshold]) => [
                                 item,
                                 category,
-                                `$${price.toFixed(2)}`,
+                                `₹${price.toFixed(2)}`,
                                 threshold,
                                 stock,
                                 <div className="flex space-x-2">

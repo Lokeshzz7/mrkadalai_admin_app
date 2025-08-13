@@ -96,7 +96,7 @@ const OrderHistory = () => {
         ord.name,
         ord.orderItems.map(i => i.item).join(', '),
         <Badge variant={getStatusVariant(ord.status)}>{ord.status}</Badge>,
-        `$${ord.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}`,
+        `₹${ord.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}`,
         ord.orderType === 'MANUAL'
             ? <Badge variant="info">Manual</Badge>
             : <Badge variant="success">App</Badge>,
@@ -202,14 +202,14 @@ const OrderHistory = () => {
                                     <tr key={idx}>
                                         <td className="p-2 border">{item.item}</td>
                                         <td className="p-2 border">{item.quantity}</td>
-                                        <td className="p-2 border">${item.unitPrice.toFixed(2)}</td>
-                                        <td className="p-2 border">${(item.quantity * item.unitPrice).toFixed(2)}</td>
+                                        <td className="p-2 border">₹{item.unitPrice.toFixed(2)}</td>
+                                        <td className="p-2 border">₹{(item.quantity * item.unitPrice).toFixed(2)}</td>
                                     </tr>
                                 ))}
                                 <tr className="font-semibold bg-gray-50">
                                     <td colSpan="3" className="p-2 border text-right">Grand Total</td>
                                     <td className="p-2 border">
-                                        ${selectedOrder.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}
+                                        ₹{selectedOrder.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}
                                     </td>
                                 </tr>
                             </tbody>
