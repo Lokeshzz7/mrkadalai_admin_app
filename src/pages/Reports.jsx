@@ -203,7 +203,7 @@ const Reports = () => {
         return profitLossTrendsData.map(item => ({
             ...item,
             month: getMonthName(item.month),
-            originalProfit: item.profit,
+            originalProfit: item.profit.toFixed(2),
             profit: item.profit < 0 ? 0 : item.profit
         }))
     }
@@ -599,25 +599,25 @@ const Reports = () => {
                             <Card>
                                 <div className="text-center">
                                     <h3 className="text-lg font-semibold text-gray-700">Total Revenue</h3>
-                                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(revenueSplitData.totalRevenue)}</p>
+                                    <p className="text-2xl font-bold text-blue-600">{formatCurrency(revenueSplitData.totalRevenue.toFixed(2))}</p>
                                 </div>
                             </Card>
                             <Card>
                                 <div className="text-center">
                                     <h3 className="text-lg font-semibold text-gray-700">App Orders</h3>
-                                    <p className="text-2xl font-bold text-green-600">{formatCurrency(revenueSplitData.revenueByAppOrder)}</p>
+                                    <p className="text-2xl font-bold text-green-600">{formatCurrency(revenueSplitData.revenueByAppOrder.toFixed(2))}</p>
                                 </div>
                             </Card>
                             <Card>
                                 <div className="text-center">
                                     <h3 className="text-lg font-semibold text-gray-700">Manual Orders</h3>
-                                    <p className="text-2xl font-bold text-purple-600">{formatCurrency(revenueSplitData.revenueByManualOrder)}</p>
+                                    <p className="text-2xl font-bold text-purple-600">{formatCurrency(revenueSplitData.revenueByManualOrder.toFixed(2))}</p>
                                 </div>
                             </Card>
                             <Card>
                                 <div className="text-center">
                                     <h3 className="text-lg font-semibold text-gray-700">Wallet Recharge</h3>
-                                    <p className="text-2xl font-bold text-orange-600">{formatCurrency(revenueSplitData.revenueByWalletRecharge)}</p>
+                                    <p className="text-2xl font-bold text-orange-600">{formatCurrency(revenueSplitData.revenueByWalletRecharge.toFixed(2))}</p>
                                 </div>
                             </Card>
                         </div>
