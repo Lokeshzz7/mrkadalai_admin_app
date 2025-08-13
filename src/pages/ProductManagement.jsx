@@ -283,14 +283,13 @@ const ProductManagement = () => {
                                                 {product.name}
                                             </h4>
                                             <span className="font-bold text-green-600">
-                                                ${product.price}
+                                                ₹{product.price}
                                             </span>
                                         </div>
 
                                         {/* Stock Info */}
                                         <div className="text-sm text-gray-600">
                                             <div>Stock: {product.inventory?.quantity || 0}</div>
-                                            <div>Min Value: {product.minValue || 0}</div>
                                         </div>
 
                                         {/* Action Buttons */}
@@ -464,9 +463,6 @@ const ProductManagement = () => {
                                 placeholder="0"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Stock will reset to this value daily at midnight
-                            </p>
                         </div>
 
                         <div>
@@ -617,9 +613,6 @@ const ProductManagement = () => {
                                 placeholder="0"
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
-                            <p className="text-xs text-gray-500 mt-1">
-                                Stock will reset to this value daily at midnight
-                            </p>
                         </div>
 
                         <div>
@@ -715,7 +708,7 @@ const ProductManagement = () => {
                             </div>
                             <div>
                                 <span className="font-semibold">Price: </span>
-                                <span className="text-green-600 font-bold">${selectedProduct.price}</span>
+                                <span className="text-green-600 font-bold">₹{selectedProduct.price}</span>
                             </div>
                             <div>
                                 <span className="font-semibold">Category: </span>
