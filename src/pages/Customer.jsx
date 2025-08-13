@@ -36,9 +36,9 @@ const Customer = () => {
           year: String(customer.yearOfStudy || 'N/A'),
           phoneNumber: String(customer.phoneNo || 'N/A'),
           email: String(customer.email || 'N/A'),
-          walletBalance: `₹${customer.walletBalance?.toLocaleString() || '0'}`,
+          walletBalance: `₹${customer.walletBalance.toFixed(2)?.toLocaleString() || '0'}`,
           totalOrders: String(customer.totalOrders || '0'),
-          totalPurchase: `₹${customer.totalPurchaseCost?.toLocaleString() || '0'}`,
+          totalPurchase: `₹${customer.totalPurchaseCost.toFixed(2)?.toLocaleString() || '0'}`,
           lastOrderDate: customer.lastOrderDate
             ? new Date(customer.lastOrderDate).toLocaleDateString('en-IN')
             : 'N/A',
