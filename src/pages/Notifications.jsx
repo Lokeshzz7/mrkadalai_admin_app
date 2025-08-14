@@ -3,25 +3,28 @@ import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import toast from 'react-hot-toast';
-import { apiRequest } from '../utils/api'; // Add this import
+import { apiRequest } from '../utils/api';
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState('notification');
   const [showCouponForm, setShowCouponForm] = useState(false);
   const [showCreateCouponForm, setShowCreateCouponForm] = useState(false);
+  const [showCreateNotificationForm, setShowCreateNotificationForm] = useState(false);
   const [coupons, setCoupons] = useState([]);
+  const [scheduledNotifications, setScheduledNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef();
+  const notificationFileInputRef = useRef();
 
   const outletId = localStorage.getItem('outletId');
 
   const [notificationFormData, setNotificationFormData] = useState({
     title: '',
-    type: '',
-    description: '',
-    scheduleDate: '',
-    scheduleTime: '',
-    image: null,
+    priority: '',
+    message: '',
+    scheduledDate: '',
+    scheduledTime: '',
+    imageUrl: null,
   });
 
   const [promotionFormData, setPromotionFormData] = useState({
@@ -46,14 +49,37 @@ const Notifications = () => {
   const [autoSend, setAutoSend] = useState(false);
 
   const couponHeaders = ["Code", "Description", "Reward", "Min Order", "Valid Until", "Usage", "Actions"];
+  const notificationHeaders = ["Title", "Message", "Priority", "Scheduled At", "Status", "Actions"];
 
   // Fetch coupons on component mount and when tab changes to coupon
   useEffect(() => {
     if (activeTab === 'coupon') {
       fetchCoupons();
+    } else if (activeTab === 'notification') {
+      fetchScheduledNotifications();
     }
   }, [activeTab]);
-  
+
+  const fetchScheduledNotifications = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const data = await apiRequest(`/superadmin/notifications/scheduled/${outletId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+      });
+      setScheduledNotifications(data.data);
+    } catch (error) {
+      console.error('Error fetching scheduled notifications:', error);
+      toast.error(error.message || 'Error fetching scheduled notifications');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchCoupons = async () => {
     try {
@@ -94,6 +120,23 @@ const Notifications = () => {
     }
   };
 
+  const cancelScheduledNotification = async (notificationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      await apiRequest(`/superadmin/notifications/scheduled/${notificationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      toast.success('Scheduled notification cancelled successfully');
+      fetchScheduledNotifications(); // Refresh the list
+    } catch (error) {
+      console.error('Error cancelling notification:', error);
+      toast.error(error.message || 'Error cancelling notification');
+    }
+  };
+
   const couponData = coupons.map(coupon => [
     coupon.code,
     coupon.description || 'No description',
@@ -112,10 +155,39 @@ const Notifications = () => {
     </div>
   ]);
 
+  const notificationData = scheduledNotifications.map(notification => [
+    notification.title,
+    notification.message.length > 50 ? `${notification.message.substring(0, 50)}...` : notification.message,
+    <span className={`px-2 py-1 rounded text-xs ${
+      notification.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+      notification.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+      'bg-green-100 text-green-800'
+    }`}>
+      {notification.priority}
+    </span>,
+    new Date(notification.scheduledAt).toLocaleString(),
+    <span className={`px-2 py-1 rounded text-xs ${
+      notification.isSent ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+    }`}>
+      {notification.isSent ? 'Sent' : 'Scheduled'}
+    </span>,
+    <div className="text-right">
+      {!notification.isSent && (
+        <Button 
+          variant="danger" 
+          onClick={() => cancelScheduledNotification(notification.id)}
+          disabled={loading}
+        >
+          Cancel
+        </Button>
+      )}
+    </div>
+  ]);
+
   const handleNotificationChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === 'image') {
-      setNotificationFormData(prev => ({ ...prev, image: files[0] }));
+    if (name === 'imageUrl') {
+      setNotificationFormData(prev => ({ ...prev, imageUrl: files[0] }));
     } else {
       setNotificationFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -135,10 +207,94 @@ const Notifications = () => {
     setCouponFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleNotificationSubmit = (e) => {
-    e.preventDefault();
-    console.log('Notification Data:', notificationFormData);
-    toast.success("Notification Sent");
+  const handleSendImmediate = async () => {
+    // Validation
+    if (!notificationFormData.title || !notificationFormData.message) {
+      toast.error('Title and message are required');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const notificationData = {
+        title: notificationFormData.title.trim(),
+        message: notificationFormData.message.trim(),
+        outletId: parseInt(outletId),
+      };
+
+      await apiRequest('/superadmin/notifications/send-immediate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: notificationData,
+      });
+
+      toast.success('Notification sent immediately');
+      setShowCreateNotificationForm(false);
+      handleNotificationReset();
+    } catch (error) {
+      console.error('Error sending immediate notification:', error);
+      toast.error(error.message || 'Error sending notification');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleScheduleNotification = async () => {
+    // Validation
+    if (!notificationFormData.title || !notificationFormData.message || 
+        !notificationFormData.scheduledDate || !notificationFormData.scheduledTime || 
+        !notificationFormData.priority) {
+      toast.error('Please fill all required fields for scheduling');
+      return;
+    }
+
+    // Validate scheduled time is in future
+    const scheduledDateTime = new Date(`${notificationFormData.scheduledDate}T${notificationFormData.scheduledTime}`);
+    const now = new Date();
+
+    if (scheduledDateTime <= now) {
+      toast.error('Scheduled time must be in the future');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      
+      const notificationData = {
+        title: notificationFormData.title.trim(),
+        message: notificationFormData.message.trim(),
+        priority: notificationFormData.priority,
+        scheduledDate: notificationFormData.scheduledDate,
+        scheduledTime: notificationFormData.scheduledTime,
+        imageUrl: notificationFormData.imageUrl || null,
+        outletId: parseInt(outletId),
+      };
+
+      await apiRequest('/superadmin/notifications/schedule', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+        },
+        body: notificationData,
+      });
+
+      toast.success('Notification scheduled successfully');
+      setShowCreateNotificationForm(false);
+      handleNotificationReset();
+      fetchScheduledNotifications();
+    } catch (error) {
+      console.error('Error scheduling notification:', error);
+      toast.error(error.message || 'Error scheduling notification');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePromotionSubmit = (e) => {
@@ -233,13 +389,13 @@ const Notifications = () => {
   const handleNotificationReset = () => {
     setNotificationFormData({
       title: '',
-      type: '',
-      description: '',
-      scheduleDate: '',
-      scheduleTime: '',
-      image: null,
+      priority: '',
+      message: '',
+      scheduledDate: '',
+      scheduledTime: '',
+      imageUrl: null,
     });
-    if (fileInputRef.current) fileInputRef.current.value = null;
+    if (notificationFileInputRef.current) notificationFileInputRef.current.value = null;
   };
 
   const handlePromotionReset = () => {
@@ -281,49 +437,140 @@ const Notifications = () => {
 
       {/* Notification Tab */}
       {activeTab === 'notification' && (
-        <Card title="Notification Details">
-          <form className="space-y-4" onSubmit={handleNotificationSubmit}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                <input type="text" name="title" value={notificationFormData.title} onChange={handleNotificationChange} className="w-full border rounded px-3 py-2" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Priority Type</label>
-                <select name="type" value={notificationFormData.type} onChange={handleNotificationChange} className="w-full border rounded px-3 py-2">
-                  <option value="">Select Type</option>
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-            </div>
+        <Card title={
+          <div className="flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-gray-800">Notification Management</h2>
+            {!showCreateNotificationForm && (
+              <Button variant="success" onClick={() => setShowCreateNotificationForm(true)}>Create Notification</Button>
+            )}
+          </div>
+        }>
+          {!showCreateNotificationForm ? (
+            <>
+              <h3 className="text-lg font-semibold mb-4 text-gray-700">Scheduled Notifications</h3>
+              {loading ? (
+                <div className="text-center py-4">Loading notifications...</div>
+              ) : scheduledNotifications.length > 0 ? (
+                <Table headers={notificationHeaders} data={notificationData} className="border rounded mb-4" />
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No scheduled notifications found. Create your first notification!
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <h3 className="text-lg font-semibold mb-4 text-gray-700">Create Notification</h3>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                    <input 
+                      type="text" 
+                      name="title" 
+                      value={notificationFormData.title} 
+                      onChange={handleNotificationChange} 
+                      className="w-full border rounded px-3 py-2" 
+                      placeholder="Enter notification title"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority Type *</label>
+                    <select 
+                      name="priority" 
+                      value={notificationFormData.priority} 
+                      onChange={handleNotificationChange} 
+                      className="w-full border rounded px-3 py-2"
+                      required
+                    >
+                      <option value="">Select Priority</option>
+                      <option value="HIGH">High</option>
+                      <option value="MEDIUM">Medium</option>
+                      <option value="LOW">Low</option>
+                    </select>
+                  </div>
+                </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea name="description" value={notificationFormData.description} onChange={handleNotificationChange} className="w-full border rounded px-3 py-2" rows="2" placeholder="Enter description" />
-            </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
+                  <textarea 
+                    name="message" 
+                    value={notificationFormData.message} 
+                    onChange={handleNotificationChange} 
+                    className="w-full border rounded px-3 py-2" 
+                    rows="3" 
+                    placeholder="Enter notification message"
+                    required
+                  />
+                </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload</label>
-                <input type="file" accept="image/*" name="image" onChange={handleNotificationChange} ref={fileInputRef} className="w-full border rounded px-3 py-2" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Date</label>
-                <input type="date" name="scheduleDate" value={notificationFormData.scheduleDate} onChange={handleNotificationChange} className="w-full border rounded px-3 py-2" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Time</label>
-                <input type="time" name="scheduleTime" value={notificationFormData.scheduleTime} onChange={handleNotificationChange} className="w-full border rounded px-3 py-2" />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload</label>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      name="imageUrl" 
+                      onChange={handleNotificationChange} 
+                      ref={notificationFileInputRef} 
+                      className="w-full border rounded px-3 py-2" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Date</label>
+                    <input 
+                      type="date" 
+                      name="scheduledDate" 
+                      value={notificationFormData.scheduledDate} 
+                      onChange={handleNotificationChange} 
+                      className="w-full border rounded px-3 py-2" 
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Time</label>
+                    <input 
+                      type="time" 
+                      name="scheduledTime" 
+                      value={notificationFormData.scheduledTime} 
+                      onChange={handleNotificationChange} 
+                      className="w-full border rounded px-3 py-2" 
+                    />
+                  </div>
+                </div>
 
-            <div className="flex justify-end space-x-2 pt-2">
-              <Button type="button" variant="danger" onClick={handleNotificationReset}>Reset</Button>
-              <Button type="submit" variant="success">Send Notification</Button>
-            </div>
-          </form>
+                <div className="flex justify-end space-x-2 pt-2">
+                  <Button 
+                    type="button" 
+                    variant="danger" 
+                    onClick={() => { 
+                      handleNotificationReset(); 
+                      setShowCreateNotificationForm(false); 
+                    }}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="black" 
+                    onClick={handleSendImmediate}
+                    disabled={loading}
+                  >
+                    {loading ? 'Sending...' : 'Send Now'}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="success"
+                    onClick={handleScheduleNotification}
+                    disabled={loading}
+                  >
+                    {loading ? 'Scheduling...' : 'Schedule'}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
         </Card>
       )}
 
