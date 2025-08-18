@@ -201,6 +201,7 @@ export const AuthProvider = ({ children }) => {
     const clearStoredData = useCallback(() => {
         try {
             localStorage.removeItem('currentOutletId');
+            localStorage.removeItem('token');
         } catch (error) {
             console.error('Error clearing stored data:', error);
         }
