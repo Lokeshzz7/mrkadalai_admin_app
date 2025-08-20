@@ -67,9 +67,6 @@ const Reports = () => {
         try {
             const response = await apiRequest(`/superadmin/outlets/sales-report/${outletId}/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     from: dateRange.from,
                     to: dateRange.to
@@ -86,9 +83,6 @@ const Reports = () => {
             // Fetch revenue by items
             const revenueByItemsResponse = await apiRequest(`/superadmin/outlets/revenue-report/${outletId}/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     from: dateRange.from,
                     to: dateRange.to
@@ -99,9 +93,6 @@ const Reports = () => {
             // Fetch revenue split
             const revenueSplitResponse = await apiRequest(`/superadmin/outlets/revenue-split/${outletId}/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     from: dateRange.from,
                     to: dateRange.to
@@ -112,9 +103,6 @@ const Reports = () => {
             // Fetch wallet recharge by day
             const walletRechargeResponse = await apiRequest(`/superadmin/outlets/wallet-recharge-by-day/${outletId}/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     from: dateRange.from,
                     to: dateRange.to
@@ -131,9 +119,6 @@ const Reports = () => {
             // Fetch profit/loss trends data
             const profitLossTrendsResponse = await apiRequest(`/superadmin/outlets/profit-loss-trends/${outletId}/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     year: selectedYear
                 })
@@ -153,9 +138,6 @@ const Reports = () => {
             // Fetch customer overview
             const customerOverviewResponse = await apiRequest(`/superadmin/outlets/customer-overview/${outletId}/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     from: dateRange.from,
                     to: dateRange.to
@@ -165,9 +147,6 @@ const Reports = () => {
 
             const customerPerOrderResponse = await apiRequest(`/superadmin/outlets/customer-per-order/${outletId}/`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify({
                     from: dateRange.from,
                     to: dateRange.to
