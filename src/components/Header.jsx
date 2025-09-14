@@ -75,7 +75,7 @@ const Header = ({ onMenuClick }) => {
                             </div>
                             <div className="hidden sm:block">
                                 <div className="text-xs sm:text-sm font-medium text-gray-900">{userName}</div>
-                                <div className="text-xs text-gray-500">Restaurant Manager</div>
+                                <div className="text-xs text-gray-500">Admin</div>
                             </div>
                         </div>
 
