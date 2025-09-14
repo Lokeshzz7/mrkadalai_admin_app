@@ -3,11 +3,14 @@ import { apiRequest } from '../utils/api';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
-import { Info, Trash2, Edit, X } from 'lucide-react';
+import { Info, Trash2, Edit, X, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../components/ui/Loader';
 
 const categories = ['All', 'Meals', 'Starters', 'Desserts', 'Beverages'];
+// Define your API base URL here, consistent with your api.js
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5500/api';
+
 
 const ProductManagement = () => {
     const [products, setProducts] = useState([]);
@@ -31,24 +34,30 @@ const ProductManagement = () => {
         name: '',
         description: '',
         price: '',
-        imageUrl: '',
         category: '',
         threshold: '',
         minValue: '',
         outletId: outletId
     });
 
+    // Image file states
+    const [imageFile, setImageFile] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+
     // Edit form states
     const [editFormData, setEditFormData] = useState({
         name: '',
         description: '',
         price: '',
-        imageUrl: '',
         category: '',
         threshold: '',
         minValue: '',
         outletId: outletId
     });
+
+    // Edit image file states
+    const [editImageFile, setEditImageFile] = useState(null);
+    const [editImagePreview, setEditImagePreview] = useState(null);
 
     useEffect(() => {
         fetchProducts();
@@ -76,21 +85,74 @@ const ProductManagement = () => {
         }
     };
 
+    const handleImageChange = (e, isEdit = false) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (!file.type.startsWith('image/')) {
+                toast.error('Only image files are allowed');
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('Image size must be less than 5MB');
+                return;
+            }
+            if (isEdit) {
+                setEditImageFile(file);
+                setEditImagePreview(URL.createObjectURL(file));
+            } else {
+                setImageFile(file);
+                setImagePreview(URL.createObjectURL(file));
+            }
+        }
+    };
+
+    const clearImage = (isEdit = false) => {
+        if (isEdit) {
+            setEditImageFile(null);
+            if (editImagePreview) {
+                URL.revokeObjectURL(editImagePreview);
+                setEditImagePreview(null);
+            }
+        } else {
+            setImageFile(null);
+            if (imagePreview) {
+                URL.revokeObjectURL(imagePreview);
+                setImagePreview(null);
+            }
+        }
+    };
+
+    // MODIFIED: Use direct fetch for FormData submission
     const handleAddProduct = async (e) => {
         e.preventDefault();
         try {
-            const productData = {
-                ...formData,
-                price: parseFloat(formData.price),
-                threshold: parseInt(formData.threshold) || 10,
-                minValue: parseInt(formData.minValue) || 0,
-                outletId: parseInt(formData.outletId)
-            };
-
-            await apiRequest('/superadmin/outlets/add-product/', {
+            const productFormData = new FormData();
+            
+            productFormData.append('name', formData.name);
+            productFormData.append('description', formData.description);
+            productFormData.append('price', formData.price);
+            productFormData.append('category', formData.category);
+            productFormData.append('threshold', formData.threshold || '10');
+            productFormData.append('minValue', formData.minValue || '0');
+            productFormData.append('outletId', formData.outletId);
+            
+            if (imageFile) {
+                productFormData.append('image', imageFile);
+            }
+            
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_BASE_URL}/superadmin/outlets/add-product/`, {
                 method: 'POST',
-                body: productData
+                headers: {
+                    ...(token && { Authorization: `Bearer ${token}` }),
+                },
+                body: productFormData, // Send FormData directly
             });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to add product');
+            }
 
             setShowAddModal(false);
             resetFormData();
@@ -101,21 +163,37 @@ const ProductManagement = () => {
         }
     };
 
+    // MODIFIED: Use direct fetch for FormData submission
     const handleEditProduct = async (e) => {
         e.preventDefault();
         try {
-            const productData = {
-                ...editFormData,
-                price: parseFloat(editFormData.price),
-                threshold: parseInt(editFormData.threshold) || 10,
-                minValue: parseInt(editFormData.minValue) || 0,
-                outletId: parseInt(editFormData.outletId)
-            };
+            const productFormData = new FormData();
+            
+            productFormData.append('name', editFormData.name);
+            productFormData.append('description', editFormData.description);
+            productFormData.append('price', editFormData.price);
+            productFormData.append('category', editFormData.category);
+            productFormData.append('threshold', editFormData.threshold || '10');
+            productFormData.append('minValue', editFormData.minValue || '0');
+            productFormData.append('outletId', editFormData.outletId);
+            
+            if (editImageFile) {
+                productFormData.append('image', editImageFile);
+            }
 
-            await apiRequest(`/superadmin/outlets/update-product/${productToEdit.id}`, {
+            const token = localStorage.getItem("token");
+            const response = await fetch(`${API_BASE_URL}/superadmin/outlets/update-product/${productToEdit.id}`, {
                 method: 'PUT',
-                body: productData
+                headers: {
+                    ...(token && { Authorization: `Bearer ${token}` }),
+                },
+                body: productFormData, // Send FormData directly
             });
+            
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to update product');
+            }
 
             setShowEditModal(false);
             setProductToEdit(null);
@@ -129,12 +207,10 @@ const ProductManagement = () => {
 
     const handleRemoveProduct = async () => {
         if (!productToRemove) return;
-
         try {
             await apiRequest(`/superadmin/outlets/delete-product/${productToRemove.id}`, {
                 method: 'DELETE'
             });
-
             setShowRemoveModal(false);
             setProductToRemove(null);
             fetchProducts();
@@ -165,12 +241,12 @@ const ProductManagement = () => {
             name: '',
             description: '',
             price: '',
-            imageUrl: '',
             category: '',
             threshold: '',
             minValue: '',
             outletId: outletId
         });
+        clearImage(false);
     };
 
     const resetEditFormData = () => {
@@ -178,12 +254,12 @@ const ProductManagement = () => {
             name: '',
             description: '',
             price: '',
-            imageUrl: '',
             category: '',
             threshold: '',
             minValue: '',
             outletId: outletId
         });
+        clearImage(true);
     };
 
     const openRemoveModal = (product) => {
@@ -202,11 +278,10 @@ const ProductManagement = () => {
             name: product.name,
             description: product.description,
             price: product.price.toString(),
-            imageUrl: product.imageUrl || '',
             category: product.category,
             threshold: product.inventory?.threshold?.toString() || '',
             minValue: product.minValue?.toString() || '0',
-            outletId: product.outletId.toString()
+            outletId: outletId
         });
         setShowEditModal(true);
     };
@@ -219,16 +294,18 @@ const ProductManagement = () => {
         );
     }
 
+    // The rest of your component's JSX remains exactly the same.
+    // ... (return statement with JSX)
     return (
         <div className="space-y-6 p-4">
             <h1 className="text-4xl font-bold">Product Management</h1>
-
+ 
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                     {error}
                 </div>
             )}
-
+ 
             {/* Filter & Action Buttons */}
             <div className="flex justify-between items-center">
                 <div className="flex space-x-4">
@@ -242,7 +319,7 @@ const ProductManagement = () => {
                         ))}
                     </select>
                 </div>
-
+ 
                 <div className="flex space-x-2">
                     <Button
                         variant='success'
@@ -252,7 +329,7 @@ const ProductManagement = () => {
                     </Button>
                 </div>
             </div>
-
+ 
             {/* Products Grid */}
             <Card title='All Products'>
                 <div className="max-h-96 overflow-y-auto scrollbar-hide">
@@ -261,12 +338,9 @@ const ProductManagement = () => {
                             <div key={product.id} className="relative">
                                 <Card>
                                     <div className="space-y-3">
-                                        {/* Category as heading */}
                                         <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
                                             {product.category}
                                         </h3>
-
-                                        {/* Product Image */}
                                         <div className="aspect-square overflow-hidden rounded-md">
                                             <img
                                                 src={product.imageUrl || '/api/placeholder/200/200'}
@@ -277,8 +351,6 @@ const ProductManagement = () => {
                                                 }}
                                             />
                                         </div>
-
-                                        {/* Product Name and Price */}
                                         <div className="flex justify-between items-center">
                                             <h4 className="font-medium text-gray-900 truncate flex-1 mr-2">
                                                 {product.name}
@@ -287,13 +359,9 @@ const ProductManagement = () => {
                                                 ₹{product.price}
                                             </span>
                                         </div>
-
-                                        {/* Stock Info */}
                                         <div className="text-sm text-gray-600">
                                             <div>Stock: {product.inventory?.quantity || 0}</div>
                                         </div>
-
-                                        {/* Action Buttons */}
                                         <div className="flex justify-between items-center pt-2">
                                             <div className="flex space-x-2">
                                                 <button
@@ -324,7 +392,7 @@ const ProductManagement = () => {
                             </div>
                         ))}
                     </div>
-
+ 
                     {filteredProducts.length === 0 && (
                         <div className="text-center py-8 text-gray-500">
                             No products found for the selected category.
@@ -332,7 +400,7 @@ const ProductManagement = () => {
                     )}
                 </div>
             </Card>
-
+ 
             {/* Add Product Modal */}
             <Modal
                 isOpen={showAddModal}
@@ -369,7 +437,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-
+ 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Description *
@@ -379,11 +447,11 @@ const ProductManagement = () => {
                             value={formData.description}
                             onChange={handleInputChange}
                             required
-                            rows={3}
+                            rows={2}
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-
+ 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -400,7 +468,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
+ 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Category *
@@ -419,22 +487,54 @@ const ProductManagement = () => {
                             </select>
                         </div>
                     </div>
-
+ 
+                    {/* Image Upload Section */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Image URL
+                            Product Image
                         </label>
-                        <input
-                            type="url"
-                            name="imageUrl"
-                            value={formData.imageUrl}
-                            onChange={handleInputChange}
-                            placeholder="https://example.com/image.jpg"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                                {imagePreview ? (
+                                    <div className="relative">
+                                        <img
+                                            src={imagePreview}
+                                            alt="Preview"
+                                            className="mx-auto h-32 w-32 object-cover rounded-md"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => clearImage(false)}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Upload className="mx-auto h-4 w-12 text-gray-400" />
+                                        <div className="flex text-sm text-gray-600">
+                                            <label htmlFor="image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                                <span>Upload a file</span>
+                                                <input
+                                                    id="image-upload"
+                                                    name="image-upload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => handleImageChange(e, false)}
+                                                    className="sr-only"
+                                                />
+                                            </label>
+                                            <p className="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4">
+ 
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Alert Threshold
@@ -449,7 +549,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
+ 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Min Value *
@@ -465,24 +565,10 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Outlet ID *
-                            </label>
-                            <input
-                                type="number"
-                                name="outletId"
-                                value={formData.outletId}
-                                onChange={handleInputChange}
-                                required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
                     </div>
                 </form>
             </Modal>
-
+ 
             {/* Edit Product Modal */}
             <Modal
                 isOpen={showEditModal}
@@ -519,7 +605,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-
+ 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Description *
@@ -533,7 +619,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
-
+ 
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -550,7 +636,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
+ 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Category *
@@ -569,22 +655,74 @@ const ProductManagement = () => {
                             </select>
                         </div>
                     </div>
-
+ 
+                    {/* Image Upload Section for Edit */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Image URL
+                            Product Image
                         </label>
-                        <input
-                            type="url"
-                            name="imageUrl"
-                            value={editFormData.imageUrl}
-                            onChange={handleEditInputChange}
-                            placeholder="https://example.com/image.jpg"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        />
+                        <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                            <div className="space-y-1 text-center">
+                                {editImagePreview ? (
+                                    <div className="relative">
+                                        <img
+                                            src={editImagePreview}
+                                            alt="Preview"
+                                            className="mx-auto h-32 w-32 object-cover rounded-md"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => clearImage(true)}
+                                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                ) : productToEdit?.imageUrl ? (
+                                    <div className="relative">
+                                        <img
+                                            src={productToEdit.imageUrl}
+                                            alt="Current"
+                                            className="mx-auto h-32 w-32 object-cover rounded-md"
+                                        />
+                                        <p className="text-xs text-gray-500 mt-1">Current image</p>
+                                        <label htmlFor="edit-image-upload" className="mt-2 cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                            <span className="text-sm">Change image</span>
+                                            <input
+                                                id="edit-image-upload"
+                                                name="edit-image-upload"
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={(e) => handleImageChange(e, true)}
+                                                className="sr-only"
+                                            />
+                                        </label>
+                                    </div>
+                                ) : (
+                                    <>
+                                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                                        <div className="flex text-sm text-gray-600">
+                                            <label htmlFor="edit-image-upload" className="relative cursor-pointer bg-white rounded-md font-medium text-indigo-600 hover:text-indigo-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-indigo-500">
+                                                <span>Upload a file</span>
+                                                <input
+                                                    id="edit-image-upload"
+                                                    name="edit-image-upload"
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={(e) => handleImageChange(e, true)}
+                                                    className="sr-only"
+                                                />
+                                            </label>
+                                            <p className="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p className="text-xs text-gray-500">PNG, JPG, GIF up to 5MB</p>
+                                    </>
+                                )}
+                            </div>
+                        </div>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4">
+ 
+                    <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Alert Threshold
@@ -599,7 +737,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
+ 
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Min Value *
@@ -615,24 +753,10 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">
-                                Outlet ID *
-                            </label>
-                            <input
-                                type="number"
-                                name="outletId"
-                                value={editFormData.outletId}
-                                onChange={handleEditInputChange}
-                                required
-                                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            />
-                        </div>
                     </div>
                 </form>
             </Modal>
-
+ 
             {/* Remove Product Modal */}
             <Modal
                 isOpen={showRemoveModal}
@@ -659,7 +783,7 @@ const ProductManagement = () => {
                     Are you sure you want to remove "{productToRemove?.name}"? This action cannot be undone.
                 </p>
             </Modal>
-
+ 
             {/* Product Details Modal */}
             <Modal
                 isOpen={showDetailsModal}
@@ -697,7 +821,7 @@ const ProductManagement = () => {
                                 }}
                             />
                         </div>
-
+ 
                         <div className="space-y-2">
                             <div>
                                 <span className="font-semibold">Name: </span>
