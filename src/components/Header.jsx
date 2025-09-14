@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from 'react'
 import { useLocation } from 'react-router-dom';
 import { Search, Bell, User, Menu, LogOut } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
-import logo from '../assets/logo.png'
+import logo from '../assets/logo3.png'
 
 const Header = ({ onMenuClick }) => {
     const { user, signOut } = useContext(AuthContext)

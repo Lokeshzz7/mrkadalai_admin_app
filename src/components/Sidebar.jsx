@@ -105,7 +105,7 @@ const AdminSidebar = ({ onClose }) => {
     }
 
     const getNavLinkClass = (item, isActive) => {
-        const baseClass = 'flex items-center px-2 py-[4.5px] text-sm font-medium rounded-lg transition-colors';
+        const baseClass = 'flex items-center px-2 py-[5.5px] text-sm font-medium rounded-lg transition-colors';
         
         if (isActive) {
             return `${baseClass} bg-black text-white`;
@@ -123,7 +123,7 @@ const AdminSidebar = ({ onClose }) => {
             return (
                 <li key={item.name}>
                     <div
-                        className="flex items-center px-2 py-[4.5px] text-sm font-medium rounded-lg transition-colors text-gray-500 cursor-not-allowed opacity-50"
+                        className="flex items-center px-2 py-[5.5px] text-sm font-medium rounded-lg transition-colors text-gray-500 cursor-not-allowed opacity-50"
                         title={`You don't have permission to access ${item.name} for this outlet`}
                     >
                         <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
@@ -247,8 +247,8 @@ const AdminSidebar = ({ onClose }) => {
             </nav>
 
             {/* Bottom Section */}
-            <div className="p-4 border-t border-gray-700">
-                <NavLink
+            <div className="p-2 border-t border-gray-700">
+                {/* <NavLink
                     to="/settings"
                     onClick={() => onClose && onClose()}
                     className={({ isActive }) =>
@@ -264,11 +264,11 @@ const AdminSidebar = ({ onClose }) => {
                 >
                     <Settings className="mr-3 h-5 w-5 flex-shrink-0" />
                     <span className="truncate">Settings</span>
-                </NavLink>
+                </NavLink> */}
 
                 <button
                     onClick={signOut}
-                    className="flex items-center w-full px-4 py-1 text-sm font-medium text-primary rounded-lg hover:bg-gray-800 hover:text-white transition-colors mt-2"
+                    className="flex items-center w-full px-4 py-2 text-sm font-medium text-primary rounded-lg hover:bg-gray-800 hover:text-white transition-colors mt-2"
                 >
                     <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
                     <span className="truncate">Logout</span>
