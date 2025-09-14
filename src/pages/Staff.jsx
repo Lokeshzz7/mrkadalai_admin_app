@@ -53,9 +53,9 @@ const Staff = () => {
             {/* Heading + Add Button */}
             <div className="flex justify-between items-center">
                 <h1 className="text-4xl font-bold">Staff Details</h1>
-                <Button variant='success' onClick={() => navigate('/staff/add')}>
+                {/* <Button variant='success' onClick={() => navigate('/staff/add')}>
                     Add Staff
-                </Button>
+                </Button> */}
             </div>
 
             {/* Staff Grid */}

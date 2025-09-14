@@ -4,6 +4,7 @@ import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import { apiRequest } from '../utils/api'; // Adjust the path based on your file structure
 import toast from 'react-hot-toast';
+import Loader from '../components/ui/Loader';
 
 const Expenditure = () => {
     const [activeTab, setActiveTab] = useState('tracker');
@@ -252,7 +253,7 @@ const Expenditure = () => {
                         </div>
                         <Card Black>
                             {loading ? (
-                                <div className="flex items-center justify-center text-center py-4"><Loader/></div>
+                                <div className="flex justify-center items-center text-center py-4"><Loader/></div>
                             ) : (
                                 <Table
                                     headers={['Category', 'Description', 'Amount', 'Date', 'Payment Method']}
