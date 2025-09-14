@@ -21,14 +21,7 @@ const StyledWrapper = styled.div`
     inset: 0 0 20px;
     border-radius: 15px 15px 10px 10px;
     padding: 1px;
-    background: linear-gradient(
-        90deg,
-        rgba(250, 248, 207, 1) 50%,
-        rgba(89, 39, 4, 1) 50%,
-        rgba(89, 39, 4, 1) 80%,
-        rgba(89, 39, 4, 1) 80%,
-        rgb(10, 4, 0) 100%
-      )
+    background: repeating-linear-gradient(-45deg, #91d2e2 0 8px, #1296a7 0 12px)
       content-box;
     --c: radial-gradient(farthest-side, #000 94%, #0000);
     -webkit-mask:
@@ -56,7 +49,7 @@ const StyledWrapper = styled.div`
     -webkit-mask-composite: destination-out;
     mask-composite: exclude, add, add, add, add, add, add, add, add;
     -webkit-mask-repeat: no-repeat;
-    animation: l2 6s infinite ease-out;
+    animation: l2 3s infinite ease-out;
   }
   .loader:before {
     content: "";
@@ -64,30 +57,7 @@ const StyledWrapper = styled.div`
     inset: 50% calc(50% - 4px) 0;
     background: #e0a267;
     border-radius: 50px;
-    box-shadow: 1px 1px 0 #472000;
-    animation: disappear 6s infinite;
   }
-
-  @keyframes disappear {
-    0% {
-      scale: 1;
-      background-color: #e0a267;
-    }
-    49% {
-      background-color: #e0a267;
-    }
-    50% {
-      scale: 1;
-      background-color: #e0a267;
-      transform: rotate(0deg);
-    }
-    75% {
-      scale: 150;
-      transform: rotate(45deg);
-      background-color: #000;
-    }
-  }
-
   @keyframes l2 {
     0% {
       -webkit-mask-size:
@@ -100,41 +70,13 @@ const StyledWrapper = styled.div`
         0 0,
         0 0,
         0 0;
-      opacity: 0;
-    }
-    2% {
-      opacity: 1;
-    }
-    5% {
-      -webkit-mask-size:
-        auto,
-        35px 35px,
-        0 0,
-        0 0,
-        0 0,
-        0 0,
-        0 0,
-        0 0,
-        0 0;
     }
     10% {
       -webkit-mask-size:
         auto,
-        35px 35px,
-        35px 35px,
+        25px 25px,
         0 0,
         0 0,
-        0 0,
-        0 0,
-        0 0,
-        0 0;
-    }
-    15% {
-      -webkit-mask-size:
-        auto,
-        35px 35px,
-        35px 35px,
-        30px 30px,
         0 0,
         0 0,
         0 0,
@@ -144,23 +86,11 @@ const StyledWrapper = styled.div`
     20% {
       -webkit-mask-size:
         auto,
-        35px 35px,
-        35px 35px,
-        30px 30px,
-        30px 30px,
+        25px 25px,
+        25px 25px,
         0 0,
         0 0,
         0 0,
-        0 0;
-    }
-    25% {
-      -webkit-mask-size:
-        auto,
-        35px 35px,
-        35px 35px,
-        30px 30px,
-        30px 30px,
-        35px 35px,
         0 0,
         0 0,
         0 0;
@@ -168,38 +98,74 @@ const StyledWrapper = styled.div`
     30% {
       -webkit-mask-size:
         auto,
-        35px 35px,
-        35px 35px,
+        25px 25px,
+        25px 25px,
         30px 30px,
-        30px 30px,
-        35px 35px,
-        35px 35px,
+        0 0,
+        0 0,
+        0 0,
         0 0,
         0 0;
     }
-    35% {
+    40% {
       -webkit-mask-size:
         auto,
-        35px 35px,
-        35px 35px,
+        25px 25px,
+        25px 25px,
         30px 30px,
         30px 30px,
-        35px 35px,
-        35px 35px,
-        35px 35px,
+        0 0,
+        0 0,
+        0 0,
         0 0;
     }
-    40%,
     50% {
       -webkit-mask-size:
         auto,
-        35px 35px,
-        35px 35px,
+        25px 25px,
+        25px 25px,
         30px 30px,
         30px 30px,
-        35px 35px,
-        35px 35px,
-        35px 35px,
+        25px 25px,
+        0 0,
+        0 0,
+        0 0;
+    }
+    60% {
+      -webkit-mask-size:
+        auto,
+        25px 25px,
+        25px 25px,
+        30px 30px,
+        30px 30px,
+        25px 25px,
+        25px 25px,
+        0 0,
+        0 0;
+    }
+    70% {
+      -webkit-mask-size:
+        auto,
+        25px 25px,
+        25px 25px,
+        30px 30px,
+        30px 30px,
+        25px 25px,
+        25px 25px,
+        25px 25px,
+        0 0;
+    }
+    80%,
+    100% {
+      -webkit-mask-size:
+        auto,
+        25px 25px,
+        25px 25px,
+        30px 30px,
+        30px 30px,
+        25px 25px,
+        25px 25px,
+        25px 25px,
         200% 200%;
     }
   }`;
