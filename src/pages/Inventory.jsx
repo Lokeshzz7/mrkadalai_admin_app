@@ -5,6 +5,7 @@ import Table from '../components/ui/Table'
 import Badge from '../components/ui/Badge'
 import Modal from '../components/ui/Modal'
 import { apiRequest } from '../utils/api'
+import Loader from '../components/ui/Loader'
 
 const Inventory = () => {
     const getFormattedDate = (date) => {
@@ -289,7 +290,9 @@ const Inventory = () => {
             {activeTab === 'stock' && (
                 <Card title="Current Stock Status">
                     {loading ? (
-                        <div className="text-center py-4">Loading stocks...</div>
+                        <div className="flex justify-center items-center text-center py-4">
+                            <Loader/>
+                        </div>
                     ) : (
                         <Table
                             headers={['Item', 'Category', 'Price', 'Threshold', 'Available Stock', 'Actions']}

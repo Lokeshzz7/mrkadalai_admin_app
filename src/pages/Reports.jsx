@@ -5,6 +5,7 @@ import Button from '../components/ui/Button'
 import Table from '../components/ui/Table'
 import Badge from '../components/ui/Badge'
 import { apiRequest } from '../utils/api'
+import Loader from '../components/ui/Loader'
 
 const Reports = () => {
     const [searchText, setSearchText] = useState('')
@@ -379,7 +380,7 @@ const Reports = () => {
                     <Button variant="black">Download Report</Button>
                 </div>
                 <div className="flex justify-center items-center h-64">
-                    <p className="text-gray-500">Loading reports data...</p>
+                    <Loader/>
                 </div>
             </div>
         )

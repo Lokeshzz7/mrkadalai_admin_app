@@ -5,6 +5,7 @@ import Card from '../components/ui/Card';
 import Modal from '../components/ui/Modal';
 import { Info, Trash2, Edit, X } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Loader from '../components/ui/Loader';
 
 const categories = ['All', 'Meals', 'Starters', 'Desserts', 'Beverages'];
 
@@ -213,7 +214,7 @@ const ProductManagement = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="text-lg">Loading products...</div>
+                <Loader/>
             </div>
         );
     }

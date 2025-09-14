@@ -4,6 +4,7 @@ import Card from '../components/ui/Card';
 import Table from '../components/ui/Table';
 import toast from 'react-hot-toast';
 import { apiRequest } from '../utils/api';
+import Loader from '../components/ui/Loader';
 
 const Notifications = () => {
   const [activeTab, setActiveTab] = useState('notification');
@@ -449,7 +450,7 @@ const Notifications = () => {
             <>
               <h3 className="text-lg font-semibold mb-4 text-gray-700">Scheduled Notifications</h3>
               {loading ? (
-                <div className="text-center py-4">Loading notifications...</div>
+                <div className="flex items-center justify-center text-center py-4"><Loader/></div>
               ) : scheduledNotifications.length > 0 ? (
                 <Table headers={notificationHeaders} data={notificationData} className="border rounded mb-4" />
               ) : (
@@ -636,7 +637,7 @@ const Notifications = () => {
             <>
               <h3 className="text-lg font-semibold mb-4 text-gray-700">Active Coupons</h3>
               {loading ? (
-                <div className="text-center py-4">Loading coupons...</div>
+                <div className="flex items-center justify-center text-center py-4"><Loader/></div>
               ) : coupons.length > 0 ? (
                 <Table headers={couponHeaders} data={couponData} className="border rounded mb-4" />
               ) : (

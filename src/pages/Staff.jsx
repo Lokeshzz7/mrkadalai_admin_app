@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import { useNavigate } from 'react-router-dom'
 import { User, Mail, Phone, Briefcase } from 'lucide-react';
 import { apiRequest } from '../utils/api';
+import Loader from '../components/ui/Loader';
 
 const Staff = () => {
     const navigate = useNavigate()
@@ -34,7 +35,7 @@ const Staff = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="text-lg">Loading staff...</div>
+                <Loader/>
             </div>
         );
     }

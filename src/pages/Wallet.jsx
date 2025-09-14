@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import Table from '../components/ui/Table'
 import Badge from '../components/ui/Badge'
 import { apiRequest } from '../utils/api'
+import Loader from '../components/ui/Loader'
 
 const Wallet = () => {
     const [searchText, setSearchText] = useState('')
@@ -131,7 +132,7 @@ const Wallet = () => {
             <div className="space-y-6">
                 <h1 className="text-4xl font-bold">Wallet Recharge</h1>
                 <div className="flex justify-center items-center h-64">
-                    <p className="text-gray-500">Loading wallet data...</p>
+                    <Loader/>
                 </div>
             </div>
         )

@@ -4,6 +4,7 @@ import Button from '../components/ui/Button'
 import Table from '../components/ui/Table'
 import Modal from '../components/ui/Modal'
 import { apiRequest } from '../utils/api'
+import Loader from '../components/ui/Loader'
 
 const Customer = () => {
   const [searchQuery, setSearchQuery] = useState('')
@@ -97,7 +98,7 @@ const Customer = () => {
       <div className="space-y-6">
         <h1 className="text-4xl font-bold">Customers Management</h1>
         <div className="flex justify-center items-center py-8">
-          <div className="text-lg">Loading customers...</div>
+          <Loader/>
         </div>
       </div>
     )

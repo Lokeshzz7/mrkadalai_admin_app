@@ -5,6 +5,7 @@ import Table from '../components/ui/Table'
 import Badge from '../components/ui/Badge'
 import Modal from '../components/ui/Modal'
 import { apiRequest } from '../utils/api'
+import Loader from '../components/ui/Loader'
 
 const OrderHistory = () => {
     const [searchQuery, setSearchQuery] = useState('');
@@ -111,8 +112,8 @@ const OrderHistory = () => {
             <div className="space-y-6">
                 <h1 className="text-4xl font-bold">Order Management</h1>
                 <Card title='Order Management'>
-                    <div className="p-8 text-center">
-                        <p>Loading orders...</p>
+                    <div className="flex p-8 justify-center items-center">
+                        <Loader/>
                     </div>
                 </Card>
             </div>

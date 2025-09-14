@@ -5,6 +5,7 @@ import Button from '../components/ui/Button';
 import { User } from 'lucide-react';
 import { apiRequest } from '../utils/api';
 import toast from 'react-hot-toast';
+import Loader from '../components/ui/Loader';
 
 const AdminDetails = () => {
     const [activeTab, setActiveTab] = useState('details');
@@ -168,7 +169,7 @@ const AdminDetails = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="text-lg">Loading admin details...</div>
+                <Loader/>
             </div>
         );
     }

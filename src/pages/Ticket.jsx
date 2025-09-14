@@ -5,6 +5,7 @@ import Table from '../components/ui/Table';
 import Badge from '../components/ui/Badge';
 import Modal from '../components/ui/Modal';
 import { apiRequest } from '../utils/api';
+import Loader from '../components/ui/Loader';
 
 const Ticket = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -171,7 +172,7 @@ const Ticket = () => {
       <div className="space-y-6">
         <h1 className="text-4xl font-bold">Ticket Management</h1>
         <div className="flex justify-center items-center h-64">
-          <p className="text-gray-500">Loading tickets...</p>
+          <Loader/>
         </div>
       </div>
     );

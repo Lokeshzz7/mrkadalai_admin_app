@@ -252,7 +252,7 @@ const Expenditure = () => {
                         </div>
                         <Card Black>
                             {loading ? (
-                                <div className="text-center py-4">Loading...</div>
+                                <div className="flex items-center justify-center text-center py-4"><Loader/></div>
                             ) : (
                                 <Table
                                     headers={['Category', 'Description', 'Amount', 'Date', 'Payment Method']}
