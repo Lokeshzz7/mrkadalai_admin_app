@@ -98,7 +98,7 @@ const Customer = () => {
       <div className="space-y-6">
         <h1 className="text-4xl font-bold">Customers Management</h1>
         <div className="flex justify-center items-center py-8">
-          <Loader/>
+          <Loader />
         </div>
       </div>
     )
@@ -121,8 +121,7 @@ const Customer = () => {
       <h1 className="text-4xl font-bold">Customers Management</h1>
 
       {/* Search and Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-800">Customer Details</h2>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end mb-4">
         <input
           type="text"
           placeholder="Search by ID or Name"
@@ -132,21 +131,23 @@ const Customer = () => {
         />
       </div>
 
-      <Card Black>
-        <Table
-          headers={[
-            'Customer Id',
-            'Wallet Id',
-            'Name',
-            'Year',
-            'Phone Number',
-            'Wallet Balance',
-            'Total purchase',
-            'Actions',
-          ]}
-          data={tableData}
-        />
-      </Card>
+      <div className='pb-5'>
+        <Card  title='Customer Details'>
+          <Table
+            headers={[
+              'Customer Id',
+              'Wallet Id',
+              'Name',
+              'Year',
+              'Phone Number',
+              'Wallet Balance',
+              'Total purchase',
+              'Actions',
+            ]}
+            data={tableData}
+          />
+        </Card>
+      </div>
 
       {/* Modal for Customer Details */}
       <Modal

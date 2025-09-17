@@ -85,8 +85,7 @@ const Inventory = () => {
                 const transformedHistory = response.history.map(item => [
                     item.product.name,
                     item.product.category,
-                    new Date(item.timestamp).toISOString().split('T')[0],
-                    `${item.quantity} ${item.action === 'ADD' ? 'Added' : 'Deducted'}`
+                    new Date(item.timestamp).toISOString().split('T')[0].split('-').reverse().join('/'), `${item.quantity} ${item.action === 'ADD' ? 'Added' : 'Deducted'}`
                 ])
                 setActivityData(transformedHistory)
                 setFilteredHistory(transformedHistory)
@@ -288,48 +287,50 @@ const Inventory = () => {
 
             {/* Content */}
             {activeTab === 'stock' && (
-                <Card title="Current Stock Status">
-                    {loading ? (
-                        <div className="flex justify-center items-center text-center py-4">
-                            <Loader/>
-                        </div>
-                    ) : (
-                        <Table
-                            headers={['Item', 'Category', 'Price', 'Threshold', 'Available Stock', 'Actions']}
-                            data={filteredStock.map(([item, category, stock, id, price, threshold]) => [
-                                item,
-                                category,
-                                `₹${price.toFixed(2)}`,
-                                threshold,
-                                stock,
-                                <div className="flex space-x-2">
-                                    <Button
-                                        variant="success"
-                                        className="px-3 py-1 text-xs"
-                                        onClick={() => {
-                                            setSelectedItem({ item, category, stock, id, price, threshold })
-                                            setModalMode('add')
-                                            setShowAddModal(true)
-                                        }}
-                                    >
-                                        Add
-                                    </Button>
-                                    <Button
-                                        variant="danger"
-                                        className="px-3 py-1 text-xs"
-                                        onClick={() => {
-                                            setSelectedItem({ item, category, stock, id, price, threshold })
-                                            setModalMode('deduct')
-                                            setShowAddModal(true)
-                                        }}
-                                    >
-                                        Deduct
-                                    </Button>
-                                </div>
-                            ])}
-                        />
-                    )}
-                </Card>
+                <div className='pb-4'>
+                    <Card title="Current Stock Status">
+                        {loading ? (
+                            <div className="flex justify-center items-center text-center py-4">
+                                <Loader />
+                            </div>
+                        ) : (
+                            <Table
+                                headers={['Item', 'Category', 'Price', 'Threshold', 'Available Stock', 'Actions']}
+                                data={filteredStock.map(([item, category, stock, id, price, threshold]) => [
+                                    item,
+                                    category,
+                                    `₹${price.toFixed(2)}`,
+                                    threshold,
+                                    stock,
+                                    <div className="flex space-x-2">
+                                        <Button
+                                            variant="success"
+                                            className="px-3 py-1 text-xs"
+                                            onClick={() => {
+                                                setSelectedItem({ item, category, stock, id, price, threshold })
+                                                setModalMode('add')
+                                                setShowAddModal(true)
+                                            }}
+                                        >
+                                            Add
+                                        </Button>
+                                        <Button
+                                            variant="danger"
+                                            className="px-3 py-1 text-xs"
+                                            onClick={() => {
+                                                setSelectedItem({ item, category, stock, id, price, threshold })
+                                                setModalMode('deduct')
+                                                setShowAddModal(true)
+                                            }}
+                                        >
+                                            Deduct
+                                        </Button>
+                                    </div>
+                                ])}
+                            />
+                        )}
+                    </Card>
+                </div>
             )}
 
             {activeTab === 'activity' && (

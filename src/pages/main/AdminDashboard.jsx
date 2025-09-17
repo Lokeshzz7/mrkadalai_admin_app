@@ -25,7 +25,9 @@ const AdminDashboard = () => {
         email: '',
         staffCount: 0
     });
-    const { setCurrentOutlet, getAccessibleRoutes } = useAuth();
+    const { setCurrentOutlet, getAccessibleRoutes, getAccessibleOutlets } = useAuth();
+
+
 
     // Dashboard data states
     const [dashboardData, setDashboardData] = useState({
@@ -114,6 +116,8 @@ const AdminDashboard = () => {
                 })
             ]);
 
+            console.log("from backedn status ", statusResponse)
+
             setRevenueData(revenueResponse);
 
             const statusData = [
@@ -122,6 +126,7 @@ const AdminDashboard = () => {
                 { name: 'Cancelled', value: statusResponse.cancelled, color: '#EF4444' },
                 { name: 'Partially Delivered', value: statusResponse.partiallyDelivered, color: '#6366F1' }
             ];
+            console.log("status Data", statusData);
             setOrderStatusData(statusData);
 
             const sourceData = [
@@ -212,18 +217,7 @@ const AdminDashboard = () => {
 
         // Show alert if only home route or no routes available
         if (showNoRouteAlert) {
-            // Option 1: Using window.alert
             toast.error(`No accessible routes found for ${college.name}. You will be redirected to the dashboard.`);
-
-            // Option 2: Using react-hot-toast (if you have it imported)
-            // toast.warning(`No accessible routes found for ${college.name}. Redirecting to dashboard.`);
-
-            // Option 3: Using a custom notification system
-            // showNotification({
-            //     type: 'warning',
-            //     title: 'Limited Access',
-            //     message: `No accessible routes found for ${college.name}. You will be redirected to the dashboard.`
-            // });
         }
 
         // Navigate to the determined route
@@ -464,23 +458,23 @@ const AdminDashboard = () => {
                         <>
                             {/* Dashboard Overview Cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                                <Card Black className="text-center">
+                                <Card className="text-center">
                                     <p className="text-gray-600">Today's Active Stores</p>
                                     <h2 className="text-2xl font-bold text-green-600">{dashboardData.totalActiveOutlets}</h2>
                                 </Card>
-                                <Card Black className="text-center">
+                                <Card className="text-center">
                                     <p className="text-gray-600">Total Revenue</p>
                                     <h2 className="text-2xl font-bold text-blue-600">{formatCurrency(dashboardData.totalRevenue)}</h2>
                                 </Card>
-                                <Card Black className="text-center">
+                                <Card className="text-center">
                                     <p className="text-gray-600">Total Customers</p>
                                     <h2 className="text-2xl font-bold text-purple-600">{dashboardData.totalCustomers}</h2>
                                 </Card>
-                                <Card Black className="text-center">
+                                <Card className="text-center">
                                     <p className="text-gray-600">Total Orders</p>
                                     <h2 className="text-2xl font-bold text-orange-600">{dashboardData.totalOrders}</h2>
                                 </Card>
-                                <Card Black className="text-center">
+                                <Card className="text-center">
                                     <p className="text-gray-600">Top Performing Store</p>
                                     <h2 className="text-2xl font-bold text-yellow-600">
                                         {dashboardData.topPerformingOutlet?.name || 'N/A'}
@@ -489,8 +483,8 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* Date Range Selector */}
-                            <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow">
-                                <h2 className="text-lg font-semibold text-gray-700">Analytics Dashboard</h2>
+                            <div className="flex justify-between items-center   p-4 rounded-lg">
+                                <h2 className="text-xl font-semibold ">Analytics Dashboard</h2>
                                 <div className="flex space-x-4">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">From</label>
@@ -593,18 +587,22 @@ const AdminDashboard = () => {
                                         </div>
 
                                         {/* Top Selling Items */}
-                                        <div>
+                                        <div className='pb-5'>
                                             <Card Black title="Top Selling Items">
                                                 <div className="space-y-4">
                                                     {topSellingItems.length > 0 ? (
                                                         <>
                                                             {/* Highlight top item */}
                                                             <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-lg text-white">
-                                                                <h3 className="font-bold text-lg">🏆 #{1}</h3>
-                                                                <p className="font-semibold">{topSellingItems[0].productName}</p>
+                                                                <div className="flex items-center justify-between">
+                                                                    <h4 className="font-medium">
+                                                                        #{1} {topSellingItems[0].productName}
+                                                                    </h4>
+                                                                </div>
                                                                 <p className="text-sm">Orders: {topSellingItems[0].totalOrders}</p>
                                                                 <p className="text-sm">Revenue: {formatCurrency(topSellingItems[0].totalRevenue)}</p>
                                                             </div>
+
 
                                                             {/* Other top items */}
                                                             {topSellingItems.slice(1).map((item, index) => (
@@ -648,27 +646,33 @@ const AdminDashboard = () => {
 
                     {/* OUTLET TAB */}
                     {activeTab === 'outlet' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-20">
-                            {outlets.map((outlet) => (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-5">
+                            {(isSuperAdmin ? outlets : outlets.filter(outlet =>
+                                getAccessibleOutlets().some(accessibleOutlet => accessibleOutlet.id === outlet.id)
+                            )).map((outlet) => (
                                 <div
                                     key={outlet.id}
                                     onClick={() => handleCollege(outlet)}
-                                    className="cursor-pointer"
+                                    className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-gray-100"
                                 >
-                                    <Card Black className="text-center p-2">
+                                    {/* Set fixed image height and width */}
+                                    <div className="relative w-full h-48">
                                         <img
                                             src={outlet.image || college}
                                             alt={outlet.name}
-                                            className="h-24 w-full object-cover rounded-lg"
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => { e.currentTarget.src = college; }}
                                         />
-                                        <p className="text-sm font-semibold mt-2">
-                                            {outlet.name}
-                                        </p>
-                                    </Card>
+                                    </div>
+
+                                    <div className="p-4 text-center">
+                                        <h4 className="text-lg font-semibold truncate">{outlet.name}</h4>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     )}
+
 
                     {activeTab === 'Onboarding' && isSuperAdmin && (
                         <>

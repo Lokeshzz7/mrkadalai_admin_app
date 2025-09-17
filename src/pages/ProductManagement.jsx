@@ -6,6 +6,7 @@ import Modal from '../components/ui/Modal';
 import { Info, Trash2, Edit, X, Upload } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Loader from '../components/ui/Loader';
+import Badge from '../components/ui/Badge';
 
 const categories = ['All', 'Meals', 'Starters', 'Desserts', 'Beverages'];
 // Define your API base URL here, consistent with your api.js
@@ -127,7 +128,7 @@ const ProductManagement = () => {
         e.preventDefault();
         try {
             const productFormData = new FormData();
-            
+
             productFormData.append('name', formData.name);
             productFormData.append('description', formData.description);
             productFormData.append('price', formData.price);
@@ -135,11 +136,11 @@ const ProductManagement = () => {
             productFormData.append('threshold', formData.threshold || '10');
             productFormData.append('minValue', formData.minValue || '0');
             productFormData.append('outletId', formData.outletId);
-            
+
             if (imageFile) {
                 productFormData.append('image', imageFile);
             }
-            
+
             const token = localStorage.getItem("token");
             const response = await fetch(`${API_BASE_URL}/superadmin/outlets/add-product/`, {
                 method: 'POST',
@@ -168,7 +169,7 @@ const ProductManagement = () => {
         e.preventDefault();
         try {
             const productFormData = new FormData();
-            
+
             productFormData.append('name', editFormData.name);
             productFormData.append('description', editFormData.description);
             productFormData.append('price', editFormData.price);
@@ -176,7 +177,7 @@ const ProductManagement = () => {
             productFormData.append('threshold', editFormData.threshold || '10');
             productFormData.append('minValue', editFormData.minValue || '0');
             productFormData.append('outletId', editFormData.outletId);
-            
+
             if (editImageFile) {
                 productFormData.append('image', editImageFile);
             }
@@ -189,7 +190,7 @@ const ProductManagement = () => {
                 },
                 body: productFormData, // Send FormData directly
             });
-            
+
             const data = await response.json();
             if (!response.ok) {
                 throw new Error(data.message || 'Failed to update product');
@@ -289,7 +290,7 @@ const ProductManagement = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <Loader/>
+                <Loader />
             </div>
         );
     }
@@ -299,13 +300,13 @@ const ProductManagement = () => {
     return (
         <div className="space-y-6 p-4">
             <h1 className="text-4xl font-bold">Product Management</h1>
- 
+
             {error && (
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                     {error}
                 </div>
             )}
- 
+
             {/* Filter & Action Buttons */}
             <div className="flex justify-between items-center">
                 <div className="flex space-x-4">
@@ -319,7 +320,7 @@ const ProductManagement = () => {
                         ))}
                     </select>
                 </div>
- 
+
                 <div className="flex space-x-2">
                     <Button
                         variant='success'
@@ -329,78 +330,105 @@ const ProductManagement = () => {
                     </Button>
                 </div>
             </div>
- 
+
             {/* Products Grid */}
-            <Card title='All Products'>
+            <Card title={selectedCategory === 'All' ? 'All Products' : `${selectedCategory} Products`}>
                 <div className="max-h-96 overflow-y-auto scrollbar-hide">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-2">
                         {filteredProducts.map((product) => (
-                            <div key={product.id} className="relative">
-                                <Card>
-                                    <div className="space-y-3">
-                                        <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
+                            <div
+                                key={product.id}
+                                className="bg-bg rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-gray-100"
+                                onClick={() => openDetailsModal(product)}
+                            >
+                                <div className="relative w-full h-48">
+                                    <img
+                                        src={product.imageUrl || '/api/placeholder/200/200'}
+                                        alt={product.name}
+                                        className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.src = '/api/placeholder/200/200';
+                                        }}
+                                    />
+                                    {(product.inventory?.quantity || 0) === 0 && (
+                                        <div className="absolute inset-0 bg-black bg-opacity-60 flex items-center justify-center">
+                                            <span className="text-white text-lg font-semibold">Out of Stock</span>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="p-4">
+                                    <div className="mb-2">
+                                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wide">
                                             {product.category}
-                                        </h3>
-                                        <div className="aspect-square overflow-hidden rounded-md">
-                                            <img
-                                                src={product.imageUrl || '/api/placeholder/200/200'}
-                                                alt={product.name}
-                                                className="w-full h-full object-cover"
-                                                onError={(e) => {
-                                                    e.target.src = '/api/placeholder/200/200';
-                                                }}
-                                            />
-                                        </div>
-                                        <div className="flex justify-between items-center">
-                                            <h4 className="font-medium text-gray-900 truncate flex-1 mr-2">
-                                                {product.name}
-                                            </h4>
-                                            <span className="font-bold text-green-600">
-                                                ₹{product.price}
-                                            </span>
-                                        </div>
-                                        <div className="text-sm text-gray-600">
-                                            <div>Stock: {product.inventory?.quantity || 0}</div>
-                                        </div>
-                                        <div className="flex justify-between items-center pt-2">
-                                            <div className="flex space-x-2">
-                                                <button
-                                                    onClick={() => openDetailsModal(product)}
-                                                    className="flex items-center text-blue-600 hover:text-blue-800 text-sm"
-                                                >
-                                                    <Info className="w-4 h-4 mr-1" />
-                                                    Details
-                                                </button>
-                                                <button
-                                                    onClick={() => openEditModal(product)}
-                                                    className="flex items-center text-green-600 hover:text-green-800 text-sm"
-                                                >
-                                                    <Edit className="w-4 h-4 mr-1" />
-                                                    Edit
-                                                </button>
-                                            </div>
+                                        </span>
+                                    </div>
+                                    <h4 className="text-lg font-semibold truncate mb-1">{product.name}</h4>
+                                    <p className="text-gray-600 text-sm mb-2 line-clamp-2">{product.description || 'No description available'}</p>
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="text-2xl font-bold text-green-600">₹{product.price}</span>
+                                        <Badge variant={(product.inventory?.quantity || 0) > 0 ? 'success' : 'danger'}>
+                                            {(product.inventory?.quantity || 0) > 0
+                                                ? `${product.inventory?.quantity || 0} in stock`
+                                                : 'Sold out'
+                                            }
+                                        </Badge>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2 border-t border-gray-100">
+                                        <div className="flex space-x-1">
                                             <button
-                                                onClick={() => openRemoveModal(product)}
-                                                className="flex items-center text-red-600 hover:text-red-800 text-sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openDetailsModal(product);
+                                                }}
+                                                className="flex items-center px-3 py-1.5 text-blue-600 hover:text-white hover:bg-blue-600 border border-blue-600 rounded-md text-sm font-medium transition-all duration-200 hover:shadow-md"
                                             >
-                                                <Trash2 className="w-4 h-4 mr-1" />
-                                                Remove
+                                                <Info className="w-3 h-3 mr-1" />
+                                                Details
+                                            </button>
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    openEditModal(product);
+                                                }}
+                                                className="flex items-center px-3 py-1.5 text-green-600 hover:text-white hover:bg-green-600 border border-green-600 rounded-md text-sm font-medium transition-all duration-200 hover:shadow-md"
+                                            >
+                                                <Edit className="w-3 h-3 mr-1" />
+                                                Edit
                                             </button>
                                         </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openRemoveModal(product);
+                                            }}
+                                            className="flex items-center px-3 py-1.5 text-red-600 hover:text-white hover:bg-red-600 border border-red-600 rounded-md text-sm font-medium transition-all duration-200 hover:shadow-md"
+                                        >
+                                            <Trash2 className="w-3 h-3 mr-1" />
+                                            Remove
+                                        </button>
                                     </div>
-                                </Card>
+                                </div>
                             </div>
                         ))}
                     </div>
- 
+
                     {filteredProducts.length === 0 && (
-                        <div className="text-center py-8 text-gray-500">
-                            No products found for the selected category.
+                        <div className="text-center py-12">
+                            <div className="text-gray-400 text-6xl mb-4">📦</div>
+                            <div className="text-gray-500 text-lg font-medium mb-2">
+                                No products found
+                            </div>
+                            <div className="text-gray-400 text-sm">
+                                {selectedCategory === 'All'
+                                    ? 'No products available. Add your first product to get started.'
+                                    : `No products found in the "${selectedCategory}" category.`
+                                }
+                            </div>
                         </div>
                     )}
                 </div>
             </Card>
- 
+
             {/* Add Product Modal */}
             <Modal
                 isOpen={showAddModal}
@@ -437,7 +465,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
- 
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Description *
@@ -451,7 +479,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
- 
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -468,7 +496,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
- 
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Category *
@@ -487,7 +515,7 @@ const ProductManagement = () => {
                             </select>
                         </div>
                     </div>
- 
+
                     {/* Image Upload Section */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -533,7 +561,7 @@ const ProductManagement = () => {
                             </div>
                         </div>
                     </div>
- 
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -549,7 +577,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
- 
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Min Value *
@@ -568,7 +596,7 @@ const ProductManagement = () => {
                     </div>
                 </form>
             </Modal>
- 
+
             {/* Edit Product Modal */}
             <Modal
                 isOpen={showEditModal}
@@ -605,7 +633,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
- 
+
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                             Description *
@@ -619,7 +647,7 @@ const ProductManagement = () => {
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
- 
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -636,7 +664,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
- 
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Category *
@@ -655,7 +683,7 @@ const ProductManagement = () => {
                             </select>
                         </div>
                     </div>
- 
+
                     {/* Image Upload Section for Edit */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -721,7 +749,7 @@ const ProductManagement = () => {
                             </div>
                         </div>
                     </div>
- 
+
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -737,7 +765,7 @@ const ProductManagement = () => {
                                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
- 
+
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">
                                 Min Value *
@@ -756,7 +784,7 @@ const ProductManagement = () => {
                     </div>
                 </form>
             </Modal>
- 
+
             {/* Remove Product Modal */}
             <Modal
                 isOpen={showRemoveModal}
@@ -783,7 +811,7 @@ const ProductManagement = () => {
                     Are you sure you want to remove "{productToRemove?.name}"? This action cannot be undone.
                 </p>
             </Modal>
- 
+
             {/* Product Details Modal */}
             <Modal
                 isOpen={showDetailsModal}
@@ -821,7 +849,7 @@ const ProductManagement = () => {
                                 }}
                             />
                         </div>
- 
+
                         <div className="space-y-2">
                             <div>
                                 <span className="font-semibold">Name: </span>

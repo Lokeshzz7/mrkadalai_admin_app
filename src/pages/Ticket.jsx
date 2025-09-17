@@ -73,6 +73,19 @@ const Ticket = () => {
     return matchesSearch && matchesPriority;
   });
 
+  const formatDateWithSlashes = (dateString) => {
+    if (!dateString) return 'N/A';
+
+    // If dateString contains '-' or '/'
+    const parts = dateString.includes('-') ? dateString.split('-') : dateString.split('/');
+
+    if (parts.length !== 3) return 'N/A';
+
+    const [year, month, day] = parts;
+    return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`;
+  };
+
+
   // const filteredTickets = ticketsData.filter(ticket =>
   //   ticket.ticketId.toLowerCase().includes(searchQuery.toLowerCase()) ||
   //   ticket.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -80,37 +93,41 @@ const Ticket = () => {
   // );
 
   // Map tickets data for the table with two action buttons (View & Chat)
-  const searchTicketData = filteredTickets.map(ticket => [
-    ticket.ticketId,
-    ticket.date,
-    ticket.description,
-    ticket.raisedBy,
-    <Badge variant={ticket.priority} key={`${ticket.ticketId}-priority`}>
-      {ticket.priority}
-    </Badge>,
-    <Badge variant={ticket.status} key={`${ticket.ticketId}-status`}>
-      {ticket.status}
-    </Badge>,
-    <div className="flex space-x-2" key={ticket.ticketId}>
-      <Button
-        onClick={() => {
-          setSelectedTicketForView(ticket);
-          setShowViewModal(true);
-        }}
-      >
-        View
-      </Button>
-      <Button
-        onClick={() => {
-          setSelectedTicketForChat(ticket);
-          setChatInput(chatReplies[ticket.ticketId] || '');
-        }}
-        disabled={ticket.status === 'closed'}
-      >
-        Chat
-      </Button>
-    </div>
-  ]);
+  const searchTicketData = filteredTickets
+    .slice()      // create a shallow copy to avoid mutating the original array
+    .reverse()    // reverse the order
+    .map(ticket => [
+      ticket.ticketId,
+      formatDateWithSlashes(ticket.date),
+      ticket.description,
+      ticket.raisedBy,
+      <Badge variant={ticket.priority} key={`${ticket.ticketId}-priority`}>
+        {ticket.priority}
+      </Badge>,
+      <Badge variant={ticket.status} key={`${ticket.ticketId}-status`}>
+        {ticket.status}
+      </Badge>,
+      <div className="flex space-x-2" key={ticket.ticketId}>
+        <Button
+          onClick={() => {
+            setSelectedTicketForView(ticket);
+            setShowViewModal(true);
+          }}
+        >
+          View
+        </Button>
+        <Button
+          onClick={() => {
+            setSelectedTicketForChat(ticket);
+            setChatInput(chatReplies[ticket.ticketId] || '');
+          }}
+          disabled={ticket.status === 'closed'}
+        >
+          Chat
+        </Button>
+      </div>
+    ]);
+
 
   const closeViewModal = () => {
     setSelectedTicketForView(null);
@@ -172,7 +189,7 @@ const Ticket = () => {
       <div className="space-y-6">
         <h1 className="text-4xl font-bold">Ticket Management</h1>
         <div className="flex justify-center items-center h-64">
-          <Loader/>
+          <Loader />
         </div>
       </div>
     );
@@ -196,27 +213,27 @@ const Ticket = () => {
     <div className="space-y-6">
       <h1 className="text-4xl font-bold">Ticket Management</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        <Card Black>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <Card className='text-center'>
           <p className="text-gray-600">Total tickets</p>
           <h2 className="text-2xl font-bold text-blue-600">{totalTickets}</h2>
         </Card>
-        <Card Black>
+        <Card className='text-center'>
           <p className="text-gray-600">Open Tickets</p>
           <h2 className="text-2xl font-bold text-blue-600">{openTickets}</h2>
         </Card>
-        <Card Black>
+        <Card className='text-center'>
           <p className="text-gray-600">Closed Tickets</p>
           <h2 className="text-2xl font-bold text-blue-600">{closedTickets}</h2>
         </Card>
-        <Card Black>
+        {/* <Card Black>
           <p className="text-gray-600">Avg Resolution Time</p>
           <h2 className="text-2xl font-bold text-blue-600">-</h2>
-        </Card>
+        </Card> */}
       </div>
 
-      <div className="flex justify-between items-center mb-4 flex-wrap gap-2">
-        <h2 className="text-lg font-semibold text-gray-800">Ticket Details</h2>
+      <div className="flex justify-end items-center mb-4 flex-wrap gap-2">
+        {/* <h2 className="text-lg font-semibold text-gray-800">Ticket Details</h2> */}
         <div className="flex gap-2">
           <select
             value={priorityFilter}
@@ -239,20 +256,22 @@ const Ticket = () => {
         </div>
       </div>
 
-      <Card>
-        <Table
-          headers={[
-            'Ticket Id',
-            'Date',
-            'Ticket Description',
-            'Ticket Raised by',
-            'Priority',
-            'Status',
-            'Actions'
-          ]}
-          data={searchTicketData}
-        />
-      </Card>
+      <div className='pb-5'>
+        <Card title='Ticket Details'>
+          <Table
+            headers={[
+              'Ticket Id',
+              'Date',
+              'Ticket Description',
+              'Ticket Raised by',
+              'Priority',
+              'Status',
+              'Actions'
+            ]}
+            data={searchTicketData}
+          />
+        </Card>
+      </div>
 
       {/* View Modal */}
       {showViewModal && selectedTicketForView && (

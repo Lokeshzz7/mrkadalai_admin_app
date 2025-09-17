@@ -58,12 +58,7 @@ const Header = ({ onMenuClick }) => {
 
                     {/* Right Section */}
                     <div className="flex items-center space-x-2 sm:space-x-4">
-                        <button
-                            onClick={signOut}
-                            className="relative p-2 border-2 border-black rounded-full text-black hover:bg-black hover:text-white transition"
-                        >
-                            <LogOut className="h-5 w-5 sm:h-6 sm:w-6" />
-                        </button>
+
 
 
                         {/* Profile */}
@@ -78,6 +73,15 @@ const Header = ({ onMenuClick }) => {
                                 <div className="text-xs text-gray-500">Admin</div>
                             </div>
                         </div>
+                        {location.pathname === '/' && (
+                            <button
+                                onClick={signOut}
+                                className="relative p-2 border-2 border-black rounded-full text-black hover:bg-black hover:text-white transition"
+                            >
+                                <LogOut className="h-3 w-3 sm:h-3 sm:w-3" />
+                            </button>
+                        )}
+
 
                         {/* Logout button */}
                         {/* <button

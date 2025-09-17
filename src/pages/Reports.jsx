@@ -380,7 +380,7 @@ const Reports = () => {
                     <Button variant="black">Download Report</Button>
                 </div>
                 <div className="flex justify-center items-center h-64">
-                    <Loader/>
+                    <Loader />
                 </div>
             </div>
         )
@@ -428,9 +428,9 @@ const Reports = () => {
             {activeTab === 'sales' && (
                 <div className="space-y-4">
                     {/* Date Range Controls */}
-                    <div className="flex justify-between items-center bg-gray-50 p-4 rounded-lg">
+                    <div className="flex justify-between items-center  p-4 rounded-lg">
                         <div className="flex items-center space-x-4">
-                            <span className="text-sm font-medium text-gray-700">Date Range:</span>
+                            <span className="text-xl font-medium text-gray-700">Date Range:</span>
                             <div className="flex space-x-2">
                                 <Button
                                     variant={isQuickDateRangeActive(7) ? 'black' : 'secondary'}
@@ -752,57 +752,59 @@ const Reports = () => {
                     </div>
 
                     {/* Profit/Loss Trends Chart */}
-                    <Card title={`Profit/Loss Trends - ${selectedYear}`}>
-                        {profitLossTrendsData && profitLossTrendsData.length > 0 ? (
-                            <div className="h-96 w-full">
-                                <ResponsiveContainer width="100%" height="100%">
-                                    <BarChart
-                                        data={getProfitLossChartData()}
-                                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                                    >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                                        <XAxis
-                                            dataKey="month"
-                                            axisLine={true}
-                                            tickLine={true}
-                                            tick={{ fontSize: 12 }}
-                                            height={60}
-                                        />
-                                        <YAxis
-                                            axisLine={true}
-                                            tickLine={true}
-                                            tick={{ fontSize: 12 }}
-                                            label={{ value: 'Amount (₹)', angle: -90, position: 'insideLeft' }}
-                                        />
-                                        <Tooltip content={<ProfitLossTooltip />} />
-                                        <Legend />
-                                        <Bar
-                                            dataKey="sales"
-                                            fill="#10b981"
-                                            name="Sales"
-                                            radius={[2, 2, 0, 0]}
-                                        />
-                                        <Bar
-                                            dataKey="expenses"
-                                            fill="#ef4444"
-                                            name="Expenses"
-                                            radius={[2, 2, 0, 0]}
-                                        />
-                                        <Bar
-                                            dataKey="profit"
-                                            fill="#3b82f6"
-                                            name="Profit"
-                                            radius={[2, 2, 0, 0]}
-                                        />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </div>
-                        ) : (
-                            <div className="text-center py-16 text-gray-500">
-                                No profit/loss trends data found for {selectedYear}
-                            </div>
-                        )}
-                    </Card>
+                    <div className='pb-5'>
+                        <Card title={`Profit/Loss Trends - ${selectedYear}`}>
+                            {profitLossTrendsData && profitLossTrendsData.length > 0 ? (
+                                <div className="h-96 w-full">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <BarChart
+                                            data={getProfitLossChartData()}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                                        >
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                            <XAxis
+                                                dataKey="month"
+                                                axisLine={true}
+                                                tickLine={true}
+                                                tick={{ fontSize: 12 }}
+                                                height={60}
+                                            />
+                                            <YAxis
+                                                axisLine={true}
+                                                tickLine={true}
+                                                tick={{ fontSize: 12 }}
+                                                label={{ value: 'Amount (₹)', angle: -90, position: 'insideLeft' }}
+                                            />
+                                            <Tooltip content={<ProfitLossTooltip />} />
+                                            <Legend />
+                                            <Bar
+                                                dataKey="sales"
+                                                fill="#10b981"
+                                                name="Sales"
+                                                radius={[2, 2, 0, 0]}
+                                            />
+                                            <Bar
+                                                dataKey="expenses"
+                                                fill="#ef4444"
+                                                name="Expenses"
+                                                radius={[2, 2, 0, 0]}
+                                            />
+                                            <Bar
+                                                dataKey="profit"
+                                                fill="#3b82f6"
+                                                name="Profit"
+                                                radius={[2, 2, 0, 0]}
+                                            />
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                </div>
+                            ) : (
+                                <div className="text-center py-16 text-gray-500">
+                                    No profit/loss trends data found for {selectedYear}
+                                </div>
+                            )}
+                        </Card>
+                    </div>
                 </div>
             )}
 
@@ -884,7 +886,7 @@ const Reports = () => {
                     )}
 
                     {/* Charts Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-5">
                         {/* Customer Overview Pie Chart */}
                         <Card title="Customer Overview">
                             {getCustomerOverviewPieData().length > 0 ? (

@@ -65,7 +65,7 @@ const Notifications = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const data = await apiRequest(`/superadmin/notifications/scheduled/${outletId}`, {
         method: 'GET',
         headers: {
@@ -87,7 +87,7 @@ const Notifications = () => {
       setLoading(true);
       const token = localStorage.getItem('token');
       console.log('Token from localStorage:', token); // Debug token
-      
+
       const data = await apiRequest(`/superadmin/get-coupons/${outletId}`, {
         method: 'GET',
         headers: {
@@ -138,7 +138,7 @@ const Notifications = () => {
     }
   };
 
-  const couponData = coupons.map(coupon => [
+  const couponData = coupons.slice().reverse().map(coupon => [
     coupon.code,
     coupon.description || 'No description',
     `₹${coupon.rewardValue}`,
@@ -146,8 +146,8 @@ const Notifications = () => {
     new Date(coupon.validUntil).toLocaleDateString(),
     `${coupon.usedCount}/${coupon.usageLimit}`,
     <div className="text-right">
-      <Button 
-        variant="danger" 
+      <Button
+        variant="danger"
         onClick={() => deleteCoupon(coupon.id)}
         disabled={loading}
       >
@@ -156,34 +156,33 @@ const Notifications = () => {
     </div>
   ]);
 
-  const notificationData = scheduledNotifications.map(notification => [
-    notification.title,
-    notification.message.length > 50 ? `${notification.message.substring(0, 50)}...` : notification.message,
-    <span className={`px-2 py-1 rounded text-xs ${
-      notification.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
-      notification.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
-      'bg-green-100 text-green-800'
-    }`}>
-      {notification.priority}
-    </span>,
-    new Date(notification.scheduledAt).toLocaleString(),
-    <span className={`px-2 py-1 rounded text-xs ${
-      notification.isSent ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-    }`}>
-      {notification.isSent ? 'Sent' : 'Scheduled'}
-    </span>,
-    <div className="text-right">
-      {!notification.isSent && (
-        <Button 
-          variant="danger" 
-          onClick={() => cancelScheduledNotification(notification.id)}
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-      )}
-    </div>
-  ]);
+  const notificationData = scheduledNotifications.slice()
+    .reverse().map(notification => [
+      notification.title,
+      notification.message.length > 50 ? `${notification.message.substring(0, 50)}...` : notification.message,
+      <span className={`px-2 py-1 rounded text-xs ${notification.priority === 'HIGH' ? 'bg-red-100 text-red-800' :
+        notification.priority === 'MEDIUM' ? 'bg-yellow-100 text-yellow-800' :
+          'bg-green-100 text-green-800'
+        }`}>
+        {notification.priority}
+      </span>,
+      new Date(notification.scheduledAt).toLocaleString(),
+      <span className={`px-2 py-1 rounded text-xs ${notification.isSent ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+        }`}>
+        {notification.isSent ? 'Sent' : 'Scheduled'}
+      </span>,
+      <div className="text-right">
+        {!notification.isSent && (
+          <Button
+            variant="danger"
+            onClick={() => cancelScheduledNotification(notification.id)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+        )}
+      </div>
+    ]);
 
   const handleNotificationChange = (e) => {
     const { name, value, files } = e.target;
@@ -218,7 +217,7 @@ const Notifications = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const notificationData = {
         title: notificationFormData.title.trim(),
         message: notificationFormData.message.trim(),
@@ -247,9 +246,9 @@ const Notifications = () => {
 
   const handleScheduleNotification = async () => {
     // Validation
-    if (!notificationFormData.title || !notificationFormData.message || 
-        !notificationFormData.scheduledDate || !notificationFormData.scheduledTime || 
-        !notificationFormData.priority) {
+    if (!notificationFormData.title || !notificationFormData.message ||
+      !notificationFormData.scheduledDate || !notificationFormData.scheduledTime ||
+      !notificationFormData.priority) {
       toast.error('Please fill all required fields for scheduling');
       return;
     }
@@ -266,7 +265,7 @@ const Notifications = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const notificationData = {
         title: notificationFormData.title.trim(),
         message: notificationFormData.message.trim(),
@@ -306,10 +305,10 @@ const Notifications = () => {
 
   const handleCouponSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validation
-    if (!couponFormData.code || !couponFormData.rewardValue || !couponFormData.validFrom || 
-        !couponFormData.validUntil || !couponFormData.usageLimit) {
+    if (!couponFormData.code || !couponFormData.rewardValue || !couponFormData.validFrom ||
+      !couponFormData.validUntil || !couponFormData.usageLimit) {
       toast.error('Please fill all required fields');
       return;
     }
@@ -347,7 +346,7 @@ const Notifications = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      
+
       const couponData = {
         code: couponFormData.code.trim().toUpperCase(),
         description: couponFormData.description.trim(),
@@ -373,8 +372,8 @@ const Notifications = () => {
       toast.success('Coupon created successfully');
       setShowCreateCouponForm(false);
       handleCouponReset();
-      fetchCoupons(); 
-      
+      fetchCoupons();
+
       if (autoSend) {
         // TODO: Implement notification sending logic
         toast.success('Notification sent to users');
@@ -438,141 +437,160 @@ const Notifications = () => {
 
       {/* Notification Tab */}
       {activeTab === 'notification' && (
-        <Card title={
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">Notification Management</h2>
-            {!showCreateNotificationForm && (
-              <Button variant="success" onClick={() => setShowCreateNotificationForm(true)}>Create Notification</Button>
-            )}
-          </div>
-        }>
-          {!showCreateNotificationForm ? (
-            <>
-              <h3 className="text-lg font-semibold mb-4 text-gray-700">Scheduled Notifications</h3>
-              {loading ? (
-                <div className="flex items-center justify-center text-center py-4"><Loader/></div>
-              ) : scheduledNotifications.length > 0 ? (
-                <Table headers={notificationHeaders} data={notificationData} className="border rounded mb-4" />
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No scheduled notifications found. Create your first notification!
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <h3 className="text-lg font-semibold mb-4 text-gray-700">Create Notification</h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
-                    <input 
-                      type="text" 
-                      name="title" 
-                      value={notificationFormData.title} 
-                      onChange={handleNotificationChange} 
-                      className="w-full border rounded px-3 py-2" 
-                      placeholder="Enter notification title"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Priority Type *</label>
-                    <select 
-                      name="priority" 
-                      value={notificationFormData.priority} 
-                      onChange={handleNotificationChange} 
-                      className="w-full border rounded px-3 py-2"
-                      required
-                    >
-                      <option value="">Select Priority</option>
-                      <option value="HIGH">High</option>
-                      <option value="MEDIUM">Medium</option>
-                      <option value="LOW">Low</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
-                  <textarea 
-                    name="message" 
-                    value={notificationFormData.message} 
-                    onChange={handleNotificationChange} 
-                    className="w-full border rounded px-3 py-2" 
-                    rows="3" 
-                    placeholder="Enter notification message"
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload</label>
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      name="imageUrl" 
-                      onChange={handleNotificationChange} 
-                      ref={notificationFileInputRef} 
-                      className="w-full border rounded px-3 py-2" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Date</label>
-                    <input 
-                      type="date" 
-                      name="scheduledDate" 
-                      value={notificationFormData.scheduledDate} 
-                      onChange={handleNotificationChange} 
-                      className="w-full border rounded px-3 py-2" 
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Time</label>
-                    <input 
-                      type="time" 
-                      name="scheduledTime" 
-                      value={notificationFormData.scheduledTime} 
-                      onChange={handleNotificationChange} 
-                      className="w-full border rounded px-3 py-2" 
-                    />
-                  </div>
-                </div>
-
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button 
-                    type="button" 
-                    variant="danger" 
-                    onClick={() => { 
-                      handleNotificationReset(); 
-                      setShowCreateNotificationForm(false); 
-                    }}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="black" 
-                    onClick={handleSendImmediate}
-                    disabled={loading}
-                  >
-                    {loading ? 'Sending...' : 'Send Now'}
-                  </Button>
-                  <Button 
-                    type="button" 
+        <div className='pb-5'>
+          <Card title={
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {showCreateNotificationForm ? 'Create Notification' : 'Scheduled Notification'}
+              </h2>
+              <div className="flex justify-end items-center space-x-2">
+                {!showCreateNotificationForm ? (
+                  <Button
                     variant="success"
-                    onClick={handleScheduleNotification}
-                    disabled={loading}
+                    onClick={() => setShowCreateNotificationForm(true)}
                   >
-                    {loading ? 'Scheduling...' : 'Schedule'}
+                    Create Notification
                   </Button>
-                </div>
+                ) : (
+                  <Button
+                    variant="black"
+                    onClick={() => setShowCreateNotificationForm(false)}
+                  >
+                    Back
+                  </Button>
+                )}
               </div>
-            </>
-          )}
-        </Card>
+
+            </div>
+          }>
+            {!showCreateNotificationForm ? (
+              <>
+                {/* <h3 className="text-lg font-semibold mb-4 text-gray-700">Scheduled Notifications</h3> */}
+                {loading ? (
+                  <div className="flex items-center justify-center text-center py-4"><Loader /></div>
+                ) : scheduledNotifications.length > 0 ? (
+                  <Table headers={notificationHeaders} data={notificationData} />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No scheduled notifications found. Create your first notification!
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <h3 className="text-lg font-semibold mb-4 text-gray-700">Create Notification</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={notificationFormData.title}
+                        onChange={handleNotificationChange}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="Enter notification title"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Priority Type *</label>
+                      <select
+                        name="priority"
+                        value={notificationFormData.priority}
+                        onChange={handleNotificationChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                      >
+                        <option value="">Select Priority</option>
+                        <option value="HIGH">High</option>
+                        <option value="MEDIUM">Medium</option>
+                        <option value="LOW">Low</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Message *</label>
+                    <textarea
+                      name="message"
+                      value={notificationFormData.message}
+                      onChange={handleNotificationChange}
+                      className="w-full border rounded px-3 py-2"
+                      rows="3"
+                      placeholder="Enter notification message"
+                      required
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Image Upload</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        name="imageUrl"
+                        onChange={handleNotificationChange}
+                        ref={notificationFileInputRef}
+                        className="w-full border rounded px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Date</label>
+                      <input
+                        type="date"
+                        name="scheduledDate"
+                        value={notificationFormData.scheduledDate}
+                        onChange={handleNotificationChange}
+                        className="w-full border rounded px-3 py-2"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Time</label>
+                      <input
+                        type="time"
+                        name="scheduledTime"
+                        value={notificationFormData.scheduledTime}
+                        onChange={handleNotificationChange}
+                        className="w-full border rounded px-3 py-2"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="danger"
+                      onClick={() => {
+                        handleNotificationReset();
+                        setShowCreateNotificationForm(false);
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="black"
+                      onClick={handleSendImmediate}
+                      disabled={loading}
+                    >
+                      {loading ? 'Sending...' : 'Send Now'}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="success"
+                      onClick={handleScheduleNotification}
+                      disabled={loading}
+                    >
+                      {loading ? 'Scheduling...' : 'Schedule'}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
       )}
 
       {/* Promotion Tab */}
@@ -625,163 +643,179 @@ const Notifications = () => {
 
       {/* Coupon Tab */}
       {activeTab === 'coupon' && (
-        <Card title={
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-800">Coupon Management</h2>
-            {!showCreateCouponForm && (
-              <Button variant="success" onClick={() => setShowCreateCouponForm(true)}>Create Coupon</Button>
-            )}
-          </div>
-        }>
-          {!showCreateCouponForm ? (
-            <>
-              <h3 className="text-lg font-semibold mb-4 text-gray-700">Active Coupons</h3>
-              {loading ? (
-                <div className="flex items-center justify-center text-center py-4"><Loader/></div>
-              ) : coupons.length > 0 ? (
-                <Table headers={couponHeaders} data={couponData} className="border rounded mb-4" />
-              ) : (
-                <div className="text-center py-8 text-gray-500">
-                  No active coupons found. Create your first coupon!
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <h3 className="text-lg font-semibold mb-4 text-gray-700">Create Coupon</h3>
-              <form className="space-y-4" onSubmit={handleCouponSubmit}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code *</label>
-                    <input 
-                      type="text" 
-                      name="code" 
-                      value={couponFormData.code} 
-                      onChange={handleCouponChange} 
-                      className="w-full border rounded px-3 py-2" 
-                      placeholder="e.g., SAVE20"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Reward Value (₹) *</label>
-                    <input 
-                      type="number" 
-                      name="rewardValue" 
-                      value={couponFormData.rewardValue} 
-                      onChange={handleCouponChange} 
-                      className="w-full border rounded px-3 py-2" 
-                      placeholder="e.g., 20"
-                      min="1"
-                      step="0.01"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                  <textarea 
-                    name="description" 
-                    value={couponFormData.description} 
-                    onChange={handleCouponChange} 
-                    rows="2" 
-                    className="w-full border rounded px-3 py-2" 
-                    placeholder="Describe your coupon offer"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Value (₹)</label>
-                    <input 
-                      type="number" 
-                      name="minOrderValue" 
-                      value={couponFormData.minOrderValue} 
-                      onChange={handleCouponChange} 
-                      className="w-full border rounded px-3 py-2" 
-                      placeholder="e.g., 100"
-                      min="0"
-                      step="0.01"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Usage Limit *</label>
-                    <input 
-                      type="number" 
-                      name="usageLimit" 
-                      value={couponFormData.usageLimit} 
-                      onChange={handleCouponChange} 
-                      className="w-full border rounded px-3 py-2" 
-                      placeholder="e.g., 100"
-                      min="1"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Valid From *</label>
-                    <input 
-                      type="datetime-local" 
-                      name="validFrom" 
-                      value={couponFormData.validFrom} 
-                      onChange={handleCouponChange} 
-                      className="w-full border rounded px-3 py-2" 
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until *</label>
-                    <input 
-                      type="datetime-local" 
-                      name="validUntil" 
-                      value={couponFormData.validUntil} 
-                      onChange={handleCouponChange} 
-                      className="w-full border rounded px-3 py-2" 
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-3 mt-4">
-                  <label className="text-sm font-medium text-gray-700">Auto Send Notification</label>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      className="sr-only peer" 
-                      checked={autoSend} 
-                      onChange={() => setAutoSend(!autoSend)} 
-                    />
-                    <div className="w-11 h-6 bg-black rounded-full peer peer-focus:ring-2 peer-checked:bg-theme after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
-                  </label>
-                </div>
-
-                <div className="flex justify-end space-x-2 pt-2">
-                  <Button 
-                    type="button" 
-                    variant="danger" 
-                    onClick={() => { 
-                      handleCouponReset(); 
-                      setShowCreateCouponForm(false); 
-                    }}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
+        <div className='pb-5'>
+          <Card title={
+            <div className="flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-800">
+                {showCreateCouponForm ? 'Create Coupon' : 'Active Coupons'}
+              </h2>
+              <div className="flex space-x-2">
+                {!showCreateCouponForm ? (
+                  <Button
                     variant="success"
-                    disabled={loading}
+                    onClick={() => setShowCreateCouponForm(true)}
                   >
-                    {loading ? 'Creating...' : 'Create Coupon'}
+                    Create Coupon
                   </Button>
-                </div>
-              </form>
-            </>
-          )}
-        </Card>
+                ) : (
+                  <Button
+                    variant="black"
+                    onClick={() => setShowCreateCouponForm(false)}
+                  >
+                    Back
+                  </Button>
+                )}
+              </div>
+            </div>
+          }>
+            {!showCreateCouponForm ? (
+              <>
+                {loading ? (
+                  <div className="flex items-center justify-center text-center py-4"><Loader /></div>
+                ) : coupons.length > 0 ? (
+                  <Table headers={couponHeaders} data={couponData} className="border rounded mb-4" />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    No active coupons found. Create your first coupon!
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <form className="space-y-4" onSubmit={handleCouponSubmit}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Coupon Code *</label>
+                      <input
+                        type="text"
+                        name="code"
+                        value={couponFormData.code}
+                        onChange={handleCouponChange}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="e.g., SAVE20"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Reward Value (₹) *</label>
+                      <input
+                        type="number"
+                        name="rewardValue"
+                        value={couponFormData.rewardValue}
+                        onChange={handleCouponChange}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="e.g., 20"
+                        min="1"
+                        step="0.01"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                    <textarea
+                      name="description"
+                      value={couponFormData.description}
+                      onChange={handleCouponChange}
+                      rows="2"
+                      className="w-full border rounded px-3 py-2"
+                      placeholder="Describe your coupon offer"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Order Value (₹)</label>
+                      <input
+                        type="number"
+                        name="minOrderValue"
+                        value={couponFormData.minOrderValue}
+                        onChange={handleCouponChange}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="e.g., 100"
+                        min="0"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Usage Limit *</label>
+                      <input
+                        type="number"
+                        name="usageLimit"
+                        value={couponFormData.usageLimit}
+                        onChange={handleCouponChange}
+                        className="w-full border rounded px-3 py-2"
+                        placeholder="e.g., 100"
+                        min="1"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Valid From *</label>
+                      <input
+                        type="datetime-local"
+                        name="validFrom"
+                        value={couponFormData.validFrom}
+                        onChange={handleCouponChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Valid Until *</label>
+                      <input
+                        type="datetime-local"
+                        name="validUntil"
+                        value={couponFormData.validUntil}
+                        onChange={handleCouponChange}
+                        className="w-full border rounded px-3 py-2"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center space-x-3 mt-4">
+                    <label className="text-sm font-medium text-gray-700">Auto Send Notification</label>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="sr-only peer"
+                        checked={autoSend}
+                        onChange={() => setAutoSend(!autoSend)}
+                      />
+                      <div className="w-11 h-6 bg-black rounded-full peer peer-focus:ring-2 peer-checked:bg-theme after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full" />
+                    </label>
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-2">
+                    <Button
+                      type="button"
+                      variant="danger"
+                      onClick={() => {
+                        handleCouponReset();
+                        setShowCreateCouponForm(false);
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      variant="success"
+                      disabled={loading}
+                    >
+                      {loading ? 'Creating...' : 'Create Coupon'}
+                    </Button>
+                  </div>
+                </form>
+              </>
+            )}
+          </Card>
+        </div>
       )}
     </div>
   );

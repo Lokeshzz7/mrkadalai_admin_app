@@ -19,7 +19,9 @@ const Badge = ({ children, variant = 'default', className = '' }) => {
         closed: 'bg-red-100 text-red-800',
         cancelled: 'bg-red-100 text-red-800',
         info: 'bg-blue-100 text-blue-800',
-        pending: 'bg-orange-100 text-orange-800'
+        pending: 'bg-orange-100 text-orange-800',
+        recharge: 'bg-green-100 text-green-800',  // treat as success
+        deduct: 'bg-red-100 text-red-800',
     }
 
     return (

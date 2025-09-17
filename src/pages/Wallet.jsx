@@ -80,32 +80,49 @@ const Wallet = () => {
 
     // Wallet Summary Data Mapping
     const filteredWalletSummary = getFilteredData(walletSummaryData, ['walletId', 'name'])
-    const walletSummaryMap = filteredWalletSummary.map(wallet => [
-        `#WLT${wallet.walletId?.toString().padStart(3, '0') || 'N/A'}`,
-        wallet.name,
-        formatCurrency(wallet.balance.toFixed(2)),
-        formatCurrency(wallet.totalRecharged.toFixed(2)),
-        formatCurrency(wallet.totalUsed.toFixed(2)),
-        formatDate(wallet.lastRecharged),
-        formatDate(wallet.lastOrder)
-    ])
+    const walletSummaryMap = filteredWalletSummary
+        .slice()                // Create a shallow copy to avoid mutating original array
+        .reverse()              // Reverse to make it descending
+        .map(wallet => [
+            `#WLT${wallet.walletId?.toString().padStart(3, '0') || 'N/A'}`,
+            wallet.name,
+            formatCurrency(wallet.balance.toFixed(2)),
+            formatCurrency(wallet.totalRecharged.toFixed(2)),
+            formatCurrency(wallet.totalUsed.toFixed(2)),
+            formatDate(wallet.lastRecharged),
+            formatDate(wallet.lastOrder)
+        ]);
+
 
     // Recharge History Data Mapping
     const filteredRechargeHistory = getFilteredData(rechargeHistoryData, ['rechargeId', 'customerName'])
-    const rechargeHistoryMap = filteredRechargeHistory.map(recharge => [
-        `#RCH${recharge.rechargeId?.toString().padStart(3, '0')}`,
-        recharge.customerName,
-        formatCurrency(recharge.amount.toFixed(2)),
-        formatDate(recharge.date),
-        recharge.method || 'N/A',
-        <Badge
-            variant={recharge.status?.toLowerCase() === 'completed' ? 'success' :
-                recharge.status?.toLowerCase() === 'pending' ? 'pending' : 'secondary'}
-            key={recharge.rechargeId}
-        >
-            {recharge.status || 'Unknown'}
-        </Badge>
-    ])
+    const rechargeHistoryMap = filteredRechargeHistory
+        .slice()      // create a shallow copy to avoid mutating original array
+        .reverse()    // reverse the order
+        .map(recharge => [
+            `#RCH${recharge.rechargeId?.toString().padStart(3, '0')}`,
+            recharge.customerName,
+            formatCurrency(recharge.amount.toFixed(2)),
+            formatDate(recharge.date),
+            recharge.method || 'N/A',
+            <Badge
+                variant={(() => {
+                    const variant = recharge.status?.toLowerCase() === 'recharge'
+                        ? 'success'
+                        : recharge.status?.toLowerCase() === 'deduct'
+                            ? 'danger'
+                            : recharge.status?.toLowerCase() === 'pending'
+                                ? 'pending'
+                                : 'secondary';
+
+                    return variant;
+                })()}
+                key={recharge.rechargeId}
+            >
+                {recharge.status || 'Unknown'}
+            </Badge>
+        ]);
+
 
     // Paid Orders Data Mapping
     const filteredPaidOrders = getFilteredData(paidOrdersData, ['orderId', 'customerName'])
@@ -132,7 +149,7 @@ const Wallet = () => {
             <div className="space-y-6">
                 <h1 className="text-4xl font-bold">Wallet Recharge</h1>
                 <div className="flex justify-center items-center h-64">
-                    <Loader/>
+                    <Loader />
                 </div>
             </div>
         )
@@ -191,50 +208,56 @@ const Wallet = () => {
 
             {/* Wallet Summary Tab */}
             {activeTab === 'summary' && (
-                <Card title='Wallet Summary'>
-                    {walletSummaryMap.length > 0 ? (
-                        <Table
-                            headers={['Wallet ID', 'Customer Name', 'Wallet Balance', 'Total Recharged', 'Total Used', 'Last Recharge', 'Last Order']}
-                            data={walletSummaryMap}
-                        />
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            No wallet data found
-                        </div>
-                    )}
-                </Card>
+                <div className='pb-5'>
+                    <Card title='Wallet Summary'>
+                        {walletSummaryMap.length > 0 ? (
+                            <Table
+                                headers={['Wallet ID', 'Customer Name', 'Wallet Balance', 'Total Recharged', 'Total Used', 'Last Recharge', 'Last Order']}
+                                data={walletSummaryMap}
+                            />
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">
+                                No wallet data found
+                            </div>
+                        )}
+                    </Card>
+                </div>
             )}
 
             {/* Recharge History Tab */}
             {activeTab === 'history' && (
-                <Card title='Recharge History'>
-                    {rechargeHistoryMap.length > 0 ? (
-                        <Table
-                            headers={['Recharge ID', 'Customer Name', 'Amount', 'Date', 'Payment Method', 'Status']}
-                            data={rechargeHistoryMap}
-                        />
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            No recharge history found
-                        </div>
-                    )}
-                </Card>
+                <div className='pb-5'>
+                    <Card title='Recharge History'>
+                        {rechargeHistoryMap.length > 0 ? (
+                            <Table
+                                headers={['Recharge ID', 'Customer Name', 'Amount', 'Date', 'Payment Method', 'Status']}
+                                data={rechargeHistoryMap}
+                            />
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">
+                                No recharge history found
+                            </div>
+                        )}
+                    </Card>
+                </div>
             )}
 
             {/* Paid Orders Tab */}
             {activeTab === 'orders' && (
-                <Card title='Paid Orders'>
-                    {paidOrdersMap.length > 0 ? (
-                        <Table
-                            headers={['Order ID', 'Customer Name', 'Amount', 'Date', 'Payment Status']}
-                            data={paidOrdersMap}
-                        />
-                    ) : (
-                        <div className="text-center py-8 text-gray-500">
-                            No paid orders found
-                        </div>
-                    )}
-                </Card>
+                <div className='pb-5'>
+                    <Card title='Paid Orders'>
+                        {paidOrdersMap.length > 0 ? (
+                            <Table
+                                headers={['Order ID', 'Customer Name', 'Amount', 'Date', 'Payment Status']}
+                                data={paidOrdersMap}
+                            />
+                        ) : (
+                            <div className="text-center py-8 text-gray-500">
+                                No paid orders found
+                            </div>
+                        )}
+                    </Card>
+                </div>
             )}
         </div>
     )
