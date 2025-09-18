@@ -2,7 +2,6 @@ import React, { useContext, useEffect } from 'react'
 import { useLocation } from 'react-router-dom';
 import { Search, Bell, User, Menu, LogOut } from 'lucide-react'
 import { AuthContext } from '../context/AuthContext'
-import logo from '../assets/logo3.png'
 
 const Header = ({ onMenuClick }) => {
     const { user, signOut } = useContext(AuthContext)
@@ -34,7 +33,7 @@ const Header = ({ onMenuClick }) => {
                         <Menu className="h-6 w-6" />
                     </button>
                     <div className="flex items-center gap-3">
-                        <img src={logo} alt="logo" className="h-8 w-auto" />
+                        <img src={'https://buvanesh-adya.s3.eu-north-1.amazonaws.com/logo3.png'} alt="logo" className="h-8 w-auto" />
                         {outletName && (
                             <span className="text-sm sm:text-base font-semibold text-gray-700">
                                 {outletName}
