@@ -1,14 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import Card from '../components/ui/Card';
-import Button from '../components/ui/Button';
-import { User } from 'lucide-react';
-import { apiRequest } from '../utils/api';
-import toast from 'react-hot-toast';
-import Loader from '../components/ui/Loader';
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
+import { User, Camera } from "lucide-react"; 
+import { apiRequest } from "../utils/api";
+import toast from "react-hot-toast";
+import Loader from "../components/ui/Loader";
 
 const StaffDetails = () => {
-  const [activeTab, setActiveTab] = useState('details');
+  const [activeTab, setActiveTab] = useState("details");
   const [staff, setStaff] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,15 +16,18 @@ const StaffDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  // Separate editing states for each tab
   const [isEditingDetails, setIsEditingDetails] = useState(false);
   const [isEditingPermissions, setIsEditingPermissions] = useState(false);
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const fileInputRef = useRef(null);
+
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    staffRole: '',
+    name: "",
+    email: "",
+    phone: "",
+    staffRole: "",
     billing: false,
     productsInsight: false,
     inventory: false,
@@ -34,6 +37,14 @@ const StaffDetails = () => {
   useEffect(() => {
     fetchStaffDetails();
   }, [id]);
+
+  useEffect(() => {
+    return () => {
+      if (imagePreview) {
+        URL.revokeObjectURL(imagePreview);
+      }
+    };
+  }, [imagePreview]);
 
   const fetchStaffDetails = async () => {
     try {
@@ -47,16 +58,16 @@ const StaffDetails = () => {
         const permissions = {};
         staffMember.permissions?.forEach((perm) => {
           switch (perm.type) {
-            case 'BILLING':
+            case "BILLING":
               permissions.billing = perm.isGranted;
               break;
-            case 'PRODUCT_INSIGHTS':
+            case "PRODUCT_INSIGHTS":
               permissions.productsInsight = perm.isGranted;
               break;
-            case 'INVENTORY':
+            case "INVENTORY":
               permissions.inventory = perm.isGranted;
               break;
-            case 'REPORTS':
+            case "REPORTS":
               permissions.reports = perm.isGranted;
               break;
             default:
@@ -65,21 +76,21 @@ const StaffDetails = () => {
         });
 
         setFormData({
-          name: staffMember.user?.name || '',
-          email: staffMember.user?.email || '',
-          phone: staffMember.user?.phone || '',
-          staffRole: staffMember.staffRole || '',
+          name: staffMember.user?.name || "",
+          email: staffMember.user?.email || "",
+          phone: staffMember.user?.phone || "",
+          staffRole: staffMember.staffRole || "",
           billing: permissions.billing || false,
           productsInsight: permissions.productsInsight || false,
           inventory: permissions.inventory || false,
           reports: permissions.reports || false,
         });
       } else {
-        setError('Staff member not found');
+        setError("Staff member not found");
       }
     } catch (err) {
-      setError('Failed to fetch staff details');
-      console.error('Error fetching staff details:', err);
+      setError("Failed to fetch staff details");
+      console.error("Error fetching staff details:", err);
     } finally {
       setLoading(false);
     }
@@ -93,47 +104,59 @@ const StaffDetails = () => {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handlePermissionChange = (permission, checked) => {
     setFormData((prev) => ({
       ...prev,
       [permission]: checked,
     }));
-  };
+  }; // Save staff details only
 
-  // Save staff details only
   const saveStaffDetails = async () => {
     try {
+      const data = new FormData();
+      data.append("name", formData.name);
+      data.append("email", formData.email);
+      data.append("phone", formData.phone);
+      data.append("staffRole", formData.staffRole);
+      if (imageFile) {
+        data.append("image", imageFile);
+      }
+
       await apiRequest(`/superadmin/outlets/update-staff/${staff.id}`, {
-        method: 'PUT',
-        body: {
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          staffRole: formData.staffRole,
-        },
+        method: "PUT",
+        body: data,
       });
-      toast.success('Staff details updated successfully');
+      toast.success("Staff details updated successfully");
       setIsEditingDetails(false);
+      setImageFile(null);
+      setImagePreview(null);
       await fetchStaffDetails();
     } catch (err) {
-      console.error('Error saving staff details:', err);
-      toast.error('Failed to save staff details');
+      console.error("Error saving staff details:", err);
+      toast.error("Failed to save staff details");
     }
   };
 
-  // Save permissions only
   const savePermissions = async () => {
     try {
       const permissionTypeMap = {
-        billing: 'BILLING',
-        productsInsight: 'PRODUCT_INSIGHTS',
-        inventory: 'INVENTORY',
-        reports: 'REPORTS',
+        billing: "BILLING",
+        productsInsight: "PRODUCT_INSIGHTS",
+        inventory: "INVENTORY",
+        reports: "REPORTS",
       };
 
       for (const key of Object.keys(permissionTypeMap)) {
-        await apiRequest('/superadmin/outlets/permissions/', {
-          method: 'POST',
+        await apiRequest("/superadmin/outlets/permissions/", {
+          method: "POST",
           body: {
             staffId: staff.id,
             permission: permissionTypeMap[key],
@@ -142,29 +165,29 @@ const StaffDetails = () => {
         });
       }
 
-      toast.success('Permissions updated successfully');
+      toast.success("Permissions updated successfully");
       setIsEditingPermissions(false);
       await fetchStaffDetails();
     } catch (err) {
-      console.error('Error saving permissions:', err);
-      toast.error('Failed to save permissions');
+      console.error("Error saving permissions:", err);
+      toast.error("Failed to save permissions");
     }
   };
 
   const handleDeleteStaff = async () => {
     const confirmDelete = window.confirm(
-      'Are you sure you want to remove this staff member?'
+      "Are you sure you want to remove this staff member?"
     );
     if (confirmDelete) {
       try {
         await apiRequest(`/superadmin/outlets/delete-staff/${staff.id}`, {
-          method: 'DELETE',
+          method: "DELETE",
         });
-        toast.success('Staff member deleted successfully');
-        navigate('/staff');
+        toast.success("Staff member deleted successfully");
+        navigate("/staff");
       } catch (err) {
-        console.error('Error deleting staff:', err);
-        toast.error('Failed to delete staff member');
+        console.error("Error deleting staff:", err);
+        toast.error("Failed to delete staff member");
       }
     }
   };
@@ -172,7 +195,7 @@ const StaffDetails = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <Loader/>
+        <Loader />
       </div>
     );
   }
@@ -180,80 +203,124 @@ const StaffDetails = () => {
   if (error || !staff) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="text-red-500">{error || 'Staff member not found'}</div>
+        {" "}
+        <div className="text-red-500">{error || "Staff member not found"}</div> 
+        {" "}
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Top Row: Back button + Tabs */}
+      {" "}
       <div className="flex justify-start items-center gap-4">
+      {" "}
         <button
           onClick={() => navigate(-1)}
           className="rounded-full bg-gray-200 hover:bg-gray-300 p-2"
         >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 text-black">
-            <polygon points="15,5 7,12 15,19" />
+       {" "}
+          <svg
+            viewBox="0 0 24 24"
+            fill="currentColor"
+            className="w-5 h-5 text-black"
+          >
+       <polygon points="15,5 7,12 15,19" />{" "}
           </svg>
         </button>
-
         <div className="flex space-x-4">
           <Button
-            variant={activeTab === 'details' ? 'black' : 'secondary'}
-            onClick={() => setActiveTab('details')}
+            variant={activeTab === "details" ? "black" : "secondary"}
+            onClick={() => setActiveTab("details")}
           >
             Staff Details
           </Button>
           <Button
-            variant={activeTab === 'permission' ? 'black' : 'secondary'}
-            onClick={() => setActiveTab('permission')}
+            variant={activeTab === "permission" ? "black" : "secondary"}
+            onClick={() => setActiveTab("permission")}
           >
-            Permission
+           Permission 
           </Button>
         </div>
       </div>
-
-      {/* Details Tab */}
-      {activeTab === 'details' && (
-        <Card title={staff.user?.name || 'N/A'} className="max-w-4xl mx-auto mt-8">
+      {/* Details Tab */}{" "}
+      {activeTab === "details" && (
+        <Card
+          title={staff.user?.name || "N/A"}
+          className="max-w-4xl mx-auto mt-8"
+        >
+          {" "}
           <div className="flex justify-center mb-6">
-            <div className="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center">
-              <User className="w-16 h-16 text-gray-400" />
+            <div className="relative w-40 h-40">
+              {imagePreview || staff.user?.imageUrl ? (
+                <img
+                  src={imagePreview || staff.user.imageUrl}
+                  alt="Staff Profile"
+                  className="w-40 h-40 rounded-full object-cover border-4 border-gray-200"
+                />
+              ) : (
+                <div className="w-40 h-40 rounded-full bg-gray-200 flex items-center justify-center border-4 border-gray-200">
+                  <User className="w-20 h-20 text-gray-400" />
+                </div>
+              )}
+              {isEditingDetails && (
+                <>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current.click()}
+                    className="absolute bottom-2 right-2 bg-gray-700 text-white p-2 rounded-full hover:bg-gray-800 transition-colors"
+                    aria-label="Change photo"
+                  >
+                    <Camera className="w-5 h-5" />
+                  </button>
+                </>
+              )}
             </div>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
             {[
-              ['name', 'Name'],
-              ['staffRole', 'Position'],
-              ['email', 'Email'],
-              ['phone', 'Phone'],
+              ["name", "Name"],
+              ["staffRole", "Position"],
+              ["email", "Email"],
+              ["phone", "Phone"],
             ].map(([field, label]) => (
               <div key={field}>
-                <label className="block text-sm font-medium text-gray-700">{label}</label>
+                <label className="block text-sm font-medium text-gray-700">
+                  {label}
+                </label>
                 <input
-                  type={field === 'email' ? 'email' : 'text'}
+                  type={field === "email" ? "email" : "text"}
                   name={field}
                   value={formData[field]}
                   onChange={handleChange}
                   disabled={!isEditingDetails}
-                  className={`mt-1 block w-full border rounded-md px-3 py-2 text-gray-900 disabled:bg-gray-100 ${!isEditingDetails ? 'cursor-not-allowed' : ''
-                    }`}
+                  className={`mt-1 block w-full border rounded-md px-3 py-2 text-gray-900 disabled:bg-gray-100 ${
+                    !isEditingDetails ? "cursor-not-allowed" : ""
+                  }`}
                 />
               </div>
             ))}
           </div>
-
-          {/* Buttons */}
           <div className="flex justify-center gap-4">
             {isEditingDetails ? (
               <>
                 <Button variant="primary" onClick={saveStaffDetails}>
-                  Save Details
+                  Save Details 
                 </Button>
-                <Button variant="secondary" onClick={() => setIsEditingDetails(false)}>
-                  Cancel
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setIsEditingDetails(false);
+                    setImageFile(null);
+                    setImagePreview(null);
+                  }}
+                > Cancel
                 </Button>
               </>
             ) : (
@@ -262,39 +329,47 @@ const StaffDetails = () => {
               </Button>
             )}
             <Button variant="danger" onClick={handleDeleteStaff}>
-              Remove Staff
+               Remove Staff
             </Button>
           </div>
         </Card>
       )}
-
       {/* Permission Tab */}
-      {activeTab === 'permission' && (
+      {activeTab === "permission" && (
         <Card title="Enable Permissions" className="max-w-4xl mx-auto mt-8">
           <div className="grid grid-cols-1 gap-8 items-center">
             <div className="space-y-6 text-lg">
               {[
-                { key: 'billing', label: 'Billing' },
-                { key: 'productsInsight', label: 'Product Insight' },
-                { key: 'inventory', label: 'Inventory' },
-                { key: 'reports', label: 'Reports' },
+                { key: "billing", label: "Billing" },
+                { key: "productsInsight", label: "Product Insight" },
+                { key: "inventory", label: "Inventory" },
+                { key: "reports", label: "Reports" },
               ].map((item) => (
-                <div key={item.key} className="flex items-center justify-between">
+                <div
+                  key={item.key}
+                  className="flex items-center justify-between"
+                >
                   <span>{item.label}</span>
                   <label
-                    className={`relative inline-flex items-center ${!isEditingPermissions ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
-                      }`}
+                    className={`relative inline-flex items-center ${
+                      !isEditingPermissions
+                        ? "opacity-50 cursor-not-allowed"
+                        : "cursor-pointer"
+                    }`}
                   >
                     <input
                       type="checkbox"
                       className="sr-only peer"
                       checked={formData[item.key] || false}
                       disabled={!isEditingPermissions}
-                      onChange={(e) => handlePermissionChange(item.key, e.target.checked)}
+                      onChange={(e) =>
+                        handlePermissionChange(item.key, e.target.checked)
+                      }
                     />
                     <div
-                      className={`w-11 h-6 rounded-full transition-colors duration-200 ${formData[item.key] ? 'bg-theme' : 'bg-black'
-                        }`}
+                      className={`w-11 h-6 rounded-full transition-colors duration-200 ${
+                        formData[item.key] ? "bg-theme" : "bg-black"
+                      }`}
                     ></div>
                     <div className="absolute left-0.5 top-0.5 bg-white w-5 h-5 rounded-full transition-all peer-checked:translate-x-full"></div>
                   </label>
@@ -302,7 +377,6 @@ const StaffDetails = () => {
               ))}
             </div>
           </div>
-
           {/* Buttons */}
           <div className="flex justify-center mt-6 gap-4">
             {isEditingPermissions ? (
@@ -310,12 +384,18 @@ const StaffDetails = () => {
                 <Button variant="primary" onClick={savePermissions}>
                   Save Permissions
                 </Button>
-                <Button variant="secondary" onClick={() => setIsEditingPermissions(false)}>
-                  Cancel
+                <Button
+                  variant="secondary"
+                  onClick={() => setIsEditingPermissions(false)}
+                >
+                  Cancel 
                 </Button>
               </>
             ) : (
-              <Button variant="black" onClick={() => setIsEditingPermissions(true)}>
+              <Button
+                variant="black"
+                onClick={() => setIsEditingPermissions(true)}
+              >
                 Update Permissions
               </Button>
             )}

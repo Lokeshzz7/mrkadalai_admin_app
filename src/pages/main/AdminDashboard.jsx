@@ -11,6 +11,7 @@ import Onboarding from '../../components/dashboard/Onboarding.jsx';
 import AdminManagment from '../../components/dashboard/AdminManagement.jsx';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+import Loader from '../../components/ui/Loader.jsx';
 
 const AdminDashboard = () => {
     const [activeTab, setActiveTab] = useState('admin');
@@ -193,34 +194,28 @@ const AdminDashboard = () => {
         // Get accessible routes for this specific outlet (before setting it as current)
         const accessibleRoutes = getAccessibleRoutes(college.id);
 
-        // Find the first accessible route (excluding home page if possible)
-        let targetRoute = '/'; // fallback to home
+        let targetRoute = '/'; 
         let showNoRouteAlert = false;
 
         if (accessibleRoutes.length > 0) {
-            // Try to find a route other than home first
             const nonHomeRoute = accessibleRoutes.find(route => route.href !== '/');
             if (nonHomeRoute) {
                 targetRoute = nonHomeRoute.href;
             } else {
-                // Only home route is accessible
                 targetRoute = accessibleRoutes[0].href;
                 showNoRouteAlert = true;
             }
         } else {
-            // No routes accessible at all
             showNoRouteAlert = true;
         }
 
-        // Set the current outlet in context AFTER determining the route
         setCurrentOutlet(college.id);
 
-        // Show alert if only home route or no routes available
+
         if (showNoRouteAlert) {
             toast.error(`No accessible routes found for ${college.name}. You will be redirected to the dashboard.`);
         }
 
-        // Navigate to the determined route
         navigate(targetRoute);
     };
 
@@ -511,7 +506,7 @@ const AdminDashboard = () => {
 
                             {loading ? (
                                 <div className="flex justify-center items-center h-64">
-                                    <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-500"></div>
+                                    <Loader/>
                                 </div>
                             ) : (
                                 <>
