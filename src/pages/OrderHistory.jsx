@@ -18,6 +18,36 @@ const OrderHistory = () => {
 
     const outletId = localStorage.getItem('outletId');
 
+    const formatDate = (dateString) => {
+        if (!dateString || dateString === 'N/A') return 'N/A';
+        const date = new Date(dateString);
+        const utcDate = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+        const options = { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'UTC' };
+        return utcDate.toLocaleDateString('en-GB', options);
+    };
+    
+
+    const formatSlot = (slot) => {
+        if (!slot || slot === 'N/A') return 'N/A';
+        try {
+            const parts = slot.replace('SLOT_', '').split('_');
+            const startTime = parseInt(parts[0], 10);
+            const endTime = parseInt(parts[1], 10);
+    
+            const formatHour = (hour) => {
+                if (hour === 12) return '12 PM';
+                if (hour === 0) return '12 AM';
+                const ampm = hour < 12 ? 'AM' : 'PM';
+                const h = hour % 12 || 12; 
+                return `${h} ${ampm}`;
+            };
+    
+            return `${formatHour(startTime)} - ${formatHour(endTime)}`;
+        } catch (e) {
+            return slot; 
+        }
+    };
+
     useEffect(() => {
         fetchOrders();
     }, []);
@@ -28,25 +58,20 @@ const OrderHistory = () => {
             setError(null);
             const response = await apiRequest(`/superadmin/outlets/${outletId}/orders/`);
 
-            console.log(response);
-
             const transformedOrders = response.map(order => ({
                 orderId: `#${order.orderId.toString().padStart(3, '0')}`,
                 name: order.customerName,
                 phone: order.customerPhone,
                 status: order.status.toLowerCase(),
                 orderType: order.type,
+                deliveryDate: formatDate(order.deliveryDate),
+                deliverySlot: formatSlot(order.deliverySlot),
                 orderItems: order.items.map(item => ({
                     item: item.productName,
                     quantity: item.quantity,
                     unitPrice: item.unitPrice
                 })),
-                timeStamp: new Date(order.orderTime).toLocaleDateString('en-CA') + ' ' +
-                    new Date(order.orderTime).toLocaleTimeString('en-US', {
-                        hour12: false,
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }),
+                timeStamp: formatDate(order.orderTime),
                 totalAmount: order.totalAmount,
                 paymentMethod: order.paymentMethod
             }));
@@ -76,13 +101,12 @@ const OrderHistory = () => {
         setShowModal(false);
     };
 
-    // Status mapping for badge variants
     const getStatusVariant = (status) => {
         switch (status.toLowerCase()) {
             case 'delivered':
             case 'completed':
                 return 'success';
-            case 'preparing':
+            case 'partially_delivered':
             case 'pending':
                 return 'warning';
             case 'cancelled':
@@ -99,11 +123,12 @@ const OrderHistory = () => {
             ? `${ord.orderItems.slice(0, 2).map(i => i.item).join(', ')}, +${ord.orderItems.length - 2}`
             : ord.orderItems.map(i => i.item).join(', '),
         <Badge variant={getStatusVariant(ord.status)}>{ord.status}</Badge>,
-        `₹${ord.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}`,
+        `₹${ord.totalAmount.toFixed(2)}`,
         ord.orderType === 'MANUAL'
             ? <Badge variant="info">Manual</Badge>
             : <Badge variant="success">App</Badge>,
         ord.timeStamp,
+        ord.deliveryDate,
         <Button onClick={() => openModal(ord)}>View</Button>
     ]);
 
@@ -148,6 +173,7 @@ const OrderHistory = () => {
                     <option value='pending'>Pending</option>
                     <option value='delivered'>Delivered</option>
                     <option value='cancelled'>Cancelled</option>
+                    <option value='partially_delivered'>Partially Delivered</option>
                 </select>
                 <input
                     type='text'
@@ -162,7 +188,7 @@ const OrderHistory = () => {
             <div className='pb-5'>
                 <Card title='Order Management'>
                     <Table
-                        headers={['Order Id', 'Name', 'Order Items', 'Status', 'Price', 'Order Type', 'Time Stamp', 'Actions']}
+                        headers={['Order Id', 'Name', 'Order Items', 'Status', 'Total Amount', 'Order Type', 'Order Date', 'Delivery Date', 'Actions']}
                         data={searchedOrders}
                     />
                 </Card>
@@ -182,6 +208,8 @@ const OrderHistory = () => {
                             <p><strong>Customer Name:</strong> {selectedOrder.name}</p>
                             <p><strong>Phone Number:</strong> {selectedOrder.phone}</p>
                             <p><strong>Status:</strong> <Badge variant={getStatusVariant(selectedOrder.status)}>{selectedOrder.status}</Badge></p>
+                            <p><strong>Delivery Date:</strong> {selectedOrder.deliveryDate}</p>
+                            <p><strong>Delivery Slot:</strong> {selectedOrder.deliverySlot}</p>
                             <p><strong>Order Type:</strong> {selectedOrder.orderType === 'MANUAL'
                                 ? <Badge variant="info">Manual</Badge>
                                 : <Badge variant="success">App</Badge>}
@@ -212,7 +240,7 @@ const OrderHistory = () => {
                                 <tr className="font-semibold bg-gray-50">
                                     <td colSpan="3" className="p-2 border text-right">Grand Total</td>
                                     <td className="p-2 border">
-                                        ₹{selectedOrder.orderItems.reduce((acc, item) => acc + item.unitPrice * item.quantity, 0).toFixed(2)}
+                                        ₹{selectedOrder.totalAmount.toFixed(2)}
                                     </td>
                                 </tr>
                             </tbody>
@@ -225,4 +253,3 @@ const OrderHistory = () => {
 };
 
 export default OrderHistory;
-
