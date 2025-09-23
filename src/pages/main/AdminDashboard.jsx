@@ -68,8 +68,8 @@ const AdminDashboard = () => {
 
     const fetchOutlets = async () => {
         try {
-            const accessibleOutlets = await getAccessibleOutlets();
-            setOutlets(accessibleOutlets);
+            const data = await apiRequest('/superadmin/get-outlets/');
+            setOutlets(data.outlets);
         } catch (error) {
             console.error(error.message);
             toast.error('Failed to load outlets');
