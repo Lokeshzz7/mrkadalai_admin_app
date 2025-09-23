@@ -521,7 +521,7 @@ const AdminDashboard = () => {
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-5">
                             {outlets.map((outlet) => (
                                 <div key={outlet.id} onClick={() => handleCollege(outlet)} className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-gray-100">
-                                    <div className="relative w-full h-48"><img src={outlet.image || college} alt={outlet.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = college; }}/></div>
+                                    <div className="relative w-full h-48"><img src={'https://buvanesh-adya.s3.eu-north-1.amazonaws.com/college.jpeg'} alt={outlet.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = college; }}/></div>
                                     <div className="p-4 text-center"><h4 className="text-lg font-semibold truncate">{outlet.name}</h4></div>
                                 </div>
                             ))}
