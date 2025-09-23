@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar } from 'recharts';
-import Button from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
-import Modal from '../../components/ui/Modal';
+import Button from '../../components/ui/Button.jsx';
+import Card from '../../components/ui/Card.jsx';
+import Modal from '../../components/ui/Modal.jsx';
 import college from '../../assets/college.jpg';
 import Header from '../../components/Header.jsx';
 import { apiRequest } from '../../utils/api.js';
 import Onboarding from '../../components/dashboard/Onboarding.jsx';
 import AdminManagment from '../../components/dashboard/AdminManagement.jsx';
 import toast from 'react-hot-toast';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../context/AuthContext.jsx';
 import Loader from '../../components/ui/Loader.jsx';
 
 const AdminDashboard = () => {
@@ -27,8 +27,6 @@ const AdminDashboard = () => {
         staffCount: 0
     });
     const { setCurrentOutlet, getAccessibleRoutes, getAccessibleOutlets } = useAuth();
-
-
 
     // Dashboard data states
     const [dashboardData, setDashboardData] = useState({
@@ -50,16 +48,13 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
 
     const { user } = useAuth();
-
     const isSuperAdmin = user?.role === 'SUPERADMIN';
-
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchOutlets();
         fetchDashboardData();
     }, []);
-
 
     useEffect(() => {
         if (!isSuperAdmin && (activeTab === 'Onboarding' || activeTab === 'AdminManagement')) {
@@ -73,8 +68,8 @@ const AdminDashboard = () => {
 
     const fetchOutlets = async () => {
         try {
-            const data = await apiRequest('/superadmin/get-outlets/');
-            setOutlets(data.outlets);
+            const accessibleOutlets = await getAccessibleOutlets();
+            setOutlets(accessibleOutlets);
         } catch (error) {
             console.error(error.message);
             toast.error('Failed to load outlets');
@@ -117,8 +112,6 @@ const AdminDashboard = () => {
                 })
             ]);
 
-            console.log("from backedn status ", statusResponse)
-
             setRevenueData(revenueResponse);
 
             const statusData = [
@@ -126,14 +119,13 @@ const AdminDashboard = () => {
                 { name: 'Pending', value: statusResponse.pending, color: '#F59E0B' },
                 { name: 'Cancelled', value: statusResponse.cancelled, color: '#EF4444' },
                 { name: 'Partially Delivered', value: statusResponse.partiallyDelivered, color: '#6366F1' }
-            ];
-            console.log("status Data", statusData);
+            ].filter(item => item.value > 0); // Filter out zero-value items for a cleaner chart
             setOrderStatusData(statusData);
 
             const sourceData = [
                 { name: 'App Orders', value: sourceResponse.appOrders, color: '#3B82F6' },
                 { name: 'Manual Orders', value: sourceResponse.manualOrders, color: '#8B5CF6' }
-            ];
+            ].filter(item => item.value > 0); // Filter out zero-value items
             setOrderSourceData(sourceData);
 
             setTopSellingItems(topItemsResponse);
@@ -187,35 +179,32 @@ const AdminDashboard = () => {
     };
 
     const handleCollege = (college) => {
-        // Set the outlet information
         localStorage.setItem('outletName', college.name);
         localStorage.setItem('outletId', college.id);
-
-        // Get accessible routes for this specific outlet (before setting it as current)
+    
         const accessibleRoutes = getAccessibleRoutes(college.id);
-
-        let targetRoute = '/'; 
+        let targetRoute = '/';
         let showNoRouteAlert = false;
-
-        if (accessibleRoutes.length > 0) {
+    
+        if (accessibleRoutes && accessibleRoutes.length > 0) {
             const nonHomeRoute = accessibleRoutes.find(route => route.href !== '/');
             if (nonHomeRoute) {
                 targetRoute = nonHomeRoute.href;
-            } else {
+            } else if (accessibleRoutes[0]) {
                 targetRoute = accessibleRoutes[0].href;
+            } else {
                 showNoRouteAlert = true;
             }
         } else {
             showNoRouteAlert = true;
         }
-
+    
         setCurrentOutlet(college.id);
-
-
+    
         if (showNoRouteAlert) {
             toast.error(`No accessible routes found for ${college.name}. You will be redirected to the dashboard.`);
         }
-
+        
         navigate(targetRoute);
     };
 
@@ -261,7 +250,7 @@ const AdminDashboard = () => {
         }
         return null;
     };
-
+    
     return (
         <div className="h-screen flex flex-col bg-gray-100 overflow-hidden">
             <div className="w-full z-30">
@@ -299,7 +288,7 @@ const AdminDashboard = () => {
                         )}
                     </div>
 
-                    {activeTab === 'outlet' && (
+                    {activeTab === 'outlet' && isSuperAdmin && (
                         <div className="flex justify-between items-center">
                             <h1 className="text-2xl font-semibold text-gray-700">Outlet Overview</h1>
                             <div className="flex space-x-4">
@@ -394,7 +383,6 @@ const AdminDashboard = () => {
                             </div>
                         </form>
                     </Modal>
-
                     {/* REMOVE OUTLET MODAL */}
                     <Modal
                         isOpen={isModalOpen && modalMode === 'remove'}
@@ -453,186 +441,75 @@ const AdminDashboard = () => {
                         <>
                             {/* Dashboard Overview Cards */}
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                                <Card className="text-center">
-                                    <p className="text-gray-600">Today's Active Stores</p>
-                                    <h2 className="text-2xl font-bold text-green-600">{dashboardData.totalActiveOutlets}</h2>
-                                </Card>
-                                <Card className="text-center">
-                                    <p className="text-gray-600">Total Revenue</p>
-                                    <h2 className="text-2xl font-bold text-blue-600">{formatCurrency(dashboardData.totalRevenue)}</h2>
-                                </Card>
-                                <Card className="text-center">
-                                    <p className="text-gray-600">Total Customers</p>
-                                    <h2 className="text-2xl font-bold text-purple-600">{dashboardData.totalCustomers}</h2>
-                                </Card>
-                                <Card className="text-center">
-                                    <p className="text-gray-600">Total Orders</p>
-                                    <h2 className="text-2xl font-bold text-orange-600">{dashboardData.totalOrders}</h2>
-                                </Card>
-                                <Card className="text-center">
-                                    <p className="text-gray-600">Top Performing Store</p>
-                                    <h2 className="text-2xl font-bold text-yellow-600">
+                                <Card className="text-center p-4"><p className="text-sm text-gray-600">Active Stores</p><h2 className="text-3xl font-bold text-green-600">{dashboardData.totalActiveOutlets}</h2></Card>
+                                <Card className="text-center p-4"><p className="text-sm text-gray-600">Total Revenue</p><h2 className="text-3xl font-bold text-blue-600">{formatCurrency(dashboardData.totalRevenue)}</h2></Card>
+                                <Card className="text-center p-4"><p className="text-sm text-gray-600">Total Customers</p><h2 className="text-3xl font-bold text-purple-600">{dashboardData.totalCustomers}</h2></Card>
+                                <Card className="text-center p-4"><p className="text-sm text-gray-600">Total Orders</p><h2 className="text-3xl font-bold text-orange-600">{dashboardData.totalOrders}</h2></Card>
+                                <Card className="text-center p-4">
+                                    <p className="text-sm text-gray-600">Top Performing Store</p>
+                                    <h2 className="text-2xl font-bold text-yellow-600 truncate" title={dashboardData.topPerformingOutlet?.name || 'N/A'}>
                                         {dashboardData.topPerformingOutlet?.name || 'N/A'}
                                     </h2>
+                                    {dashboardData.topPerformingOutlet?.orderCount && <p className="text-xs text-gray-500">{dashboardData.topPerformingOutlet.orderCount} orders</p>}
                                 </Card>
                             </div>
 
                             {/* Date Range Selector */}
-                            <div className="flex justify-between items-center   p-4 rounded-lg">
-                                <h2 className="text-xl font-semibold ">Analytics Dashboard</h2>
-                                <div className="flex space-x-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">From</label>
-                                        <input
-                                            type="date"
-                                            name="from"
-                                            value={dateRange.from}
-                                            onChange={handleDateRangeChange}
-                                            className="px-3 py-2 border rounded"
-                                        />
+                            <div className="flex flex-wrap justify-between items-center bg-white p-4 rounded-lg shadow-sm">
+                                <h2 className="text-xl font-semibold mb-2 sm:mb-0">Analytics Dashboard</h2>
+                                <div className="flex items-center space-x-2 sm:space-x-4">
+                                    <div className="flex items-center space-x-2">
+                                        <label className="text-sm font-medium">From</label>
+                                        <input type="date" name="from" value={dateRange.from} onChange={handleDateRangeChange} className="px-3 py-1 border rounded-md"/>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">To</label>
-                                        <input
-                                            type="date"
-                                            name="to"
-                                            value={dateRange.to}
-                                            onChange={handleDateRangeChange}
-                                            className="px-3 py-2 border rounded"
-                                        />
+                                    <div className="flex items-center space-x-2">
+                                        <label className="text-sm font-medium">To</label>
+                                        <input type="date" name="to" value={dateRange.to} onChange={handleDateRangeChange} className="px-3 py-1 border rounded-md"/>
                                     </div>
                                 </div>
                             </div>
 
                             {loading ? (
-                                <div className="flex justify-center items-center h-64">
-                                    <Loader/>
-                                </div>
+                                <div className="flex justify-center items-center h-64"><Loader /></div>
                             ) : (
                                 <>
                                     {/* Charts Section */}
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                        {/* Revenue Trend Chart */}
-                                        <div className="lg:col-span-2">
-                                            <Card Black title="Revenue Trend">
-                                                <ResponsiveContainer width="100%" height={300}>
-                                                    <LineChart data={revenueData}>
-                                                        <CartesianGrid strokeDasharray="3 3" />
-                                                        <XAxis dataKey="date" />
-                                                        <YAxis tickFormatter={(value) => formatCurrency(value)} />
-                                                        <Tooltip content={<CustomTooltip />} />
-                                                        <Legend />
-                                                        <Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={2} />
-                                                    </LineChart>
-                                                </ResponsiveContainer>
-                                            </Card>
-                                        </div>
-
-                                        {/* Order Status Distribution */}
-                                        <div>
-                                            <Card Black title="Order Status Distribution">
-                                                <ResponsiveContainer width="100%" height={300}>
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={orderStatusData}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            innerRadius={60}
-                                                            outerRadius={80}
-                                                            paddingAngle={5}
-                                                            dataKey="value"
-                                                        >
-                                                            {orderStatusData.map((entry, index) => (
-                                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                                            ))}
-                                                        </Pie>
-                                                        <Tooltip content={<PieTooltip />} />
-                                                        <Legend />
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                            </Card>
-                                        </div>
+                                        <Card Black title="Revenue Trend" className="lg:col-span-2">
+                                            <ResponsiveContainer width="100%" height={300}>
+                                                <LineChart data={revenueData}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" /><YAxis tickFormatter={(value) => formatCurrency(value)} /><Tooltip content={<CustomTooltip />} /><Legend /><Line type="monotone" dataKey="revenue" stroke="#3B82F6" strokeWidth={2} /></LineChart>
+                                            </ResponsiveContainer>
+                                        </Card>
+                                        <Card Black title="Order Status">
+                                            <ResponsiveContainer width="100%" height={300}>
+                                                <PieChart><Pie data={orderStatusData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">{orderStatusData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}</Pie><Tooltip content={<PieTooltip />} /><Legend /></PieChart>
+                                            </ResponsiveContainer>
+                                        </Card>
                                     </div>
 
                                     {/* Second Row Charts */}
                                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                        {/* Order Source Distribution */}
-                                        <div>
-                                            <Card Black title="Order Source Distribution">
-                                                <ResponsiveContainer width="100%" height={300}>
-                                                    <PieChart>
-                                                        <Pie
-                                                            data={orderSourceData}
-                                                            cx="50%"
-                                                            cy="50%"
-                                                            innerRadius={60}
-                                                            outerRadius={80}
-                                                            paddingAngle={5}
-                                                            dataKey="value"
-                                                        >
-                                                            {orderSourceData.map((entry, index) => (
-                                                                <Cell key={`cell-${index}`} fill={entry.color} />
-                                                            ))}
-                                                        </Pie>
-                                                        <Tooltip content={<PieTooltip />} />
-                                                        <Legend />
-                                                    </PieChart>
-                                                </ResponsiveContainer>
-                                            </Card>
-                                        </div>
-
-                                        {/* Top Selling Items */}
-                                        <div className='pb-5'>
-                                            <Card Black title="Top Selling Items">
-                                                <div className="space-y-4">
-                                                    {topSellingItems.length > 0 ? (
-                                                        <>
-                                                            {/* Highlight top item */}
-                                                            <div className="bg-gradient-to-r from-yellow-400 to-orange-500 p-4 rounded-lg text-white">
-                                                                <div className="flex items-center justify-between">
-                                                                    <h4 className="font-medium">
-                                                                        #{1} {topSellingItems[0].productName}
-                                                                    </h4>
-                                                                </div>
-                                                                <p className="text-sm">Orders: {topSellingItems[0].totalOrders}</p>
-                                                                <p className="text-sm">Revenue: {formatCurrency(topSellingItems[0].totalRevenue)}</p>
-                                                            </div>
-
-
-                                                            {/* Other top items */}
-                                                            {topSellingItems.slice(1).map((item, index) => (
-                                                                <div key={item.productId} className="bg-gray-50 p-3 rounded-lg">
-                                                                    <div className="flex justify-between items-start">
-                                                                        <div>
-                                                                            <h4 className="font-medium">#{index + 2} {item.productName}</h4>
-                                                                            <p className="text-sm text-gray-600">Orders: {item.totalOrders}</p>
-                                                                            <p className="text-sm text-gray-600">Revenue: {formatCurrency(item.totalRevenue)}</p>
-                                                                        </div>
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </>
-                                                    ) : (
-                                                        <p className="text-gray-500 text-center py-8">No data available</p>
-                                                    )}
-                                                </div>
-                                            </Card>
-                                        </div>
-
-                                        {/* Peak Time Slots */}
-                                        <div>
-                                            <Card Black title="Peak Time Slots">
-                                                <ResponsiveContainer width="100%" height={300}>
-                                                    <BarChart data={peakTimeSlots}>
-                                                        <CartesianGrid strokeDasharray="3 3" />
-                                                        <XAxis dataKey="displayName" />
-                                                        <YAxis />
-                                                        <Tooltip />
-                                                        <Bar dataKey="orderCount" fill="#8884d8" />
-                                                    </BarChart>
-                                                </ResponsiveContainer>
-                                            </Card>
-                                        </div>
+                                        <Card Black title="Order Source">
+                                            <ResponsiveContainer width="100%" height={300}>
+                                                <PieChart><Pie data={orderSourceData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">{orderSourceData.map((entry, index) => (<Cell key={`cell-${index}`} fill={entry.color} />))}</Pie><Tooltip content={<PieTooltip />} /><Legend /></PieChart>
+                                            </ResponsiveContainer>
+                                        </Card>
+                                        <Card Black title="Top Selling Items" className="lg:col-span-1">
+                                            <div className="space-y-3 h-[300px] overflow-y-auto pr-2">
+                                                {topSellingItems.length > 0 ? topSellingItems.map((item, index) => (
+                                                    <div key={item.productId} className={`p-3 rounded-lg ${index === 0 ? 'bg-yellow-100 border border-yellow-300' : 'bg-gray-50'}`}>
+                                                        <h4 className="font-semibold text-gray-800">#{index + 1} {item.productName}</h4>
+                                                        <div className="flex justify-between text-sm text-gray-600"><span>Orders:</span> <span>{item.totalOrders}</span></div>
+                                                        <div className="flex justify-between text-sm text-gray-600"><span>Revenue:</span> <span>{formatCurrency(item.totalRevenue)}</span></div>
+                                                    </div>
+                                                )) : <p className="text-center text-gray-500 pt-16">No data available</p>}
+                                            </div>
+                                        </Card>
+                                        <Card Black title="Peak Time Slots">
+                                            <ResponsiveContainer width="100%" height={300}>
+                                                <BarChart data={peakTimeSlots}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="displayName" /><YAxis /><Tooltip /><Legend /><Bar dataKey="orderCount" fill="#8884d8" /></BarChart>
+                                            </ResponsiveContainer>
+                                        </Card>
                                     </div>
                                 </>
                             )}
@@ -641,45 +518,18 @@ const AdminDashboard = () => {
 
                     {/* OUTLET TAB */}
                     {activeTab === 'outlet' && (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pb-5">
-                            {(isSuperAdmin ? outlets : outlets.filter(outlet =>
-                                getAccessibleOutlets().some(accessibleOutlet => accessibleOutlet.id === outlet.id)
-                            )).map((outlet) => (
-                                <div
-                                    key={outlet.id}
-                                    onClick={() => handleCollege(outlet)}
-                                    className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-gray-100"
-                                >
-                                    {/* Set fixed image height and width */}
-                                    <div className="relative w-full h-48">
-                                        <img
-                                            src={outlet.image || college}
-                                            alt={outlet.name}
-                                            className="w-full h-full object-cover"
-                                            onError={(e) => { e.currentTarget.src = college; }}
-                                        />
-                                    </div>
-
-                                    <div className="p-4 text-center">
-                                        <h4 className="text-lg font-semibold truncate">{outlet.name}</h4>
-                                    </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-5">
+                            {outlets.map((outlet) => (
+                                <div key={outlet.id} onClick={() => handleCollege(outlet)} className="bg-white rounded-lg overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 cursor-pointer border border-gray-100">
+                                    <div className="relative w-full h-48"><img src={outlet.image || college} alt={outlet.name} className="w-full h-full object-cover" onError={(e) => { e.currentTarget.src = college; }}/></div>
+                                    <div className="p-4 text-center"><h4 className="text-lg font-semibold truncate">{outlet.name}</h4></div>
                                 </div>
                             ))}
                         </div>
                     )}
 
-
-                    {activeTab === 'Onboarding' && isSuperAdmin && (
-                        <>
-                            <Onboarding />
-                        </>
-                    )}
-
-                    {activeTab === 'AdminManagement' && isSuperAdmin && (
-                        <>
-                            <AdminManagment />
-                        </>
-                    )}
+                    {activeTab === 'Onboarding' && isSuperAdmin && <Onboarding />}
+                    {activeTab === 'AdminManagement' && isSuperAdmin && <AdminManagment />}
                 </div>
             </main>
         </div>
