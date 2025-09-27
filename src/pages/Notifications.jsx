@@ -371,13 +371,14 @@ const handleCouponSubmit = async (e) => {
 
     if (autoSend) {
       try {
+        
         const notificationData = {
-          title: `🎉 New Coupon Available: ${couponFormData.code}`,
-          message: `Exciting news! Use coupon code "${couponFormData.code}" and save ${couponFormData.rewardValue * 100}% ${couponFormData.minOrderValue ? ` on orders above ₹${couponFormData.minOrderValue}` : ''}. Valid until ${new Date(couponFormData.validUntil).toLocaleDateString()}. Limited usage - hurry up!`,
+          title: `🎉 New Coupon Available: ${couponFormData.code.trim().toUpperCase()}`,
+          message: `Exciting news! Use coupon code "${couponFormData.code.trim().toUpperCase()}" and save ₹${couponFormData.rewardValue}${couponFormData.minOrderValue ? ` on orders above ₹${couponFormData.minOrderValue}` : ''}. Valid until ${new Date(couponFormData.validUntil).toLocaleDateString()}. Limited usage - hurry up!`,
           outletId: parseInt(outletId),
         };
 
-        await apiRequest('/superadmin/notifications/send-immediate', {
+        const notificationResult = await apiRequest('/superadmin/notifications/send-immediate', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -389,7 +390,12 @@ const handleCouponSubmit = async (e) => {
         toast.success('Coupon notification sent to users successfully!');
       } catch (notificationError) {
         console.error('Error sending coupon notification:', notificationError);
-        toast.error('Coupon created but failed to send notification');
+        console.error('Full error details:', {
+          message: notificationError.message,
+          status: notificationError.status,
+          response: notificationError.response
+        });
+        toast.error(`Coupon created but failed to send notification: ${notificationError.message || 'Unknown error'}`);
       }
     }
   } catch (error) {
