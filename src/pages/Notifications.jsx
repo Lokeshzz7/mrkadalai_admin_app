@@ -86,7 +86,6 @@ const Notifications = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      console.log('Token from localStorage:', token); // Debug token
 
       const data = await apiRequest(`/superadmin/get-coupons/${outletId}`, {
         method: 'GET',
@@ -114,7 +113,7 @@ const Notifications = () => {
         },
       });
       toast.success('Coupon deleted successfully');
-      fetchCoupons(); // Refresh the list
+      fetchCoupons();
     } catch (error) {
       console.error('Error deleting coupon:', error);
       toast.error(error.message || 'Error deleting coupon');
@@ -141,7 +140,7 @@ const Notifications = () => {
   const couponData = coupons.slice().reverse().map(coupon => [
     coupon.code,
     coupon.description || 'No description',
-    `₹${coupon.rewardValue}`,
+    `${coupon.rewardValue}`,
     `₹${coupon.minOrderValue}`,
     new Date(coupon.validUntil).toLocaleDateString(),
     `${coupon.usedCount}/${coupon.usageLimit}`,
@@ -303,88 +302,103 @@ const Notifications = () => {
     toast.success("Promotion Sent");
   };
 
-  const handleCouponSubmit = async (e) => {
-    e.preventDefault();
+const handleCouponSubmit = async (e) => {
+  e.preventDefault();
 
-    // Validation
-    if (!couponFormData.code || !couponFormData.rewardValue || !couponFormData.validFrom ||
-      !couponFormData.validUntil || !couponFormData.usageLimit) {
-      toast.error('Please fill all required fields');
-      return;
-    }
+  if (!couponFormData.code || !couponFormData.rewardValue || !couponFormData.validFrom ||
+    !couponFormData.validUntil || !couponFormData.usageLimit) {
+    toast.error('Please fill all required fields');
+    return;
+  }
 
-    // Validate dates
-    const validFrom = new Date(couponFormData.validFrom);
-    const validUntil = new Date(couponFormData.validUntil);
-    const now = new Date();
+  const validFrom = new Date(couponFormData.validFrom);
+  const validUntil = new Date(couponFormData.validUntil);
+  const now = new Date();
 
-    if (validFrom < now) {
-      toast.error('Valid from date cannot be in the past');
-      return;
-    }
+  if (validFrom < now) {
+    toast.error('Valid from date cannot be in the past');
+    return;
+  }
 
-    if (validUntil <= validFrom) {
-      toast.error('Valid until date must be after valid from date');
-      return;
-    }
+  if (validUntil <= validFrom) {
+    toast.error('Valid until date must be after valid from date');
+    return;
+  }
 
-    if (parseFloat(couponFormData.rewardValue) <= 0) {
-      toast.error('Reward value must be greater than 0');
-      return;
-    }
+  if (parseFloat(couponFormData.rewardValue) <= 0) {
+    toast.error('Reward value must be greater than 0');
+    return;
+  }
 
-    if (parseFloat(couponFormData.minOrderValue) < 0) {
-      toast.error('Minimum order value cannot be negative');
-      return;
-    }
+  if (parseFloat(couponFormData.minOrderValue) < 0) {
+    toast.error('Minimum order value cannot be negative');
+    return;
+  }
 
-    if (parseInt(couponFormData.usageLimit) <= 0) {
-      toast.error('Usage limit must be greater than 0');
-      return;
-    }
+  if (parseInt(couponFormData.usageLimit) <= 0) {
+    toast.error('Usage limit must be greater than 0');
+    return;
+  }
 
-    try {
-      setLoading(true);
-      const token = localStorage.getItem('token');
+  try {
+    setLoading(true);
+    const token = localStorage.getItem('token');
 
-      const couponData = {
-        code: couponFormData.code.trim().toUpperCase(),
-        description: couponFormData.description.trim(),
-        rewardValue: `${couponFormData.rewardValue}%`,
-        minOrderValue: parseFloat(couponFormData.minOrderValue),
-        validFrom: couponFormData.validFrom,
-        validUntil: couponFormData.validUntil,
-        usageLimit: parseInt(couponFormData.usageLimit),
-        outletId: parseInt(outletId),
-      };
+    const couponData = {
+      code: couponFormData.code.trim().toUpperCase(),
+      description: couponFormData.description.trim(),
+      rewardValue: `${couponFormData.rewardValue}%`,
+      minOrderValue: parseFloat(couponFormData.minOrderValue),
+      validFrom: couponFormData.validFrom,
+      validUntil: couponFormData.validUntil,
+      usageLimit: parseInt(couponFormData.usageLimit),
+      outletId: parseInt(outletId),
+    };
 
-      console.log('Coupon data being sent:', couponData);
+    const result = await apiRequest('/superadmin/create-coupon/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      },
+      body: couponData,
+    });
 
-      const result = await apiRequest('/superadmin/create-coupon/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
-        },
-        body: couponData,
-      });
+    toast.success('Coupon created successfully');
+    setShowCreateCouponForm(false);
+    handleCouponReset();
+    fetchCoupons();
 
-      toast.success('Coupon created successfully');
-      setShowCreateCouponForm(false);
-      handleCouponReset();
-      fetchCoupons();
+    if (autoSend) {
+      try {
+        const notificationData = {
+          title: `🎉 New Coupon Available: ${couponFormData.code}`,
+          message: `Exciting news! Use coupon code "${couponFormData.code}" and save ${couponFormData.rewardValue * 100}% ${couponFormData.minOrderValue ? ` on orders above ₹${couponFormData.minOrderValue}` : ''}. Valid until ${new Date(couponFormData.validUntil).toLocaleDateString()}. Limited usage - hurry up!`,
+          outletId: parseInt(outletId),
+        };
 
-      if (autoSend) {
-        // TODO: Implement notification sending logic
-        toast.success('Notification sent to users');
+        await apiRequest('/superadmin/notifications/send-immediate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+          },
+          body: notificationData,
+        });
+
+        toast.success('Coupon notification sent to users successfully!');
+      } catch (notificationError) {
+        console.error('Error sending coupon notification:', notificationError);
+        toast.error('Coupon created but failed to send notification');
       }
-    } catch (error) {
-      console.error('Error creating coupon:', error);
-      toast.error(error.message || 'Error creating coupon');
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error('Error creating coupon:', error);
+    toast.error(error.message || 'Error creating coupon');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleNotificationReset = () => {
     setNotificationFormData({
