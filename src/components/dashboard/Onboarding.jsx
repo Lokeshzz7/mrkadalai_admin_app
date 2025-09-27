@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import Card from '../ui/Card';
 import Button from '../ui/Button'
 import { useNavigate } from 'react-router-dom'
@@ -202,8 +202,8 @@ const Onboarding = () => {
                     <button
                         onClick={() => handleTabChange('admin')}
                         className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'admin'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
                         Admin
@@ -211,8 +211,8 @@ const Onboarding = () => {
                     <button
                         onClick={() => handleTabChange('staff')}
                         className={`py-2 px-1 border-b-2 font-medium text-sm ${activeTab === 'staff'
-                            ? 'border-blue-500 text-blue-600'
-                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                                ? 'border-blue-500 text-blue-600'
+                                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                             }`}
                     >
                         Staff
@@ -331,19 +331,31 @@ const Onboarding = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <p className="text-sm font-medium mb-2">Aadhaar Card</p>
-                                            <img
-                                                src="https://via.placeholder.com/200x120/e5e7eb/6b7280?text=Aadhaar+Card"
-                                                alt="Aadhaar Card"
-                                                className="w-full h-24 object-cover rounded border"
-                                            />
+                                            {(activeTab === 'admin' && selectedPerson.aadharUrl) || (activeTab === 'staff' && selectedPerson.staffInfo?.aadharUrl) ? (
+                                                <img
+                                                    src={activeTab === 'admin' ? selectedPerson.aadharUrl : selectedPerson.staffInfo.aadharUrl}
+                                                    alt="Aadhaar Card"
+                                                    className="w-full h-24 object-cover rounded border"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-24 flex items-center justify-center bg-gray-100 rounded border text-gray-500 text-sm">
+                                                    Not Uploaded
+                                                </div>
+                                            )}
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium mb-2">PAN Card</p>
-                                            <img
-                                                src="https://via.placeholder.com/200x120/e5e7eb/6b7280?text=PAN+Card"
-                                                alt="PAN Card"
-                                                className="w-full h-24 object-cover rounded border"
-                                            />
+                                            {(activeTab === 'admin' && selectedPerson.panUrl) || (activeTab === 'staff' && selectedPerson.staffInfo?.panUrl) ? (
+                                                <img
+                                                    src={activeTab === 'admin' ? selectedPerson.panUrl : selectedPerson.staffInfo.panUrl}
+                                                    alt="PAN Card"
+                                                    className="w-full h-24 object-cover rounded border"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-24 flex items-center justify-center bg-gray-100 rounded border text-gray-500 text-sm">
+                                                    Not Uploaded
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -442,4 +454,4 @@ const Onboarding = () => {
     )
 }
 
-export default Onboarding
+export default Onboarding;
