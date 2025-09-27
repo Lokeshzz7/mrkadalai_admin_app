@@ -4,6 +4,7 @@ import Button from '../ui/Button'
 import { useNavigate } from 'react-router-dom'
 import { User, Mail, Phone, Briefcase } from 'lucide-react';
 import { apiRequest } from '../../utils/api';
+import Loader from '../ui/Loader';
 
 
 const AdminManagment = () => {
@@ -38,7 +39,7 @@ const AdminManagment = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="text-lg">Loading admin...</div>
+                <div className="flex justify-center items-center"><Loader/></div>
             </div>
         );
     }
