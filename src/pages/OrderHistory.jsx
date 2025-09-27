@@ -120,7 +120,7 @@ const OrderHistory = () => {
         ord.orderId,
         ord.name,
         ord.orderItems.length > 2
-            ? `${ord.orderItems.slice(0, 2).map(i => i.item).join(', ')}, +${ord.orderItems.length - 2}`
+            ? `${ord.orderItems.slice(0, 1).map(i => i.item).join(', ')}, +${ord.orderItems.length - 1}`
             : ord.orderItems.map(i => i.item).join(', '),
         <Badge variant={getStatusVariant(ord.status)}>{ord.status}</Badge>,
         `₹${ord.totalAmount.toFixed(2)}`,
