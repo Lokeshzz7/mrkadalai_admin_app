@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react'
 import Card from '../ui/Card';
 import Button from '../ui/Button'
 import { useNavigate } from 'react-router-dom'
-import { User, Mail, Phone, Briefcase, X, Building, UserCheck } from 'lucide-react';
+import { User, Mail, Phone, Briefcase, X, Building, UserCheck} from 'lucide-react';
 import { apiRequest } from '../../utils/api';
 import toast from 'react-hot-toast';
+import Loader from '../ui/Loader';
 
 const Onboarding = () => {
     const navigate = useNavigate()
@@ -173,7 +174,7 @@ const Onboarding = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
-                <div className="text-lg">Loading {currentRole}...</div>
+                <div className="flex justify-center items-center"><Loader/></div>
             </div>
         );
     }
