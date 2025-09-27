@@ -140,7 +140,7 @@ const Notifications = () => {
   const couponData = coupons.slice().reverse().map(coupon => [
     coupon.code,
     coupon.description || 'No description',
-    `${coupon.rewardValue}`,
+    `${coupon.rewardValue * 100}%`,
     `₹${coupon.minOrderValue}`,
     new Date(coupon.validUntil).toLocaleDateString(),
     `${coupon.usedCount}/${coupon.usageLimit}`,
@@ -374,7 +374,7 @@ const handleCouponSubmit = async (e) => {
         
         const notificationData = {
           title: `🎉 New Coupon Available: ${couponFormData.code.trim().toUpperCase()}`,
-          message: `Exciting news! Use coupon code "${couponFormData.code.trim().toUpperCase()}" and save ₹${couponFormData.rewardValue}${couponFormData.minOrderValue ? ` on orders above ₹${couponFormData.minOrderValue}` : ''}. Valid until ${new Date(couponFormData.validUntil).toLocaleDateString()}. Limited usage - hurry up!`,
+          message: `Exciting news! Use coupon code "${couponFormData.code.trim().toUpperCase()}" and save ${couponFormData.rewardValue * 100}% ${couponFormData.minOrderValue ? ` on orders above ₹${couponFormData.minOrderValue}` : ''}. Valid until ${new Date(couponFormData.validUntil).toLocaleDateString()}. Limited usage - hurry up!`,
           outletId: parseInt(outletId),
         };
 
@@ -717,7 +717,7 @@ const handleCouponSubmit = async (e) => {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Reward Value (₹) *</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Reward Value %*</label>
                       <input
                         type="number"
                         name="rewardValue"
